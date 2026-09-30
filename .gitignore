@@ -1,0 +1,5 @@
+nlp/.venv/
+__pycache__/
+*.pyc
+storage/contract_pdfs/*
+.cursor/

@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Event Props and Production Warehouse Lease Agreement 2026
+- Contract Type: Lease Agreement
+- Effective Date: 2026-07-01
+- End Date: 2028-06-30
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: StowWell Logistics Corp.
+- Vendor Address: Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: StowWell Logistics Corp. shall lease to JBC Events Management approximately 800 square meters of dry warehouse space for chairs, linens, lighting cases, and leftover production materials, including dock access, 24x7 compound security, racking, and monthly inventory access logs. Vendor shall restore power and access within eight hours of a confirmed facility failure.
+
+4. Financial Terms
+- Contract Value: PHP 2,160,000.00
+- Currency: PHP
+- Payment Terms: Monthly
+- Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on the overdue monthly rent plus 0.1% per day thereafter until paid in full.
+
+5. Renewal and Termination
+- Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written notice of non-renewal.
+- Termination Clause: Either party may terminate for uncured material breach after thirty days written notice. Client may terminate for convenience with ninety days written notice and payment of rent through the notice period.
+
+6. Signatures
+- Client Authorized Signatory: Nina S. Domingo, Procurement Officer, JBC Events Management
+- Vendor Authorized Signatory: Maricel A. Bautista, Property Manager, StowWell Logistics Corp.
+- Signed Date: 2026-06-20

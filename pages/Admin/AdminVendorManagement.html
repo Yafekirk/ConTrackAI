@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="image" href="/assets/images/Logo-mark.png">
+<title>ConTrack AI — Vendors</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/ADMIN/Admin.css">
+<link rel="stylesheet" href="/assets/css/portal-shell.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ── NOTIFICATIONS ──────────────────────────────────────────── -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-sidebar" id="notif-sidebar">
+  <div class="notif-sidebar-header">
+    <div class="notif-sidebar-title"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>NOTIFICATIONS</div>
+    <button class="notif-close" onclick="closeNotifications()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="notif-tabs">
+    <div class="notif-tab active" data-tab="all" onclick="switchNotifTab('all')">ALL</div>
+    <div class="notif-tab" data-tab="unread" onclick="switchNotifTab('unread')">UNREAD</div>
+    <div class="notif-tab" data-tab="archived" onclick="switchNotifTab('archived')">ARCHIVED</div>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+  <div class="notif-footer"><button class="notif-footer-btn" onclick="markAllRead()">Mark All as Read</button></div>
+</div>
+
+<!-- ── VENDOR DETAIL MODAL ────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-vendor-detail">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <div class="modal-title">Vendor Profile</div>
+      <button class="modal-close" onclick="closeModal('modal-vendor-detail')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div class="detail-section-title">VENDOR INFORMATION</div>
+          <div class="detail-row"><div class="detail-key">COMPANY NAME</div><div class="detail-val" id="vd-company">—</div></div>
+          <div class="detail-row"><div class="detail-key">SUPPLIER TYPE</div><div class="detail-val" id="vd-type">—</div></div>
+          <div class="detail-row"><div class="detail-key">MAIN CONTRACT TYPE</div><div class="detail-val" id="vd-contract-type">—</div></div>
+          <div class="detail-row"><div class="detail-key">EMAIL</div><div class="detail-val" id="vd-email">—</div></div>
+          <div class="detail-row"><div class="detail-key">PHONE</div><div class="detail-val" id="vd-phone">—</div></div>
+          <div class="detail-row"><div class="detail-key">STATUS</div><div class="detail-val" id="vd-status">—</div></div>
+          <div class="detail-row"><div class="detail-key">RISK</div><div class="detail-val" id="vd-risk">—</div></div>
+        </div>
+        <div>
+          <div class="detail-section-title">PERFORMANCE SCORES</div>
+          <div class="criterion-star-row" style="border-bottom:1px solid #f3e4e6;margin-bottom:8px;">
+            <span class="criterion-star-name">Overall</span>
+            <span id="vs-overall">—</span>
+          </div>
+          <div id="vs-criteria"></div>
+          <div class="detail-section-title" style="margin-top:16px;">CONTRACT SUMMARY</div>
+          <div class="detail-row"><div class="detail-key">TOTAL CONTRACTS</div><div class="detail-val" id="vd-total">—</div></div>
+          <div class="detail-row"><div class="detail-key">APPROVED</div><div class="detail-val" id="vd-approved">—</div></div>
+          <div class="detail-row"><div class="detail-key">PENDING</div><div class="detail-val" id="vd-pending">—</div></div>
+          <div class="detail-row"><div class="detail-key">TOTAL VALUE</div><div class="detail-val" id="vd-value">—</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-vendor-detail')">Close</button>
+      <a class="btn btn-outline" href="/pages/Admin/AdminContracts.html">View Contracts</a>
+      <a class="btn btn-primary" href="/pages/Admin/AdminUserManagement.html">Manage Account</a>
+    </div>
+  </div>
+</div>
+
+<!-- Vendor accounts are created in User Management (POST /api/users.php) or by vendor self-signup. -->
+
+<!-- ── SHELL ─────────────────────────────────────────────────── -->
+<div class="shell">
+  <div class="topbar">
+    <div class="top-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="top-search" placeholder="Search vendors…">
+    </div>
+    <div class="top-spacer"></div>
+    <button class="top-notif-btn" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="top-notif-badge" id="notif-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <div class="main-wrap">
+    <div class="sidebar">
+      <div class="sb-logo-area">
+        <img class="sb-brand-logo" src="/assets/images/Logo-mark.png" alt="ConTrack AI logo" width="38" height="38" decoding="sync" fetchpriority="high">
+        <div class="sb-brand-copy">
+          <div class="sb-logo-text">Con<span>Track</span> AI</div>
+          <div class="sb-logo-sub">ADMIN PANEL</div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">MAINTENANCE</div>
+        <a class="sb-item" href="/pages/Admin/AdminDashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a class="sb-item" href="/pages/Admin/AdminAlerts&Logs.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>System Logs &amp; Audit</a>
+        <a class="sb-item" href="/pages/Admin/AdminContracts.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Contract registry</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ADMINISTRATION</div>
+        <a class="sb-item" href="/pages/Admin/AdminUserManagement.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>User Management</a>
+        <a class="sb-item active" href="/pages/Admin/AdminVendorManagement.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>Vendors</a>
+        <a class="sb-item" href="/pages/Admin/AdminVendorScoring.html"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Vendor Scoring</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ACCOUNT</div>
+        <a class="sb-item" href="/pages/Admin/AdminProfile.html"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile</a>
+        <a class="sb-item" href="/pages/Admin/AdminSettings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-av">AD</div>
+        <div style="flex:1;min-width:0;"><div class="sb-name">Admin User</div><div class="sb-email">admin@contrack.ph</div></div>
+        <button class="sb-logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Vendors</div>
+          <div class="page-sub">View and manage all registered vendor accounts and performance.</div>
+        </div>
+        <a class="btn btn-primary" href="/pages/Admin/AdminUserManagement.html">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+          Add Vendor
+        </a>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row col4" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-label">TOTAL VENDORS</div>
+          <div class="stat-number" style="font-size:32px;">—</div>
+          <div class="stat-desc">Registered suppliers</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ACTIVE</div>
+          <div class="stat-number" style="font-size:32px;">—</div>
+          <div class="stat-desc">With active contracts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">AVG. SCORE</div>
+          <div class="stat-number" style="font-size:32px;">—</div>
+          <div class="stat-desc">Performance average</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">LOW SCORE (&lt;60)</div>
+          <div class="stat-number" style="font-size:32px;">—</div>
+          <div class="stat-desc">Requires review</div>
+        </div>
+      </div>
+
+      <!-- Chart + Table layout -->
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:20px;">
+        <div class="chart-card">
+          <div class="chart-title">VENDOR CONTRACT VALUE TREND</div>
+          <div class="chart-wrap"><canvas id="vendor-trend-chart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">SCORE DISTRIBUTION</div>
+          <div class="chart-wrap"><canvas id="score-dist-chart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Filter -->
+      <div class="filter-bar">
+        <div class="filter-search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="filter-search" placeholder="Search vendors…">
+        </div>
+        <select class="filter-select">
+          <option value="">All Types</option>
+          <option>IT &amp; Technology</option>
+          <option>Food &amp; Catering</option>
+          <option>Construction</option>
+          <option>Consulting</option>
+          <option>Logistics</option>
+        </select>
+        <select class="filter-select">
+          <option value="">All Statuses</option>
+          <option>Active</option>
+          <option>Inactive</option>
+          <option>Pending</option>
+        </select>
+        <select class="filter-select">
+          <option value="">Score: Any</option>
+          <option>90+ (Excellent)</option>
+          <option>70–89 (Good)</option>
+          <option>Below 70 (At Risk)</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-header-title">VENDOR DIRECTORY</div>
+          <button class="table-view-btn">Export CSV</button>
+        </div>
+        <div class="t-cols" style="grid-template-columns:2fr 1.3fr 0.7fr 1.5fr 0.8fr 90px;">
+          <div class="t-col">VENDOR / COMPANY</div>
+          <div class="t-col">TYPE</div>
+          <div class="t-col">CONTRACTS</div>
+          <div class="t-col">SCORE</div>
+          <div class="t-col">STATUS</div>
+          <div class="t-col">ACTIONS</div>
+        </div>
+
+        <div id="vendor-directory-body"></div>
+
+        <!--
+        EXAMPLE ROW:
+        <div class="t-row" style="grid-template-columns:2fr 1.5fr 1fr 80px 80px 90px;">
+          <div class="user-avatar-cell">
+            <div class="user-avatar-mini role-vendor">SO</div>
+            <div>
+              <div class="t-cell-primary">SolarTech Industries</div>
+              <div class="t-cell-meta">vendor@solartech.ph</div>
+            </div>
+          </div>
+          <div class="t-cell-secondary">IT & Technology</div>
+          <div class="t-cell-secondary">3 active</div>
+          <div><span style="font-weight:700;color:var(--green);">84</span><span style="font-size:11px;color:var(--gray-400);">/100</span></div>
+          <div><span class="pill pill-active">ACTIVE</span></div>
+          <div class="t-actions">
+            <button class="t-action-btn" title="View" onclick="openModal('modal-vendor-detail')">
+              <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+            <button class="t-action-btn" title="Edit">
+              <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </button>
+          </div>
+        </div>
+        -->
+
+        <div class="t-foot">
+          <span class="t-showing">Showing 0 of 0 vendors</span>
+          <div class="t-pages">
+            <button class="t-page-btn">Prev</button>
+            <button class="t-page-btn active">1</button>
+            <button class="t-page-btn">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="/assets/js/portal-shell.js"></script>
+<script src="/assets/js/ADMIN.js"></script>
+<script type="module" src="/assets/js/admin-vendors-data.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Trend chart — replace data with API values
+  const trendCtx = document.getElementById('vendor-trend-chart');
+  if (trendCtx) {
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: ['Nov','Dec','Jan','Feb','Mar','Apr','May'],
+        datasets: [{
+          label: 'Value (₱M)',
+          data: [0,0,0,0,0,0,0], // ← replace
+          borderColor: '#711A20',
+          backgroundColor: 'rgba(113,26,32,0.06)',
+          tension: 0.4,
+          fill: true,
+          pointBackgroundColor: '#711A20',
+          pointRadius: 4
+        }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9E9E9E',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#9E9E9E',font:{size:11}}}} }
+    });
+  }
+  // Score distribution
+  const scoreCtx = document.getElementById('score-dist-chart');
+  if (scoreCtx) {
+    new Chart(scoreCtx, {
+      type: 'bar',
+      data: {
+        labels: ['<60','60-69','70-79','80-89','90+'],
+        datasets: [{
+          data: [0,0,0,0,0], // ← replace
+          backgroundColor: ['#C0392B','#E67E22','#F4A63A','#2D7135','#1a6b2e'],
+          borderRadius: 4
+        }]
+      },
+      options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9E9E9E',font:{size:11}}},x:{grid:{display:false},ticks:{color:'#9E9E9E',font:{size:11}}}} }
+    });
+  }
+});
+</script>
+</body>
+</html>

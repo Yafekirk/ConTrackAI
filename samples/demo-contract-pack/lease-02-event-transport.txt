@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Event Logistics Vehicle Lease Agreement 2026
+- Contract Type: Lease Agreement
+- Effective Date: 2026-05-01
+- End Date: 2027-04-30
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: RapidMove Event Transport Inc.
+- Vendor Address: 15 West Service Road, Sucat, Paranaque City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: RapidMove Event Transport Inc. shall lease eight (8) closed vans and two (2) passenger shuttles to JBC Events Management for decor, equipment, and staff transport on event days, including preventive maintenance, comprehensive insurance, roadside assistance, and a replacement unit within 24 hours of a breakdown.
+
+4. Financial Terms
+- Contract Value: PHP 1,560,000.00
+- Currency: PHP
+- Payment Terms: Monthly
+- Penalty Clause: Unavailability of a contracted unit beyond 24 hours without a replacement incurs a 3% credit of that unit monthly lease fee per day of downtime.
+
+5. Renewal and Termination
+- Renewal Terms: Manual renewal only after a fleet condition inspection and written agreement.
+- Termination Clause: Either party may terminate for uncured material breach after 15 days written notice. Early return of units requires 30 days notice and a two-month residual fee.
+
+6. Signatures
+- Client Authorized Signatory: Carlo M. Reyes, Operations Manager, JBC Events Management
+- Vendor Authorized Signatory: Dominic R. Santos, Fleet Manager, RapidMove Event Transport Inc.
+- Signed Date: 2026-04-18

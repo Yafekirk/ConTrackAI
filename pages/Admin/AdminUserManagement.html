@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="image" href="/assets/images/Logo-mark.png">
+<title>ConTrack AI — User Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/ADMIN/Admin.css">
+<link rel="stylesheet" href="/assets/css/portal-shell.css">
+</head>
+<body>
+
+<!-- ── NOTIFICATION SIDEBAR ─────────────────────────────────── -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-sidebar" id="notif-sidebar">
+  <div class="notif-sidebar-header">
+    <div class="notif-sidebar-title">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      NOTIFICATIONS
+    </div>
+    <button class="notif-close" onclick="closeNotifications()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="notif-tabs">
+    <div class="notif-tab active" data-tab="all" onclick="switchNotifTab('all')">ALL</div>
+    <div class="notif-tab" data-tab="unread" onclick="switchNotifTab('unread')">UNREAD</div>
+    <div class="notif-tab" data-tab="archived" onclick="switchNotifTab('archived')">ARCHIVED</div>
+  </div>
+  <div class="notif-list" id="notif-list"></div>
+  <div class="notif-footer"><button class="notif-footer-btn" onclick="markAllRead()">Mark All as Read</button></div>
+</div>
+
+<!-- ── ADD USER MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-add-user">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Add New User</div>
+      <button class="modal-close" onclick="closeModal('modal-add-user')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-row r2">
+          <div><label class="fgl">FIRST NAME</label><input class="fgi" id="inp-add-fname" placeholder="First name"></div>
+          <div><label class="fgl">LAST NAME</label><input class="fgi" id="inp-add-lname" placeholder="Last name"></div>
+        </div>
+        <div><label class="fgl">EMAIL ADDRESS</label><input class="fgi" id="inp-add-email" type="email" placeholder="user@contrack.ph"></div>
+        <div class="form-row r2">
+          <div>
+            <label class="fgl">ROLE</label>
+            <select class="fgsel" id="sel-add-role">
+              <option value="admin" selected>Admin (Company employee)</option>
+              <option value="manager">Manager (Company employee)</option>
+              <option value="ceo">CEO (Company employee)</option>
+              <option value="vendor">Vendor / Client (External)</option>
+            </select>
+          </div>
+          <div><label class="fgl">CONTACT NUMBER</label><input class="fgi" type="tel" placeholder="+63 900 000 0000"></div>
+        </div>
+        <div><label class="fgl">DEPARTMENT</label><input class="fgi" placeholder="Optional"></div>
+        <div class="form-row r2">
+          <div><label class="fgl">PASSWORD</label><input class="fgi" id="inp-add-pass" type="password" placeholder="Temporary password"></div>
+          <div><label class="fgl">CONFIRM PASSWORD</label><input class="fgi" id="inp-add-pass2" type="password" placeholder="Confirm password"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-create-user">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        Create User
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── EDIT USER MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="modal-edit-user">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit User</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-user')">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-user-id" value="">
+      <div class="form-grid">
+        <div class="form-row r2">
+          <div><label class="fgl">FIRST NAME</label><input class="fgi" id="inp-edit-fname" placeholder="First name"></div>
+          <div><label class="fgl">LAST NAME</label><input class="fgi" id="inp-edit-lname" placeholder="Last name"></div>
+        </div>
+        <div><label class="fgl">EMAIL ADDRESS</label><input class="fgi" id="inp-edit-email" type="email" readonly placeholder="user@contrack.ph"></div>
+        <div class="form-row r2">
+          <div>
+            <label class="fgl">ROLE</label>
+            <select class="fgsel" id="sel-edit-role">
+              <option value="admin">Admin (Company employee)</option>
+              <option value="manager">Manager (Company employee)</option>
+              <option value="ceo">CEO (Company employee)</option>
+              <option value="vendor">Vendor / Client (External)</option>
+            </select>
+          </div>
+          <div>
+            <label class="fgl">STATUS</label>
+            <select class="fgsel" id="sel-edit-status">
+              <option value="active">Active</option>
+              <option value="disabled">Disabled</option>
+            </select>
+          </div>
+        </div>
+        <div><label class="fgl">DEPARTMENT</label><input class="fgi" placeholder="Optional"></div>
+        <div><label class="fgl">CONTACT NUMBER</label><input class="fgi" type="tel" placeholder="+63 900 000 0000"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-user')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="btn-save-user">
+        <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── DELETE CONFIRM MODAL ───────────────────────────────────── -->
+<div class="modal-overlay" id="modal-delete-user">
+  <div class="modal modal-sm">
+    <div class="modal-body" style="text-align:center;padding:40px 30px;">
+      <div style="width:60px;height:60px;border-radius:50%;background:var(--red-light);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+      </div>
+      <div style="font-family:var(--font-display);font-size:20px;color:var(--gray-900);margin-bottom:8px;">Remove User?</div>
+      <div style="font-size:13px;color:var(--gray-500);line-height:1.6;margin:0 auto 24px;">This user will lose all access to the system. This action cannot be undone.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-ghost" onclick="closeModal('modal-delete-user')">Cancel</button>
+        <button class="btn btn-danger-red" onclick="closeModal('modal-delete-user')">Remove User</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── SHELL ─────────────────────────────────────────────────── -->
+<div class="shell">
+  <div class="topbar">
+    <div class="top-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="top-search" placeholder="Search users…">
+    </div>
+    <div class="top-spacer"></div>
+    <button class="top-notif-btn" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="top-notif-badge" id="notif-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <div class="main-wrap">
+    <div class="sidebar">
+      <div class="sb-logo-area">
+        <img class="sb-brand-logo" src="/assets/images/Logo-mark.png" alt="ConTrack AI logo" width="38" height="38" decoding="sync" fetchpriority="high">
+        <div class="sb-brand-copy">
+          <div class="sb-logo-text">Con<span>Track</span> AI</div>
+          <div class="sb-logo-sub">ADMIN PANEL</div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">MAINTENANCE</div>
+        <a class="sb-item" href="/pages/Admin/AdminDashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>Dashboard</a>
+        <a class="sb-item" href="/pages/Admin/AdminAlerts&Logs.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>System Logs &amp; Audit</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ADMINISTRATION</div>
+        <a class="sb-item active" href="/pages/Admin/AdminUserManagement.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>User Management</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ACCOUNT</div>
+        <a class="sb-item" href="/pages/Admin/AdminProfile.html"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile</a>
+        <a class="sb-item" href="/pages/Admin/AdminSettings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-av">AD</div>
+        <div style="flex:1;min-width:0;"><div class="sb-name">Admin User</div><div class="sb-email">admin@contrack.ph</div></div>
+        <button class="sb-logout"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <div class="page-title">User Management</div>
+          <div class="page-sub">Manage company employees (Admin, Manager, CEO) and external vendor accounts. Admin is a company employee role.</div>
+        </div>
+        <button class="btn btn-primary" onclick="openModal('modal-add-user')">
+          <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          Add User
+        </button>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="stats-row col4" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-label">TOTAL USERS</div>
+          <div class="stat-number" id="um-stat-total" style="font-size:32px;">—</div>
+          <div class="stat-desc">Registered accounts</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ACTIVE ACCOUNTS</div>
+          <div class="stat-number" id="um-stat-active" style="font-size:32px;">—</div>
+          <div class="stat-desc">Not disabled</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">COMPANY EMPLOYEES</div>
+          <div class="stat-number" id="um-stat-admin" style="font-size:32px;">—</div>
+          <div class="stat-desc">Admin, Manager, and CEO</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">NEVER LOGGED IN</div>
+          <div class="stat-number" id="um-stat-pending" style="font-size:32px;">—</div>
+          <div class="stat-desc">No last_login_at</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="filter-bar">
+        <div class="filter-search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="filter-search" id="um-search" placeholder="Search by name or email…">
+        </div>
+        <select class="filter-select" id="um-role-filter">
+          <option value="">All roles</option>
+          <option value="employees">Company employees</option>
+          <option value="admin">Admin</option>
+          <option value="manager">Manager</option>
+          <option value="ceo">CEO</option>
+          <option value="vendor">Vendor / Client</option>
+        </select>
+        <select class="filter-select">
+          <option value="">All Statuses</option>
+          <option>Active</option>
+          <option>Inactive</option>
+          <option>Suspended</option>
+        </select>
+      </div>
+
+      <!-- Table -->
+      <div class="table-card">
+        <div class="table-header">
+          <div class="table-header-title">SYSTEM USERS</div>
+          <div class="table-header-actions">
+            <button class="table-view-btn">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Export CSV
+            </button>
+          </div>
+        </div>
+        <div class="t-cols" style="grid-template-columns:2fr 2fr 100px 100px 120px 100px;">
+          <div class="t-col">USER</div>
+          <div class="t-col">EMAIL</div>
+          <div class="t-col">ROLE</div>
+          <div class="t-col">TYPE</div>
+          <div class="t-col">STATUS</div>
+          <div class="t-col">ACTIONS</div>
+        </div>
+
+        <div id="users-table-body"></div>
+        <div class="t-empty" id="users-empty">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          No users found. Add your first user to get started.
+        </div>
+
+        <div class="t-foot">
+          <span class="t-showing" id="users-meta">Showing 0 of 0 users</span>
+          <div class="t-pages">
+            <button class="t-page-btn">Prev</button>
+            <button class="t-page-btn active">1</button>
+            <button class="t-page-btn">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/ADMIN.js"></script>
+<script type="module" src="/assets/js/portal-shell.js"></script>
+<script type="module" src="/assets/js/admin-users.js"></script>
+</body>
+</html>

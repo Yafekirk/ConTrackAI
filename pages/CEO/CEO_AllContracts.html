@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="image" href="/assets/images/Logo-mark.png">
+<title>ConTrack AI — All Contracts</title>
+<link rel="stylesheet" href="/assets/css/CEO/CEO.css">
+<link rel="stylesheet" href="/assets/css/portal-shell.css">
+</head>
+<body>
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-sidebar" id="notif-sidebar">
+  <div class="notif-sidebar-header">
+    <div class="notif-sidebar-title"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>NOTIFICATIONS</div>
+    <button class="notif-close" onclick="closeNotifications()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="notif-tabs">
+    <div class="notif-tab active" onclick="switchNotifTab(this,'all')">ALL</div>
+    <div class="notif-tab" onclick="switchNotifTab(this,'unread')">UNREAD</div>
+    <div class="notif-tab" onclick="switchNotifTab(this,'archived')">ARCHIVED</div>
+  </div>
+  <div class="notif-content" id="notif-content"></div>
+  <div class="notif-footer"><button class="notif-footer-btn" onclick="markAllRead()">Mark All as Read</button></div>
+</div>
+
+<!-- CONTRACT DETAIL MODAL -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Contract Details</div>
+      <button class="modal-close" onclick="closeModal('modal-detail')"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-section-title">CONTRACT INFORMATION</div>
+      <div class="detail-row"><div class="detail-key">CONTRACT ID</div><div class="detail-val" id="d-id">—</div></div>
+      <div class="detail-row"><div class="detail-key">VENDOR</div><div class="detail-val" id="d-vendor">—</div></div>
+      <div class="detail-row"><div class="detail-key">VALUE</div><div class="detail-val" id="d-value">—</div></div>
+      <div class="detail-row"><div class="detail-key">START DATE</div><div class="detail-val" id="d-start">—</div></div>
+      <div class="detail-row"><div class="detail-key">END DATE</div><div class="detail-val" id="d-end">—</div></div>
+      <div class="detail-row"><div class="detail-key">STATUS</div><div class="detail-val" id="d-status">—</div></div>
+      <div class="detail-row"><div class="detail-key">RISK LEVEL</div><div class="detail-val" id="d-risk">—</div></div>
+      <div class="detail-row"><div class="detail-key">PAYMENT TERMS</div><div class="detail-val" id="d-payment">—</div></div>
+      <div class="detail-row"><div class="detail-key">CLASSIFICATION</div><div class="detail-val" id="d-class">—</div></div>
+      <div class="detail-section-title">AI-EXTRACTED CLAUSES</div>
+      <div class="detail-clause" id="d-clauses">Contract clause data will appear here once connected to the AI extraction module.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="shell">
+  <div class="topbar">
+    <div class="top-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="top-search" placeholder="Search contracts, vendors...">
+    </div>
+    <div class="top-spacer"></div>
+    <button class="top-notif-btn" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="top-notif-badge" id="notif-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <div class="main-wrap">
+    <div class="sidebar">
+      <div class="sb-logo-area">
+        <img class="sb-brand-logo" src="/assets/images/Logo-mark.png" alt="ConTrack AI logo" width="38" height="38" decoding="sync" fetchpriority="high">
+        <div class="sb-brand-copy">
+          <div class="sb-logo-text">Con<span>Track</span> AI</div>
+          <div class="sb-logo-sub">EXECUTIVE PANEL</div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">MAIN</div>
+        <a class="sb-item" href="/pages/CEO/CEO_Dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Approvals.html"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Approvals<span class="sb-badge" style="display:none;">0</span></a>
+        <a class="sb-item active" href="/pages/CEO/CEO_AllContracts.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>All Contracts</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Vendors.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Vendor Overview</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Reports.html"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports &amp; Analytics</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ACCOUNT</div>
+        <a class="sb-item" href="/pages/CEO/CEO_Profile.html"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-av">RD</div>
+        <div style="flex:1;min-width:0;"><div class="sb-name">— CEO Name —</div><div class="sb-email">ceo@contrack.ph</div></div>
+        <a class="sb-logout" href="#" title="Sign Out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="breadcrumb">
+        <a href="/pages/CEO/CEO_Dashboard.html" style="color:inherit;text-decoration:none;">CEO Panel</a>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>All Contracts</span>
+      </div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">All Contracts</div>
+          <div class="page-sub">Complete contract repository across all vendors and departments.</div>
+        </div>
+        <button class="btn btn-ghost btn-sm">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+
+      <!-- QUICK STATS -->
+      <div class="stats-row col4">
+        <div class="stat-card"><div class="stat-label">TOTAL CONTRACTS</div><div class="stat-number">—</div></div>
+        <div class="stat-card"><div class="stat-label">ACTIVE</div><div class="stat-number" style="color:var(--green);">—</div></div>
+        <div class="stat-card"><div class="stat-label">EXPIRING SOON</div><div class="stat-number" style="color:var(--orange);">—</div></div>
+        <div class="stat-card"><div class="stat-label">EXPIRED</div><div class="stat-number" style="color:var(--red);">—</div></div>
+      </div>
+
+      <!-- FILTERS -->
+      <div class="filter-bar">
+        <div class="filter-search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="filter-search" placeholder="Search by contract ID or vendor...">
+        </div>
+        <select class="filter-select">
+          <option>All Status</option>
+          <option>Active</option>
+          <option>Net 30</option>
+          <option>Expired</option>
+          <option>For Renewal</option>
+          <option>Pending</option>
+          <option>Archived</option>
+        </select>
+        <select class="filter-select">
+          <option>All Risk</option>
+          <option>Low</option>
+          <option>Medium</option>
+          <option>High</option>
+        </select>
+        <select class="filter-select">
+          <option>All Vendors</option>
+          <!-- Vendors populated from DB -->
+        </select>
+      </div>
+
+      <!-- TABLE -->
+      <div class="table-card" id="contracts-registry">
+        <div class="table-header">
+          <span class="table-header-title">CONTRACT REGISTRY</span>
+        </div>
+        <div class="t-cols" style="grid-template-columns:1.5fr 2fr 1.5fr 1fr 1fr 1fr 1fr;">
+          <div class="t-col">CONTRACT ID</div>
+          <div class="t-col">VENDOR</div>
+          <div class="t-col">VALUE</div>
+          <div class="t-col">END DATE</div>
+          <div class="t-col">STATUS</div>
+          <div class="t-col">RISK</div>
+          <div class="t-col">ACTION</div>
+        </div>
+        <div id="ceo-contracts-table-body"></div>
+        <div class="t-foot">
+          <span class="t-showing">Showing 0 contracts</span>
+          <div class="t-pages">
+            <button class="t-page-btn active">1</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/assets/js/CEO.js"></script>
+<script type="module" src="/assets/js/ceo-all-contracts.js"></script>
+<script type="module" src="/assets/js/portal-shell.js"></script>
+</body>
+</html>

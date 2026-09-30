@@ -1,0 +1,22 @@
+CONTRACT TITLE: IT Equipment Supply Agreement 2026
+CONTRACT TYPE: Supply Agreement
+EFFECTIVE DATE: 2026-05-15
+END DATE: 2027-05-14
+
+CLIENT NAME: ConTrack Holdings Inc.
+VENDOR NAME: Apex Office Solutions
+VENDOR ADDRESS: 123 Makati Avenue, Makati City, Philippines
+
+SCOPE OF WORK: The Vendor shall supply office laptops, monitors, docking stations, and accessories for the Client's operations. Delivery shall be in three batches based on the approved procurement schedule.
+
+CONTRACT VALUE: PHP 1250000.00
+CURRENCY: PHP
+PAYMENT TERMS: Net 30 after approved delivery receipt and invoice.
+PENALTY CLAUSE: Late delivery beyond 7 calendar days incurs a 1% deduction per week from the affected batch value.
+
+RENEWAL TERMS: Manual renewal only, subject to performance evaluation and mutual written agreement.
+TERMINATION CLAUSE: Either party may terminate with 30 days written notice for material breach not cured within 15 days from notice.
+
+SIGNATORY (CLIENT): Maria Dela Cruz, Procurement Director
+SIGNATORY (VENDOR): James Santos, General Manager
+SIGNED DATE: 2026-05-10

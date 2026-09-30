@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Banquet Catering Services Agreement 2026
+- Contract Type: Service Agreement
+- Effective Date: 2026-06-01
+- End Date: 2027-05-31
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: MesaNueva Catering Services Inc.
+- Vendor Address: 42 Scout Torillo Street, South Triangle, Quezon City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: MesaNueva Catering Services Inc. shall provide banquet menus, service staff, kitchen set-up, and post-event pull-out for JBC Events Management weddings, corporate dinners, and socials in Metro Manila. Coverage includes tasting sessions, on-site captain, dietary labeling, and a guest-count adjustment window of seventy-two hours before each event.
+
+4. Financial Terms
+- Contract Value: PHP 3,150,000.00
+- Currency: PHP
+- Payment Terms: Net 30
+- Penalty Clause: A confirmed staffing shortfall or missed tasting more than twice in a month incurs a 5% service credit on that month fee.
+
+5. Renewal and Termination
+- Renewal Terms: Auto-renew (12 months) unless either party gives 60 days written notice of non-renewal.
+- Termination Clause: Either party may terminate for uncured material breach after 30 days written notice. Client may terminate for convenience with 90 days notice and payment through the notice period.
+
+6. Signatures
+- Client Authorized Signatory: Patricia J. Bernal, Managing Director, JBC Events Management
+- Vendor Authorized Signatory: Chef Lorenzo P. Villanueva, Principal, MesaNueva Catering Services Inc.
+- Signed Date: 2026-05-28

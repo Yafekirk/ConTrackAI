@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Audio Visual Equipment Supply Agreement 2026
+- Contract Type: Supply Agreement
+- Effective Date: 2026-06-01
+- End Date: 2027-05-31
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: LumenStage AV Trading Corp.
+- Vendor Address: 210 Shaw Boulevard, Addition Hills, Mandaluyong City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: LumenStage AV Trading Corp. shall supply LED wall panels, wireless microphones, digital mixers, spare lamps, and signal cables for JBC Events Management corporate and social events. Equipment shall be delivered, tested, and signed off in four milestone batches according to the production calendar, with serial-number inventories and a 24-hour replacement unit for any failed device.
+
+4. Financial Terms
+- Contract Value: PHP 2,450,000.00
+- Currency: PHP
+- Payment Terms: Milestone-based
+- Penalty Clause: Each delayed milestone shipment beyond 5 calendar days incurs liquidated damages of 1.5% of that milestone value, capped at 10% of the contract value.
+
+5. Renewal and Termination
+- Renewal Terms: No renewal. Any extension requires a written change order.
+- Termination Clause: Either party may terminate for uncured material breach after 30 days written notice.
+
+6. Signatures
+- Client Authorized Signatory: Carlo M. Reyes, Operations Manager, JBC Events Management
+- Vendor Authorized Signatory: Kevin Paul Ong, Managing Partner, LumenStage AV Trading Corp.
+- Signed Date: 2026-05-20

@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Event Print and Collateral Supply Agreement 2026
+- Contract Type: Supply Agreement
+- Effective Date: 2026-04-01
+- End Date: 2027-03-31
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: PrintHaus Creative Supplies Inc.
+- Vendor Address: 14 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: PrintHaus Creative Supplies Inc. shall supply stage backdrops, pull-up banners, invitation kits, name plates, and program booklets for JBC Events Management client events. All lots shall match approved artwork, include a press proof, and replace damaged or misprinted pieces at Vendor cost before doors open.
+
+4. Financial Terms
+- Contract Value: PHP 920,000.00
+- Currency: PHP
+- Payment Terms: Net 15
+- Penalty Clause: Failed delivery of a scheduled print run beyond 48 hours incurs a 2% deduction on that order value, plus rush reprint freight at Vendor expense.
+
+5. Renewal and Termination
+- Renewal Terms: Auto-renew (12 months) unless either party gives 60 days written notice of non-renewal.
+- Termination Clause: Either party may terminate for uncured material breach after 15 days written notice.
+
+6. Signatures
+- Client Authorized Signatory: Nina S. Domingo, Procurement Officer, JBC Events Management
+- Vendor Authorized Signatory: Andrea Mae Uy, Sales Director, PrintHaus Creative Supplies Inc.
+- Signed Date: 2026-03-22

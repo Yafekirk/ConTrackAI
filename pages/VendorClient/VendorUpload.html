@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="image" href="/assets/images/Logo-mark.png">
+<title>ConTrack AI — Submit Contract</title>
+<link rel="stylesheet" href="/assets/css/VENDOR/Vendor.css">
+<link rel="stylesheet" href="/assets/css/portal-shell.css">
+</head>
+<body>
+
+<!-- NOTIFICATION OVERLAY + SIDEBAR -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-sidebar" id="notif-sidebar">
+  <div class="notif-sidebar-header">
+    <div class="notif-sidebar-title">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      NOTIFICATIONS
+    </div>
+    <button class="notif-close" onclick="closeNotifications()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="notif-tabs">
+    <div class="notif-tab active" onclick="switchNotifTab('all', this)">ALL</div>
+    <div class="notif-tab" onclick="switchNotifTab('unread', this)">UNREAD</div>
+    <div class="notif-tab" onclick="switchNotifTab('archived', this)">ARCHIVED</div>
+  </div>
+  <div class="notif-content" id="notif-content"></div>
+  <div class="notif-footer">
+    <button class="notif-footer-btn" onclick="markAllRead()">Mark All as Read</button>
+  </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="modal-success">
+  <div class="modal" style="width:460px;">
+    <div class="modal-body" style="text-align:center;padding:40px 30px;">
+      <div style="width:64px;height:64px;background:var(--green-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div style="font-family:var(--font-display);font-size:22px;color:var(--gray-900);margin-bottom:8px;">Contract Submitted!</div>
+      <div style="font-size:13px;color:var(--gray-500);line-height:1.6;margin-bottom:24px;">Your contract PDF has been submitted successfully. Our AI will extract key information and it will be sent to the manager.</div>
+      <div style="display:flex;gap:10px;justify-content:center;">
+        <button class="btn btn-ghost" onclick="closeModal('modal-success')">Submit Another</button>
+        <a href="/pages/VendorClient/VendorContracts.html"><button class="btn btn-primary">View My Contracts</button></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="top-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="top-search" type="text" placeholder="Search contracts...">
+    </div>
+    <div class="top-spacer"></div>
+    <button class="top-notif-btn top-icon-btn" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="top-notif-badge" id="notif-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <div class="main-wrap">
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sb-logo-area">
+        <img class="sb-brand-logo" src="/assets/images/Logo-mark.png" alt="ConTrack AI logo" width="38" height="38" decoding="sync" fetchpriority="high">
+        <div class="sb-brand-copy">
+          <div class="sb-logo-text">Con<span>Track</span> AI</div>
+          <div class="sb-logo-sub">VENDOR PORTAL</div>
+        </div>
+      </div>
+      <div class="sb-vendor-status">
+        <div class="sb-vendor-dot"></div>
+        <div class="sb-vendor-label">ACTIVE VENDOR</div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">MAIN</div>
+        <a href="/pages/VendorClient/VendorDashboard.html" style="text-decoration:none;">
+          <div class="sb-item">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+            Dashboard
+          </div>
+        </a>
+      </div>
+      <div class="sb-section">
+        <a href="/pages/VendorClient/VendorUpload.html" style="text-decoration:none;">
+          <div class="sb-item active">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            Submit Contract
+          </div>
+        </a>
+        <a href="/pages/VendorClient/VendorContracts.html" style="text-decoration:none;">
+          <div class="sb-item">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            My Contracts
+          </div>
+        </a>
+        <a href="/pages/VendorClient/VendorPerformance.html" style="text-decoration:none;">
+          <div class="sb-item">
+            <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Performance
+          </div>
+        </a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ACCOUNT</div>
+        <a href="/pages/VendorClient/VendorProfile.html" style="text-decoration:none;">
+          <div class="sb-item">
+            <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            My Profile
+          </div>
+        </a>
+        <a class="sb-item" href="/pages/VendorClient/VendorSettings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-av">—</div>
+        <div style="flex:1;min-width:0;">
+          <div class="sb-name">—</div>
+          <div class="sb-email">—</div>
+        </div>
+        <button class="sb-logout" title="Sign Out">
+          <svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+      <div class="breadcrumb">
+        Vendor Portal
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Submit Contract</span>
+      </div>
+
+      <div class="page-header">
+        <div>
+          <div class="page-title">Submit New Contract</div>
+          <div class="page-sub">Upload your contract PDF and let AI extract key information automatically.</div>
+        </div>
+        <span class="ai-badge">
+          <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+          AI Extraction Enabled
+        </span>
+      </div>
+
+      <div class="submit-layout">
+
+        <div class="submit-main">
+
+          <div class="card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div>
+                  <div class="tpl-card-kicker">UPLOAD DOCUMENT</div>
+                  <div class="tpl-card-hint">PDF only, max 25MB — labeled template files extract cleanly</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                <div class="drop-icon">
+                  <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                </div>
+                <div class="drop-title">Drop your contract PDF here</div>
+                <div class="drop-sub" style="margin:8px 0 14px;">or click to browse — PDF files only, max 25MB</div>
+                <button class="btn btn-outline btn-sm" style="pointer-events:none;">Browse Files</button>
+                <input type="file" id="file-input" accept=".pdf,application/pdf" style="display:none;" onchange="handleFile(this)">
+
+                <div class="nlp-drop-loader" id="nlp-extract-overlay" aria-hidden="true">
+                  <div class="nlp-drop-scan" aria-hidden="true"></div>
+                  <div class="nlp-drop-mark">
+                    <span class="nlp-drop-orbit" aria-hidden="true"></span>
+                    <span class="nlp-drop-orbit nlp-drop-orbit--gold" aria-hidden="true"></span>
+                    <span class="nlp-drop-core">
+                      <img src="/assets/images/Logo-mark.png" alt="" class="nlp-drop-logo" draggable="false">
+                    </span>
+                  </div>
+                  <div class="nlp-drop-title">Extracting clauses</div>
+                  <div class="nlp-drop-status" id="nlp-extract-status" aria-live="polite">Reading the uploaded PDF…</div>
+                  <div class="nlp-drop-bar"><span class="nlp-progress-bar"></span></div>
+                </div>
+              </div>
+
+              <div id="file-preview" style="display:none;padding:12px;background:var(--green-light);border-radius:var(--radius-sm);margin-top:12px;align-items:center;gap:10px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <span id="file-name" style="font-size:13px;font-weight:600;color:var(--green);flex:1;">—</span>
+                <button class="btn-icon" onclick="clearFile()" title="Remove file">
+                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <div class="info-box info-box-green" style="margin-top:14px;margin-bottom:0;">
+                <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
+                <div>
+                  <div class="info-box-label">AI Extraction Enabled</div>
+                  <div class="info-box-body">AI automatically extracts supplier, dates, financial terms, penalties, and key clauses from your PDF.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">NLP</div>
+                <div>
+                  <div class="tpl-card-kicker">CONTRACT TEXT (FOR NLP AUTO-FILL)</div>
+                  <div class="tpl-card-hint">Paste contract text after upload, or run NLP on the PDF</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <textarea id="contractTextInput" class="fgta" style="height:130px;" placeholder="Contract text appears here after you upload a PDF..."></textarea>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
+                <button id="extractContractBtn" type="button" class="btn btn-outline">Run NLP Auto-Fill</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">1</div>
+                <div>
+                  <div class="tpl-card-kicker">CONTRACT HEADER</div>
+                  <div class="tpl-card-hint">Title, type, effective date, and end date</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-row r2" style="margin-bottom:14px;">
+                <div>
+                  <label class="fgl">CONTRACT TITLE</label>
+                  <input id="vendor-contract-title" class="fgi" type="text" placeholder="e.g. Supply Agreement Q3 2026">
+                </div>
+                <div>
+                  <label class="fgl">CONTRACT TYPE</label>
+                  <select id="vendor-contract-type" class="fgsel">
+                    <option value="">Select type...</option>
+                    <option>Supply Agreement</option>
+                    <option>Service Agreement</option>
+                    <option>Consulting Contract</option>
+                    <option>Maintenance Contract</option>
+                    <option>Lease Agreement</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row r2" style="margin-bottom:0;">
+                <div>
+                  <label class="fgl">EFFECTIVE DATE</label>
+                  <input id="vendor-contract-start" class="fgi" type="date">
+                </div>
+                <div>
+                  <label class="fgl">END DATE</label>
+                  <input id="vendor-contract-end" class="fgi" type="date">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">2</div>
+                <div>
+                  <div class="tpl-card-kicker">PARTIES</div>
+                  <div class="tpl-card-hint">Client, vendor, and vendor address</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-row r2" style="margin-bottom:14px;">
+                <div>
+                  <label class="fgl">CLIENT NAME</label>
+                  <input id="vendor-contract-client" class="fgi" type="text" placeholder="Client company name">
+                </div>
+                <div>
+                  <label class="fgl">VENDOR NAME</label>
+                  <input id="vendor-contract-vendor" class="fgi" type="text" placeholder="Vendor company name">
+                </div>
+              </div>
+              <div>
+                <label class="fgl">VENDOR ADDRESS</label>
+                <input id="vendor-contract-vendor-address" class="fgi" type="text" placeholder="Vendor address">
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">3</div>
+                <div>
+                  <div class="tpl-card-kicker">SCOPE OF WORK</div>
+                  <div class="tpl-card-hint">Describe the work or goods covered by this contract</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <label class="fgl">SCOPE OF WORK</label>
+              <textarea id="vendor-contract-scope" class="fgta" style="height:110px;" placeholder="Briefly describe the scope of this contract..."></textarea>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">4</div>
+                <div>
+                  <div class="tpl-card-kicker">FINANCIAL TERMS</div>
+                  <div class="tpl-card-hint">Value, currency, payment terms, and penalties</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-row r2" style="margin-bottom:14px;">
+                <div>
+                  <label class="fgl">CONTRACT VALUE</label>
+                  <input id="vendor-contract-value" class="fgi" type="text" placeholder="0.00">
+                </div>
+                <div>
+                  <label class="fgl">CURRENCY</label>
+                  <select id="vendor-contract-currency" class="fgsel">
+                    <option value="PHP">PHP (₱)</option>
+                    <option value="USD">USD ($)</option>
+                    <option value="EUR">EUR (€)</option>
+                  </select>
+                </div>
+              </div>
+              <div style="margin-bottom:14px;">
+                <label class="fgl">PAYMENT TERMS</label>
+                <select id="vendor-contract-payment" class="fgsel">
+                  <option value="">Select...</option>
+                  <option value="15 Days">15 Days</option>
+                  <option value="30 Days">30 Days</option>
+                  <option value="60 Days">60 Days</option>
+                  <option value="90 Days">90 Days</option>
+                  <option value="Milestone-based">Milestone-based</option>
+                  <option value="Upfront">Upfront</option>
+                  <option value="Monthly">Monthly</option>
+                </select>
+              </div>
+              <div>
+                <label class="fgl">PENALTY CLAUSE</label>
+                <textarea id="vendor-contract-penalty" class="fgta" style="height:72px;" placeholder="Late fees, liquidated damages, or other penalties extracted from the contract..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">5</div>
+                <div>
+                  <div class="tpl-card-kicker">RENEWAL AND TERMINATION</div>
+                  <div class="tpl-card-hint">Renewal option and how the contract may end</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div style="margin-bottom:14px;">
+                <label class="fgl">RENEWAL TERMS</label>
+                <select id="vendor-contract-renewal" class="fgsel">
+                  <option value="">Select...</option>
+                  <option>Auto-renew (12 months)</option>
+                  <option>Auto-renew (6 months)</option>
+                  <option>Manual renewal only</option>
+                  <option>No renewal</option>
+                </select>
+              </div>
+              <div>
+                <label class="fgl">TERMINATION CLAUSE</label>
+                <textarea id="vendor-contract-termination" class="fgta" style="height:80px;" placeholder="Termination notice period, convenience clause, or other exit terms..."></textarea>
+              </div>
+            </div>
+          </div>
+
+          <div class="card tpl-card">
+            <div class="card-header">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div class="tpl-num">6</div>
+                <div>
+                  <div class="tpl-card-kicker">SIGNATURES</div>
+                  <div class="tpl-card-hint">Authorized signatories and signed date</div>
+                </div>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="form-row r2" style="margin-bottom:14px;">
+                <div>
+                  <label class="fgl">CLIENT AUTHORIZED SIGNATORY</label>
+                  <input id="vendor-contract-client-signatory" class="fgi" type="text" placeholder="Client authorized signatory">
+                </div>
+                <div>
+                  <label class="fgl">VENDOR AUTHORIZED SIGNATORY</label>
+                  <input id="vendor-contract-vendor-signatory" class="fgi" type="text" placeholder="Vendor authorized signatory">
+                </div>
+              </div>
+              <div>
+                <label class="fgl">SIGNED DATE</label>
+                <input id="vendor-contract-signed-date" class="fgi" type="date">
+              </div>
+            </div>
+          </div>
+
+          <div class="submit-actions-bar">
+            <a href="/pages/VendorClient/VendorContracts.html">
+              <button class="btn btn-ghost" type="button">Cancel</button>
+            </a>
+            <button class="btn btn-outline" type="button">
+              <svg viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save as Draft
+            </button>
+            <button id="submitContractBtn" type="button" class="btn btn-primary">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Submit Contract
+            </button>
+          </div>
+
+        </div>
+
+        <div class="sticky-aside">
+
+          <div class="card">
+            <div class="card-header"><span class="card-header-title">EXTRACTED BRIEF</span></div>
+            <div class="card-body" style="padding:16px;">
+              <div class="extract-brief" id="extract-brief">
+                <div class="extract-row"><div class="extract-label">TITLE</div><div class="extract-value is-empty" data-brief="title">—</div></div>
+                <div class="extract-row"><div class="extract-label">TYPE</div><div class="extract-value is-empty" data-brief="type">—</div></div>
+                <div class="extract-row"><div class="extract-label">PARTIES</div><div class="extract-value is-empty" data-brief="parties">—</div></div>
+                <div class="extract-row"><div class="extract-label">TERM</div><div class="extract-value is-empty" data-brief="term">—</div></div>
+                <div class="extract-row"><div class="extract-label">VALUE</div><div class="extract-value is-empty" data-brief="value">—</div></div>
+                <div class="extract-row"><div class="extract-label">PAYMENT</div><div class="extract-value is-empty" data-brief="payment">—</div></div>
+                <div class="extract-row"><div class="extract-label">RENEWAL</div><div class="extract-value is-empty" data-brief="renewal">—</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-header-title">SUBMISSION PROCESS</span></div>
+            <div class="card-body" style="padding:16px;">
+              <div style="display:flex;flex-direction:column;gap:0;">
+                <div style="display:flex;gap:12px;padding-bottom:16px;position:relative;">
+                  <div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:30px;height:30px;border-radius:50%;background:var(--maroon);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">1</div>
+                    <div style="width:2px;flex:1;background:var(--gray-200);margin-top:4px;min-height:20px;"></div>
+                  </div>
+                  <div style="padding-top:4px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--gray-800);">Upload PDF</div>
+                    <div style="font-size:11px;color:var(--gray-400);margin-top:2px;line-height:1.4;">Drag and drop or browse your contract file</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;padding-bottom:16px;">
+                  <div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:30px;height:30px;border-radius:50%;background:var(--maroon-soft);color:var(--maroon);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">2</div>
+                    <div style="width:2px;flex:1;background:var(--gray-200);margin-top:4px;min-height:20px;"></div>
+                  </div>
+                  <div style="padding-top:4px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--gray-800);">AI Extraction</div>
+                    <div style="font-size:11px;color:var(--gray-400);margin-top:2px;line-height:1.4;">NLP maps header, parties, finance, renewal, and signatures</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;padding-bottom:16px;">
+                  <div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="width:30px;height:30px;border-radius:50%;background:var(--maroon-soft);color:var(--maroon);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">3</div>
+                    <div style="width:2px;flex:1;background:var(--gray-200);margin-top:4px;min-height:20px;"></div>
+                  </div>
+                  <div style="padding-top:4px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--gray-800);">Manager Evaluation</div>
+                    <div style="font-size:11px;color:var(--gray-400);margin-top:2px;line-height:1.4;">Contract is evaluated and forwarded to the CEO</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:12px;">
+                  <div style="width:30px;height:30px;border-radius:50%;background:var(--maroon-soft);color:var(--maroon);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">4</div>
+                  <div style="padding-top:4px;">
+                    <div style="font-size:12px;font-weight:700;color:var(--gray-800);">CEO Approval</div>
+                    <div style="font-size:11px;color:var(--gray-400);margin-top:2px;line-height:1.4;">Final approval or rejection by executive</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><span class="card-header-title">TEMPLATE CHECKLIST</span></div>
+            <div class="card-body" style="padding:16px;">
+              <div style="display:flex;flex-direction:column;gap:10px;">
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style="font-size:12px;color:var(--gray-700);">PDF format only (max 25MB)</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style="font-size:12px;color:var(--gray-700);">Contract must include valid dates</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style="font-size:12px;color:var(--gray-700);">Financial terms: value, currency, payment, penalty</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style="font-size:12px;color:var(--gray-700);">Both authorized signatories and signed date</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:flex-start;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--maroon)" stroke-width="2.5" style="flex-shrink:0;margin-top:1px;"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style="font-size:12px;color:var(--gray-700);">Labeled template fields (not free-form Word files)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-box info-box-maroon" style="margin-bottom:0;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <div class="info-box-label">Need Help?</div>
+              <div class="info-box-body">Contact our support team if you have questions about the submission process.</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main-wrap -->
+</div><!-- /shell -->
+
+<script type="module" src="/assets/js/vendor-notifications.js"></script>
+<script>
+const dz = document.getElementById('drop-zone');
+if (dz) {
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      if (!/\.pdf$/i.test(file.name || "") && file.type !== "application/pdf") {
+        alert("Only PDF files are accepted. Word documents are not allowed.");
+        return;
+      }
+      showFile(file);
+    }
+  });
+}
+
+function handleFile(input) { if (input.files[0]) showFile(input.files[0]); }
+function showFile(file) {
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-preview').style.display = 'flex';
+}
+function clearFile() {
+  document.getElementById('file-preview').style.display = 'none';
+  document.getElementById('file-input').value = '';
+}
+
+</script>
+<script type="module" src="/assets/js/portal-shell.js"></script>
+<script type="module" src="/assets/js/vendor-upload.js"></script>
+</body>
+</html>

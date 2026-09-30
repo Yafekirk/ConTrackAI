@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Grand Ballroom and Pre-Function Hall Lease Agreement 2026
+- Contract Type: Lease Agreement
+- Effective Date: 2026-07-01
+- End Date: 2028-06-30
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: Marquee Pavilion Venues Inc.
+- Vendor Address: The Marquee, 5th Avenue, Bonifacio Global City, Taguig City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: Marquee Pavilion Venues Inc. shall lease to JBC Events Management the Grand Ballroom and adjoining pre-function hall (approximately 1,200 square meters) for contracted event dates, including house lighting, basic power, restrooms, and loading-bay access. Vendor shall provide 24x7 building security on event days, HVAC during call times, and a dedicated venue coordinator.
+
+4. Financial Terms
+- Contract Value: PHP 4,200,000.00
+- Currency: PHP
+- Payment Terms: Monthly
+- Penalty Clause: Late rental payment beyond 5 calendar days incurs a 2% surcharge on the overdue monthly rent plus 0.1% per day thereafter until paid.
+
+5. Renewal and Termination
+- Renewal Terms: Auto-renew (12 months) unless either party gives 90 days written notice of non-renewal.
+- Termination Clause: Either party may terminate for uncured material breach after 30 days written notice. Client may terminate for convenience with 90 days written notice and payment of rent through the notice period.
+
+6. Signatures
+- Client Authorized Signatory: Patricia J. Bernal, Managing Director, JBC Events Management
+- Vendor Authorized Signatory: Isabelle G. Tan, Leasing Director, Marquee Pavilion Venues Inc.
+- Signed Date: 2026-06-12

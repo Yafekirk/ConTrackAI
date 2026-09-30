@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConTrack AI - Login</title>
+    <link rel="stylesheet" href="/assets/css/index.css">
+    <link rel="stylesheet" href="/assets/css/login-guard.css">
+    <link rel="stylesheet" href="/assets/css/password-toggle.css">
+    <link rel="stylesheet" href="/assets/css/terms-modal.css">
+</head>
+
+
+<!-- ACCOUNTS
+MANAGER
+Email: manager@contrack.ai
+Password: 123456
+
+SYSTEM ADMIN
+Email: admin@contrack.ai
+Password: 123456
+
+CEO
+Email: ceo@contract.ai
+Password: 123456
+-->
+
+
+<body>
+
+<div class="container">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+        <div class="brand-intro" aria-hidden="true">
+            <span style="--i:0">W</span>
+            <span style="--i:1">e</span>
+            <span style="--i:2">l</span>
+            <span style="--i:3">c</span>
+            <span style="--i:4">o</span>
+            <span style="--i:5">m</span>
+            <span style="--i:6">e</span>
+            <span class="intro-gap" style="--i:7">t</span>
+            <span style="--i:8">o</span>
+            <span class="intro-gap" style="--i:9">C</span>
+            <span style="--i:10">o</span>
+            <span style="--i:11">n</span>
+            <span style="--i:12">T</span>
+            <span style="--i:13">r</span>
+            <span style="--i:14">a</span>
+            <span style="--i:15">c</span>
+            <span style="--i:16">k</span>
+            <span class="intro-ai intro-gap" style="--i:17">A</span>
+            <span class="intro-ai" style="--i:18">I</span>
+            <span style="--i:19">!</span>
+        </div>
+        <div class="brand-row">
+            <img src="/assets/images/Logo.png" class="logo" alt="ConTrack AI logo">
+
+            <div class="divider"></div>
+
+            <div class="brand-text">
+                <h1>ConTrack <span>AI</span></h1>
+                <p>— CONTRACT MANAGEMENT SYSTEM —</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+        <div class="right-content">
+
+            <!-- LOGIN CARD -->
+            <div class="login-card">
+
+                <h2 class="welcome">Welcome!</h2>
+                <p class="subtitle">SIGN IN TO CONTRACK AI</p>
+
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label>EMAIL ADDRESS</label>
+                        <input id="emailInput" type="email" placeholder="Enter your email address" required>
+                    </div>
+
+                    <div class="input-group">
+                        <label>PASSWORD</label>
+                        <input id="passwordInput" type="password" placeholder="Enter your password" required>
+                    </div>
+
+                    <div class="options">
+                        <label>
+                            <input type="checkbox"> Remember me
+                        </label>
+                        <a href="/ForgotPassword.html">Forgot Password?</a>
+                    </div>
+
+                    <button type="submit">SIGN IN →</button>
+
+                    <p id="loginNotice" class="login-notice" hidden></p>
+
+                    <div class="create-account">
+                        Are you a vendor? 
+                        <a href="/CreatePassword.html" class="btn-secondary">Create account</a>
+                    </div>
+                </form>
+                
+
+            </div>
+
+            <!-- FOOTER -->
+            <div class="login-footer">
+                <p>
+                    By signing in, you agree to our 
+                    <a href="#" data-terms-open>Terms & Conditions</a> and 
+                    <a href="#" data-terms-open>Privacy Policy</a>
+                </p>
+                <p>© 2026 ConTrack AI. All rights reserved.</p>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+</body>
+<script type="module" src="/assets/js/auth.js"></script>
+<script type="module" src="/assets/js/password-toggle.js"></script>
+</html>

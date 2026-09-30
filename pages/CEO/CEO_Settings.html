@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preload" as="image" href="/assets/images/Logo-mark.png">
+<title>Settings — ConTrack AI</title>
+<link rel="stylesheet" href="/assets/css/CEO/CEO.css">
+<link rel="stylesheet" href="/assets/css/portal-shell.css">
+</head>
+<body>
+
+<!-- NOTIFICATIONS -->
+<div class="notif-overlay" id="notif-overlay" onclick="closeNotifications()"></div>
+<div class="notif-sidebar" id="notif-sidebar">
+  <div class="notif-sidebar-header">
+    <div class="notif-sidebar-title"><svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>NOTIFICATIONS</div>
+    <button class="notif-close" onclick="closeNotifications()"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+  <div class="notif-tabs">
+    <div class="notif-tab active" onclick="switchNotifTab(this,'all')">ALL</div>
+    <div class="notif-tab" onclick="switchNotifTab(this,'unread')">UNREAD</div>
+    <div class="notif-tab" onclick="switchNotifTab(this,'archived')">ARCHIVED</div>
+  </div>
+  <div class="notif-content" id="notif-content"></div>
+  <div class="notif-footer"><button class="notif-footer-btn" onclick="markAllRead()">Mark All as Read</button></div>
+</div>
+
+<!-- SAVE TOAST -->
+<div id="toast" style="position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px;z-index:3000;box-shadow:var(--shadow-lg);">
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  Changes saved successfully!
+</div>
+
+<!-- SHELL -->
+<div class="shell">
+  <div class="topbar">
+    <div class="top-search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="top-search" placeholder="Search...">
+    </div>
+    <div class="top-spacer"></div>
+    <button class="top-notif-btn" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="top-notif-badge" id="notif-badge" style="display:none;">0</span>
+    </button>
+  </div>
+
+  <div class="main-wrap">
+    <div class="sidebar">
+      <div class="sb-logo-area">
+        <img class="sb-brand-logo" src="/assets/images/Logo-mark.png" alt="ConTrack AI logo" width="38" height="38" decoding="sync" fetchpriority="high">
+        <div class="sb-brand-copy">
+          <div class="sb-logo-text">Con<span>Track</span> AI</div>
+          <div class="sb-logo-sub">EXECUTIVE PANEL</div>
+        </div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">MAIN</div>
+        <a class="sb-item" href="/pages/CEO/CEO_Dashboard.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Approvals.html"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Approvals<span class="sb-badge" style="display:none;">0</span></a>
+        <a class="sb-item" href="/pages/CEO/CEO_AllContracts.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>All Contracts</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Vendors.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Vendor Overview</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Reports.html"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports &amp; Analytics</a>
+      </div>
+      <div class="sb-section">
+        <div class="sb-section-label">ACCOUNT</div>
+        <a class="sb-item" href="/pages/CEO/CEO_Profile.html"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>My Profile</a>
+        <a class="sb-item" href="/pages/CEO/CEO_Settings.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Settings</a>
+      </div>
+      <div class="sb-bottom">
+        <div class="sb-av">RD</div>
+        <div style="flex:1;min-width:0;"><div class="sb-name">— CEO Name —</div><div class="sb-email">ceo@contrack.ph</div></div>
+        <a class="sb-logout" href="#" title="Sign Out"><svg viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="breadcrumb">
+        <span>Account</span>
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        <span>Settings</span>
+      </div>
+      <div class="page-header">
+        <div>
+          <div class="page-title">Settings</div>
+          <div class="page-sub">Password, alerts, and this session.</div>
+        </div>
+      </div>
+      <div class="acct-page">
+        <section class="acct-card">
+          <div class="acct-kicker">ACCOUNT</div>
+          <p class="set-line" id="set-email">—</p>
+          <p class="set-meta" id="set-role"></p>
+          <p class="set-meta" id="set-seen">Last sign-in —</p>
+        </section>
+        <section class="acct-card">
+          <div class="acct-kicker">PASSWORD</div>
+          <div class="acct-fields">
+            <label class="fgl" for="pw-current">CURRENT PASSWORD</label>
+            <input class="fgi" id="pw-current" type="password" autocomplete="current-password" placeholder="Current password">
+            <label class="fgl" for="pw-new">NEW PASSWORD</label>
+            <input class="fgi" id="pw-new" type="password" autocomplete="new-password" minlength="8" maxlength="64" placeholder="8–64 characters, letter and number">
+            <label class="fgl" for="pw-confirm">CONFIRM NEW PASSWORD</label>
+            <input class="fgi" id="pw-confirm" type="password" autocomplete="new-password" placeholder="Repeat the new password">
+          </div>
+          <p class="acct-note">Name and photo stay on My Profile.</p>
+          <button class="btn btn-primary" type="button" id="btn-update-password">Update password</button>
+          <div id="profile-status" class="acct-status"></div>
+        </section>
+        <section class="acct-card">
+          <div class="acct-kicker">ALERTS</div>
+          <label class="set-row" for="set-alerts">
+            <span>
+              <strong>In-app alerts</strong>
+              <span class="acct-note" id="set-alert-copy">Notices in the bell.</span>
+            </span>
+            <input type="checkbox" id="set-alerts" checked>
+          </label>
+        </section>
+        <section class="acct-card">
+          <div class="acct-kicker">SESSION</div>
+          <p class="acct-note">Ends this sign-in on this browser.</p>
+          <button class="btn btn-ghost" type="button" id="set-signout">Sign out</button>
+        </section>
+      </div>
+</div>
+  </div>
+</div>
+
+<script src="/assets/js/CEO.js"></script>
+<script type="module" src="/assets/js/portal-shell.js"></script>
+<script type="module" src="/assets/js/profile-account.js"></script>
+</body>
+</html>

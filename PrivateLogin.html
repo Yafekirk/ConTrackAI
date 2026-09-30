@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConTrack AI - Private Login</title>
+  <link rel="stylesheet" href="/assets/css/private-login.css">
+  <link rel="stylesheet" href="/assets/css/login-guard.css">
+</head>
+<body>
+  <main class="private-wrap">
+    <section class="private-card">
+      <h1>Private Access Portal</h1>
+      <p>Restricted to CEO, MANAGER, and ADMIN accounts only.</p>
+      <form id="privateLoginForm">
+        <label for="privateEmail">Email Address</label>
+        <input id="privateEmail" type="email" required placeholder="name@company.com">
+
+        <label for="privatePassword">Password</label>
+        <input id="privatePassword" type="password" required placeholder="Enter password">
+
+        <button type="submit">Sign In</button>
+      </form>
+      <a class="back-link" href="/index.html">Back to main login</a>
+    </section>
+  </main>
+  <script type="module" src="/assets/js/private-login.js"></script>
+</body>
+</html>

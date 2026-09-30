@@ -1,0 +1,28 @@
+1. CONTRACT HEADER
+Contract Title: North Luzon Cold Storage Facility Lease Agreement 2026
+Contract Type: Lease Agreement
+Effective Date: 2026-07-01
+End Date: 2028-06-30
+
+2. PARTIES
+Client Name: ConTrack Holdings Inc.
+Vendor Name: PolarVault Logistics Corp.
+Vendor Address: Lot 12, Industrial Estate 2, Clark Freeport Zone, Pampanga, Philippines
+
+3. SCOPE OF WORK
+Scope of Work: Vendor shall lease to Client approximately 2,400 square meters of temperature-controlled warehouse space at Clark Freeport Zone, including dock-level loading bays, 24x7 on-site security, humidity and temperature monitoring between -18C and 4C by zone, pallet racking, and monthly facility condition reports. Utilities for refrigeration are included up to the contracted kWh cap in Exhibit A; excess consumption is billed at cost. Vendor shall maintain cold-chain equipment and restore refrigeration service within eight hours of a confirmed failure.
+
+4. FINANCIAL TERMS
+Contract Value: PHP 4860000.00
+Currency: PHP
+Payment Terms: Monthly
+Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on the overdue monthly rent plus 0.1% per day thereafter until paid in full.
+
+5. RENEWAL AND TERMINATION
+Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written notice of non-renewal.
+Termination Clause: Either party may terminate for uncured material breach after thirty days written notice. Client may terminate for convenience with ninety days written notice and payment of rent through the notice period.
+
+6. SIGNATURES
+Client Authorized Signatory: Maria Dela Cruz, Procurement Director
+Vendor Authorized Signatory: Enrique Solis, Chief Commercial Officer
+Signed Date: 2026-06-20

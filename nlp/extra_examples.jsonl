@@ -1,0 +1,246 @@
+# Add one JSON object per line. Labels: title, type, parties, dates, scope, payment, value, penalty, renewal, termination, signatures, other
+# After editing this file, retrain: nlp\.venv\Scripts\python.exe nlp\train.py
+{"text": "THIS AGREEMENT is made as of 15 March 2026 between Aurora Festival Group (\"Client\") and Horizon Sound Collective, with offices at 22 Tomas Morato Avenue, Quezon City, Philippines (\"Vendor\").", "label": "parties"}
+{"text": "The term begins 15 March 2026 and expires 14 March 2027.", "label": "dates"}
+{"text": "The total consideration is PHP 1,975,000.00.", "label": "value"}
+{"text": "Invoices are due net thirty (30) days from receipt.", "label": "payment"}
+{"text": "If a show is delayed more than four hours because of Vendor equipment failure, liquidated damages of 3% of that event fee shall apply.", "label": "penalty"}
+{"text": "This contract shall automatically renew for successive twelve-month periods unless either party gives sixty days written notice of non-renewal.", "label": "renewal"}
+{"text": "Contract Title: North Luzon Cold Storage Facility Lease Agreement 2026", "label": "title"}
+{"text": "- Contract Title: North Luzon Cold Storage Facility Lease Agreement 2026", "label": "title"}
+{"text": "Contract Type: Lease Agreement", "label": "type"}
+{"text": "- Contract Type: Lease Agreement", "label": "type"}
+{"text": "Effective Date: 2026-07-01", "label": "dates"}
+{"text": "- Effective Date: 2026-07-01", "label": "dates"}
+{"text": "End Date: 2028-06-30", "label": "dates"}
+{"text": "- End Date: 2028-06-30", "label": "dates"}
+{"text": "Client Name: ConTrack Holdings Inc.", "label": "parties"}
+{"text": "- Client Name: ConTrack Holdings Inc.", "label": "parties"}
+{"text": "Vendor Name: PolarVault Logistics Corp.", "label": "parties"}
+{"text": "- Vendor Name: PolarVault Logistics Corp.", "label": "parties"}
+{"text": "Vendor Address: Lot 12, Industrial Estate 2, Clark Freeport Zone, Pampanga, Philippines", "label": "parties"}
+{"text": "- Vendor Address: Lot 12, Industrial Estate 2, Clark Freeport Zone, Pampanga, Philippines", "label": "parties"}
+{"text": "Scope of Work: Vendor shall lease to Client approximately 2,400 square meters of", "label": "scope"}
+{"text": "- Scope of Work: Vendor shall lease to Client approximately 2,400 square meters of", "label": "scope"}
+{"text": "Contract Value: PHP 4860000.00", "label": "value"}
+{"text": "- Contract Value: PHP 4860000.00", "label": "value"}
+{"text": "Payment Terms: Monthly", "label": "payment"}
+{"text": "- Payment Terms: Monthly", "label": "payment"}
+{"text": "Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on the", "label": "penalty"}
+{"text": "- Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on the", "label": "penalty"}
+{"text": "Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written notice of", "label": "renewal"}
+{"text": "- Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written notice of", "label": "renewal"}
+{"text": "Termination Clause: Either party may terminate for uncured material breach after thirty days", "label": "termination"}
+{"text": "- Termination Clause: Either party may terminate for uncured material breach after thirty days", "label": "termination"}
+{"text": "Client Authorized Signatory: Maria Dela Cruz, Procurement Director", "label": "signatures"}
+{"text": "- Client Authorized Signatory: Maria Dela Cruz, Procurement Director", "label": "signatures"}
+{"text": "Vendor Authorized Signatory: Enrique Solis, Chief Commercial Officer", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Enrique Solis, Chief Commercial Officer", "label": "signatures"}
+{"text": "Signed Date: 2026-06-20", "label": "signatures"}
+{"text": "- Signed Date: 2026-06-20", "label": "signatures"}
+{"text": "Contract Title: Grand Ballroom and Pre-Function Hall Lease Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Grand Ballroom and Pre-Function Hall Lease Agreement 2026", "label": "title"}
+{"text": "Client Name: JBC Events Management", "label": "parties"}
+{"text": "- Client Name: JBC Events Management", "label": "parties"}
+{"text": "Vendor Name: Marquee Pavilion Venues Inc.", "label": "parties"}
+{"text": "- Vendor Name: Marquee Pavilion Venues Inc.", "label": "parties"}
+{"text": "Vendor Address: The Marquee, 5th Avenue, Bonifacio Global City, Taguig City, Metro", "label": "parties"}
+{"text": "- Vendor Address: The Marquee, 5th Avenue, Bonifacio Global City, Taguig City, Metro", "label": "parties"}
+{"text": "Scope of Work: Marquee Pavilion Venues Inc. shall lease to JBC Events Management the", "label": "scope"}
+{"text": "- Scope of Work: Marquee Pavilion Venues Inc. shall lease to JBC Events Management the", "label": "scope"}
+{"text": "Contract Value: PHP 4,200,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 4,200,000.00", "label": "value"}
+{"text": "Penalty Clause: Late rental payment beyond 5 calendar days incurs a 2% surcharge on", "label": "penalty"}
+{"text": "- Penalty Clause: Late rental payment beyond 5 calendar days incurs a 2% surcharge on", "label": "penalty"}
+{"text": "Renewal Terms: Auto-renew (12 months) unless either party gives 90 days written notice", "label": "renewal"}
+{"text": "- Renewal Terms: Auto-renew (12 months) unless either party gives 90 days written notice", "label": "renewal"}
+{"text": "Termination Clause: Either party may terminate for uncured material breach after 30", "label": "termination"}
+{"text": "- Termination Clause: Either party may terminate for uncured material breach after 30", "label": "termination"}
+{"text": "Client Authorized Signatory: Patricia J. Bernal, Managing Director, JBC Events", "label": "signatures"}
+{"text": "- Client Authorized Signatory: Patricia J. Bernal, Managing Director, JBC Events", "label": "signatures"}
+{"text": "Vendor Authorized Signatory: Isabelle G. Tan, Leasing Director, Marquee Pavilion", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Isabelle G. Tan, Leasing Director, Marquee Pavilion", "label": "signatures"}
+{"text": "Signed Date: 2026-06-12", "label": "signatures"}
+{"text": "- Signed Date: 2026-06-12", "label": "signatures"}
+{"text": "Contract Title: Event Logistics Vehicle Lease Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Logistics Vehicle Lease Agreement 2026", "label": "title"}
+{"text": "Effective Date: 2026-05-01", "label": "dates"}
+{"text": "- Effective Date: 2026-05-01", "label": "dates"}
+{"text": "End Date: 2027-04-30", "label": "dates"}
+{"text": "- End Date: 2027-04-30", "label": "dates"}
+{"text": "Vendor Name: RapidMove Event Transport Inc.", "label": "parties"}
+{"text": "- Vendor Name: RapidMove Event Transport Inc.", "label": "parties"}
+{"text": "Vendor Address: 15 West Service Road, Sucat, Paraˆ–aque City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 15 West Service Road, Sucat, Paraˆ–aque City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: RapidMove Event Transport Inc. shall lease eight (8) closed vans and two", "label": "scope"}
+{"text": "- Scope of Work: RapidMove Event Transport Inc. shall lease eight (8) closed vans and two", "label": "scope"}
+{"text": "Contract Value: PHP 1,560,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 1,560,000.00", "label": "value"}
+{"text": "Penalty Clause: Unavailability of a contracted unit beyond 24 hours without a", "label": "penalty"}
+{"text": "- Penalty Clause: Unavailability of a contracted unit beyond 24 hours without a", "label": "penalty"}
+{"text": "Renewal Terms: Manual renewal only after a fleet condition inspection and written", "label": "renewal"}
+{"text": "- Renewal Terms: Manual renewal only after a fleet condition inspection and written", "label": "renewal"}
+{"text": "Termination Clause: Either party may terminate for uncured material breach after 15", "label": "termination"}
+{"text": "- Termination Clause: Either party may terminate for uncured material breach after 15", "label": "termination"}
+{"text": "Client Authorized Signatory: Carlo M. Reyes, Operations Manager, JBC Events Management", "label": "signatures"}
+{"text": "- Client Authorized Signatory: Carlo M. Reyes, Operations Manager, JBC Events Management", "label": "signatures"}
+{"text": "Vendor Authorized Signatory: Dominic R. Santos, Fleet Manager, RapidMove Event", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Dominic R. Santos, Fleet Manager, RapidMove Event", "label": "signatures"}
+{"text": "Signed Date: 2026-04-18", "label": "signatures"}
+{"text": "- Signed Date: 2026-04-18", "label": "signatures"}
+{"text": "Contract Title: Event Props and Production Warehouse Lease Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Props and Production Warehouse Lease Agreement 2026", "label": "title"}
+{"text": "Vendor Name: StowWell Logistics Corp.", "label": "parties"}
+{"text": "- Vendor Name: StowWell Logistics Corp.", "label": "parties"}
+{"text": "Vendor Address: Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: StowWell Logistics Corp. shall lease to JBC Events Management", "label": "scope"}
+{"text": "- Scope of Work: StowWell Logistics Corp. shall lease to JBC Events Management", "label": "scope"}
+{"text": "Contract Value: PHP 2,160,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 2,160,000.00", "label": "value"}
+{"text": "Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on", "label": "penalty"}
+{"text": "- Penalty Clause: Late rental payment beyond five calendar days incurs a 2% surcharge on", "label": "penalty"}
+{"text": "Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written", "label": "renewal"}
+{"text": "- Renewal Terms: Auto-renew (12 months) unless either party gives sixty days written", "label": "renewal"}
+{"text": "Termination Clause: Either party may terminate for uncured material breach after", "label": "termination"}
+{"text": "- Termination Clause: Either party may terminate for uncured material breach after", "label": "termination"}
+{"text": "Client Authorized Signatory: Nina S. Domingo, Procurement Officer, JBC Events", "label": "signatures"}
+{"text": "- Client Authorized Signatory: Nina S. Domingo, Procurement Officer, JBC Events", "label": "signatures"}
+{"text": "Vendor Authorized Signatory: Maricel A. Bautista, Property Manager, StowWell Logistics", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Maricel A. Bautista, Property Manager, StowWell Logistics", "label": "signatures"}
+{"text": "Contract Title: Banquet Catering Services Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Banquet Catering Services Agreement 2026", "label": "title"}
+{"text": "Contract Type: Service Agreement", "label": "type"}
+{"text": "- Contract Type: Service Agreement", "label": "type"}
+{"text": "Effective Date: 2026-06-01", "label": "dates"}
+{"text": "- Effective Date: 2026-06-01", "label": "dates"}
+{"text": "End Date: 2027-05-31", "label": "dates"}
+{"text": "- End Date: 2027-05-31", "label": "dates"}
+{"text": "Vendor Name: MesaNueva Catering Services Inc.", "label": "parties"}
+{"text": "- Vendor Name: MesaNueva Catering Services Inc.", "label": "parties"}
+{"text": "Vendor Address: 42 Scout Torillo Street, South Triangle, Quezon City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 42 Scout Torillo Street, South Triangle, Quezon City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: MesaNueva Catering Services Inc. shall provide banquet menus, service", "label": "scope"}
+{"text": "- Scope of Work: MesaNueva Catering Services Inc. shall provide banquet menus, service", "label": "scope"}
+{"text": "Contract Value: PHP 3,150,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 3,150,000.00", "label": "value"}
+{"text": "Payment Terms: Net 30", "label": "payment"}
+{"text": "- Payment Terms: Net 30", "label": "payment"}
+{"text": "Penalty Clause: A confirmed staffing shortfall or missed tasting more than twice in a", "label": "penalty"}
+{"text": "- Penalty Clause: A confirmed staffing shortfall or missed tasting more than twice in a", "label": "penalty"}
+{"text": "Renewal Terms: Auto-renew (12 months) unless either party gives 60 days written notice", "label": "renewal"}
+{"text": "- Renewal Terms: Auto-renew (12 months) unless either party gives 60 days written notice", "label": "renewal"}
+{"text": "Vendor Authorized Signatory: Chef Lorenzo P. Villanueva, Principal, MesaNueva Catering", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Chef Lorenzo P. Villanueva, Principal, MesaNueva Catering", "label": "signatures"}
+{"text": "Signed Date: 2026-05-28", "label": "signatures"}
+{"text": "- Signed Date: 2026-05-28", "label": "signatures"}
+{"text": "Contract Title: Event Security and Crowd Control Services Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Security and Crowd Control Services Agreement 2026", "label": "title"}
+{"text": "Effective Date: 2026-04-01", "label": "dates"}
+{"text": "- Effective Date: 2026-04-01", "label": "dates"}
+{"text": "End Date: 2027-03-31", "label": "dates"}
+{"text": "- End Date: 2027-03-31", "label": "dates"}
+{"text": "Vendor Name: Nightwatch Event Security Inc.", "label": "parties"}
+{"text": "- Vendor Name: Nightwatch Event Security Inc.", "label": "parties"}
+{"text": "Vendor Address: 7 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 7 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: Nightwatch Event Security Inc. shall provide licensed security officers,", "label": "scope"}
+{"text": "- Scope of Work: Nightwatch Event Security Inc. shall provide licensed security officers,", "label": "scope"}
+{"text": "Contract Value: PHP 1,440,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 1,440,000.00", "label": "value"}
+{"text": "Penalty Clause: An unfilled post beyond two hours without a qualified replacement", "label": "penalty"}
+{"text": "- Penalty Clause: An unfilled post beyond two hours without a qualified replacement", "label": "penalty"}
+{"text": "Renewal Terms: Auto-renew (12 months) unless either party gives 45 days written notice", "label": "renewal"}
+{"text": "- Renewal Terms: Auto-renew (12 months) unless either party gives 45 days written notice", "label": "renewal"}
+{"text": "Termination Clause: Client may terminate immediately for loss of license or a proven", "label": "termination"}
+{"text": "- Termination Clause: Client may terminate immediately for loss of license or a proven", "label": "termination"}
+{"text": "Vendor Authorized Signatory: Oscar Mendoza, Operations Vice President, Nightwatch", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Oscar Mendoza, Operations Vice President, Nightwatch", "label": "signatures"}
+{"text": "Signed Date: 2026-03-20", "label": "signatures"}
+{"text": "- Signed Date: 2026-03-20", "label": "signatures"}
+{"text": "Contract Title: Event Production and Technical Crew Services Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Production and Technical Crew Services Agreement 2026", "label": "title"}
+{"text": "Effective Date: 2026-08-01", "label": "dates"}
+{"text": "- Effective Date: 2026-08-01", "label": "dates"}
+{"text": "End Date: 2027-07-31", "label": "dates"}
+{"text": "- End Date: 2027-07-31", "label": "dates"}
+{"text": "Vendor Name: Apex Production Crew Inc.", "label": "parties"}
+{"text": "- Vendor Name: Apex Production Crew Inc.", "label": "parties"}
+{"text": "Vendor Address: 3rd Floor, 6750 Building, Ayala Avenue, Makati City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 3rd Floor, 6750 Building, Ayala Avenue, Makati City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: Apex Production Crew Inc. shall provide technical direction, lighting", "label": "scope"}
+{"text": "- Scope of Work: Apex Production Crew Inc. shall provide technical direction, lighting", "label": "scope"}
+{"text": "Contract Value: PHP 2,280,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 2,280,000.00", "label": "value"}
+{"text": "Payment Terms: Net 15", "label": "payment"}
+{"text": "- Payment Terms: Net 15", "label": "payment"}
+{"text": "Penalty Clause: A missed key-position call (technical director, sound, or lighting)", "label": "penalty"}
+{"text": "- Penalty Clause: A missed key-position call (technical director, sound, or lighting)", "label": "penalty"}
+{"text": "Renewal Terms: Manual renewal only, subject to a season-end production review and", "label": "renewal"}
+{"text": "- Renewal Terms: Manual renewal only, subject to a season-end production review and", "label": "renewal"}
+{"text": "Vendor Authorized Signatory: Bianca R. Gomez, Production Director, Apex Production", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Bianca R. Gomez, Production Director, Apex Production", "label": "signatures"}
+{"text": "Signed Date: 2026-07-15", "label": "signatures"}
+{"text": "- Signed Date: 2026-07-15", "label": "signatures"}
+{"text": "Contract Title: Event Furniture and Staging Supply Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Furniture and Staging Supply Agreement 2026", "label": "title"}
+{"text": "Contract Type: Supply Agreement", "label": "type"}
+{"text": "- Contract Type: Supply Agreement", "label": "type"}
+{"text": "Effective Date: 2026-05-15", "label": "dates"}
+{"text": "- Effective Date: 2026-05-15", "label": "dates"}
+{"text": "End Date: 2027-05-14", "label": "dates"}
+{"text": "- End Date: 2027-05-14", "label": "dates"}
+{"text": "Vendor Name: Grandeur Event Furnishings Co.", "label": "parties"}
+{"text": "- Vendor Name: Grandeur Event Furnishings Co.", "label": "parties"}
+{"text": "Vendor Address: 88 Katipunan Avenue, Loyola Heights, Quezon City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 88 Katipunan Avenue, Loyola Heights, Quezon City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: Grandeur Event Furnishings Co. shall supply banquet tables, Chiavari", "label": "scope"}
+{"text": "- Scope of Work: Grandeur Event Furnishings Co. shall supply banquet tables, Chiavari", "label": "scope"}
+{"text": "Contract Value: PHP 1,680,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 1,680,000.00", "label": "value"}
+{"text": "Penalty Clause: Late delivery beyond 7 calendar days incurs a 1% deduction per week", "label": "penalty"}
+{"text": "- Penalty Clause: Late delivery beyond 7 calendar days incurs a 1% deduction per week", "label": "penalty"}
+{"text": "Renewal Terms: Manual renewal only, subject to performance evaluation and mutual", "label": "renewal"}
+{"text": "- Renewal Terms: Manual renewal only, subject to performance evaluation and mutual", "label": "renewal"}
+{"text": "Termination Clause: Either party may terminate with 30 days written notice for", "label": "termination"}
+{"text": "- Termination Clause: Either party may terminate with 30 days written notice for", "label": "termination"}
+{"text": "Vendor Authorized Signatory: Rafael D. Lim, General Manager, Grandeur Event", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Rafael D. Lim, General Manager, Grandeur Event", "label": "signatures"}
+{"text": "Signed Date: 2026-05-10", "label": "signatures"}
+{"text": "- Signed Date: 2026-05-10", "label": "signatures"}
+{"text": "Contract Title: Event Print and Collateral Supply Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Event Print and Collateral Supply Agreement 2026", "label": "title"}
+{"text": "Vendor Name: PrintHaus Creative Supplies Inc.", "label": "parties"}
+{"text": "- Vendor Name: PrintHaus Creative Supplies Inc.", "label": "parties"}
+{"text": "Vendor Address: 14 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 14 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: PrintHaus Creative Supplies Inc. shall supply stage backdrops, pull-up", "label": "scope"}
+{"text": "- Scope of Work: PrintHaus Creative Supplies Inc. shall supply stage backdrops, pull-up", "label": "scope"}
+{"text": "Contract Value: PHP 920,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 920,000.00", "label": "value"}
+{"text": "Penalty Clause: Failed delivery of a scheduled print run beyond 48 hours incurs a 2%", "label": "penalty"}
+{"text": "- Penalty Clause: Failed delivery of a scheduled print run beyond 48 hours incurs a 2%", "label": "penalty"}
+{"text": "Vendor Authorized Signatory: Andrea Mae Uy, Sales Director, PrintHaus Creative", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Andrea Mae Uy, Sales Director, PrintHaus Creative", "label": "signatures"}
+{"text": "Signed Date: 2026-03-22", "label": "signatures"}
+{"text": "- Signed Date: 2026-03-22", "label": "signatures"}
+{"text": "Contract Title: Audio Visual Equipment Supply Agreement 2026", "label": "title"}
+{"text": "- Contract Title: Audio Visual Equipment Supply Agreement 2026", "label": "title"}
+{"text": "Vendor Name: LumenStage AV Trading Corp.", "label": "parties"}
+{"text": "- Vendor Name: LumenStage AV Trading Corp.", "label": "parties"}
+{"text": "Vendor Address: 210 Shaw Boulevard, Addition Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "- Vendor Address: 210 Shaw Boulevard, Addition Hills, Mandaluyong City, Metro Manila,", "label": "parties"}
+{"text": "Scope of Work: LumenStage AV Trading Corp. shall supply LED wall panels, wireless", "label": "scope"}
+{"text": "- Scope of Work: LumenStage AV Trading Corp. shall supply LED wall panels, wireless", "label": "scope"}
+{"text": "Contract Value: PHP 2,450,000.00", "label": "value"}
+{"text": "- Contract Value: PHP 2,450,000.00", "label": "value"}
+{"text": "Payment Terms: Milestone-based", "label": "payment"}
+{"text": "- Payment Terms: Milestone-based", "label": "payment"}
+{"text": "Penalty Clause: Each delayed milestone shipment beyond 5 calendar days incurs", "label": "penalty"}
+{"text": "- Penalty Clause: Each delayed milestone shipment beyond 5 calendar days incurs", "label": "penalty"}
+{"text": "Renewal Terms: No renewal. Any extension requires a written change order.", "label": "renewal"}
+{"text": "- Renewal Terms: No renewal. Any extension requires a written change order.", "label": "renewal"}
+{"text": "Vendor Authorized Signatory: Kevin Paul Ong, Managing Partner, LumenStage AV Trading", "label": "signatures"}
+{"text": "- Vendor Authorized Signatory: Kevin Paul Ong, Managing Partner, LumenStage AV Trading", "label": "signatures"}
+{"text": "Signed Date: 2026-05-20", "label": "signatures"}
+{"text": "- Signed Date: 2026-05-20", "label": "signatures"}

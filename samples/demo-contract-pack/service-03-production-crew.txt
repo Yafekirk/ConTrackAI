@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Event Production and Technical Crew Services Agreement 2026
+- Contract Type: Service Agreement
+- Effective Date: 2026-08-01
+- End Date: 2027-07-31
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: Apex Production Crew Inc.
+- Vendor Address: 3rd Floor, 6750 Building, Ayala Avenue, Makati City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: Apex Production Crew Inc. shall provide technical direction, lighting operators, sound engineers, and stage managers for JBC Events Management shows. Crew call times follow the production rundown, including load-in, show call, and strike, with a show caller on the comms channel and a written show report after each event.
+
+4. Financial Terms
+- Contract Value: PHP 2,280,000.00
+- Currency: PHP
+- Payment Terms: Net 15
+- Penalty Clause: A missed key-position call (technical director, sound, or lighting) without a qualified replacement incurs a 3% deduction on the event fee.
+
+5. Renewal and Termination
+- Renewal Terms: Manual renewal only, subject to a season-end production review and written agreement.
+- Termination Clause: Either party may terminate for uncured material breach after 15 days written notice. Client may terminate for convenience with 30 days notice.
+
+6. Signatures
+- Client Authorized Signatory: Nina S. Domingo, Procurement Officer, JBC Events Management
+- Vendor Authorized Signatory: Bianca R. Gomez, Production Director, Apex Production Crew Inc.
+- Signed Date: 2026-07-15

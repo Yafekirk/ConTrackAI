@@ -1,0 +1,30 @@
+Contract Template
+
+1. Contract Header
+- Contract Title: Event Security and Crowd Control Services Agreement 2026
+- Contract Type: Service Agreement
+- Effective Date: 2026-04-01
+- End Date: 2027-03-31
+
+2. Parties
+- Client Name: JBC Events Management
+- Vendor Name: Nightwatch Event Security Inc.
+- Vendor Address: 7 Pioneer Street, Highway Hills, Mandaluyong City, Metro Manila, Philippines
+
+3. Scope of Work
+Scope of Work: Nightwatch Event Security Inc. shall provide licensed security officers, bag checks, VIP access control, and incident reports for JBC Events Management events. Manning follows the posted table per event, with a supervisor on site, radio coordination with the JBC floor manager, and post-event turnover of lost-and-found and incident logs within twenty-four hours.
+
+4. Financial Terms
+- Contract Value: PHP 1,440,000.00
+- Currency: PHP
+- Payment Terms: Monthly
+- Penalty Clause: An unfilled post beyond two hours without a qualified replacement incurs a 4% credit of that day post fee.
+
+5. Renewal and Termination
+- Renewal Terms: Auto-renew (12 months) unless either party gives 45 days written notice of non-renewal.
+- Termination Clause: Client may terminate immediately for loss of license or a proven integrity incident. Either party may terminate for uncured material breach after 15 days written notice.
+
+6. Signatures
+- Client Authorized Signatory: Carlo M. Reyes, Operations Manager, JBC Events Management
+- Vendor Authorized Signatory: Oscar Mendoza, Operations Vice President, Nightwatch Event Security Inc.
+- Signed Date: 2026-03-20
