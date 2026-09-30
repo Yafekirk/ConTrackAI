@@ -26,6 +26,17 @@ let refs = null;
 let settle = null;
 let lastFocused = null;
 
+function bindPressLight(button) {
+  const press = () => {
+    if (!button.disabled) button.classList.add("is-pressed");
+  };
+  const release = () => button.classList.remove("is-pressed");
+  button.addEventListener("pointerdown", press);
+  button.addEventListener("pointerup", release);
+  button.addEventListener("pointercancel", release);
+  button.addEventListener("pointerleave", release);
+}
+
 function build() {
   if (refs) return refs;
 
@@ -85,6 +96,7 @@ function build() {
   });
 
   refs.submit.addEventListener("click", submitAgreement);
+  bindPressLight(refs.submit);
 
   overlay.querySelector("[data-terms-close]").addEventListener("click", () => close(false));
 
