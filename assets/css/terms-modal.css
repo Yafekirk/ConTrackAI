@@ -206,11 +206,17 @@
     letter-spacing: .3px;
     cursor: pointer;
     box-shadow: 0 6px 16px rgba(122, 12, 12, 0.26);
-    transition: filter .18s ease, opacity .18s ease, box-shadow .18s ease;
+    transition: filter .12s ease, transform .12s ease, box-shadow .12s ease, opacity .18s ease;
 }
 
 .terms-submit:hover:not(:disabled) {
-    filter: brightness(1.08);
+    filter: none;
+}
+
+.terms-submit:active:not(:disabled) {
+    filter: brightness(1.35);
+    transform: translateY(1px);
+    box-shadow: 0 3px 10px rgba(122, 12, 12, 0.2);
 }
 
 .terms-submit:disabled {
@@ -276,6 +282,15 @@
 .terms-link:hover {
     filter: none;
     color: #7A0C0C;
+}
+
+.terms-link:active {
+    filter: none;
+    color: #f6c4c6;
+}
+
+.login-footer a[data-terms-open]:active {
+    color: #F4C396;
 }
 
 .terms-link:focus-visible {
