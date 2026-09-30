@@ -1,0 +1,248 @@
+/* Title brand shown above the form card on phone and tablet.
+   Desktop keeps the side panel. */
+
+.mobile-brand {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .container {
+        display: block;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .left-panel {
+        display: none;
+    }
+
+    .right-panel {
+        min-height: 100vh;
+        width: 100%;
+        overflow: auto;
+        flex-direction: column;
+        align-items: stretch;
+        justify-content: flex-start;
+        padding: 0 0 28px;
+    }
+
+    .mobile-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        width: 100%;
+        min-height: 156px;
+        margin: 0 0 56px;
+        padding: 20px 14px 16px;
+        background: #fdeaea;
+        overflow: hidden;
+    }
+
+    .mobile-brand .brand-intro {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: nowrap;
+        gap: 0;
+        width: 100%;
+        padding: 0 10px;
+        font-size: clamp(14px, 4.4vw, 30px);
+        font-weight: 700;
+        letter-spacing: 0;
+        color: #1a1a1a;
+        pointer-events: none;
+        animation: introToLogo 3.1s ease forwards;
+    }
+
+    .mobile-brand .brand-intro span {
+        display: inline-block;
+        opacity: 0;
+        transform: translateY(14px);
+        animation: spellLetter 0.45s cubic-bezier(.2, .8, .2, 1) forwards;
+        animation-delay: calc(var(--i) * 0.055s);
+    }
+
+    .mobile-brand .brand-intro .intro-gap {
+        margin-left: 0.32em;
+    }
+
+    .mobile-brand .brand-intro .intro-ai {
+        color: #e4c19c;
+    }
+
+    .mobile-brand .brand-row {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+        gap: clamp(10px, 2.4vw, 22px);
+        position: relative;
+        z-index: 3;
+        max-width: 100%;
+        opacity: 0;
+        transform: translateY(18px) scale(0.96);
+        animation: brandReveal 0.9s cubic-bezier(.2, .8, .2, 1) 2.35s forwards;
+    }
+
+    .mobile-brand .logo {
+        width: clamp(62px, 18vw, 130px);
+        height: auto;
+        flex: 0 0 auto;
+        filter: drop-shadow(0 10px 16px rgba(122, 15, 20, 0.16));
+        transform-origin: center;
+        animation: logoSettle 1.2s cubic-bezier(.2, .8, .2, 1) 2.35s both;
+    }
+
+    .mobile-brand .divider {
+        width: 2px;
+        height: clamp(48px, 12vw, 96px);
+        flex: 0 0 auto;
+        background: #7a0f14;
+        transform-origin: center;
+        animation: dividerDraw 0.75s ease 2.55s both;
+    }
+
+    .mobile-brand .brand-text h1 {
+        margin-left: 0;
+        font-size: clamp(16px, 4.4vw, 30px);
+        font-weight: 700;
+        line-height: 1.1;
+        color: #1a1a1a;
+        animation: titleSlideIn 0.65s ease 2.75s both;
+    }
+
+    .mobile-brand .brand-text p {
+        margin-top: 6px;
+        font-size: clamp(8px, 2vw, 12px);
+        line-height: 1.3;
+        color: #777;
+        white-space: nowrap;
+        animation: titleSlideIn 0.65s ease 2.9s both;
+    }
+
+    .right-content {
+        width: min(480px, calc(100% - 32px));
+        margin: 0 auto;
+        align-items: stretch;
+    }
+
+    .login-card,
+    .right-panel > .login-card {
+        width: min(480px, calc(100% - 32px));
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .right-content .login-card {
+        width: 100%;
+    }
+
+    .row {
+        flex-direction: column;
+    }
+}
+
+@keyframes spellLetter {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes introToLogo {
+    0%, 58% {
+        opacity: 1;
+        transform: scale(1);
+        filter: blur(0);
+    }
+    80% {
+        opacity: 0.8;
+        transform: scale(0.78);
+        filter: blur(0);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.45);
+        filter: blur(8px);
+        visibility: hidden;
+    }
+}
+
+@keyframes brandReveal {
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes logoSettle {
+    0% {
+        opacity: 0;
+        transform: scale(0.72) rotate(-7deg);
+        clip-path: circle(0% at 50% 50%);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.04) rotate(1deg);
+        clip-path: circle(72% at 50% 50%);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+        clip-path: circle(72% at 50% 50%);
+    }
+}
+
+@keyframes dividerDraw {
+    from {
+        opacity: 0;
+        transform: scaleY(0);
+    }
+    to {
+        opacity: 1;
+        transform: scaleY(1);
+    }
+}
+
+@keyframes titleSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes panelGlow {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(18px, 20px) scale(1.08); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-brand .brand-intro,
+    .mobile-brand .brand-intro span,
+    .mobile-brand .brand-row,
+    .mobile-brand .logo,
+    .mobile-brand .divider,
+    .mobile-brand .brand-text h1,
+    .mobile-brand .brand-text p {
+        animation: none !important;
+        opacity: 1;
+        transform: none;
+        visibility: visible;
+        filter: none;
+        clip-path: none;
+    }
+
+    .mobile-brand .brand-intro {
+        display: none;
+    }
+}
