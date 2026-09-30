@@ -453,9 +453,22 @@ button:hover {
 @media (max-width: 768px) {
     .container {
         grid-template-columns: 100%;
+        min-height: 100vh;
+        height: auto;
     }
 
     .left-panel {
         display: none;
+    }
+
+    .right-panel {
+        min-height: 100vh;
+        overflow: auto;
+        padding: 24px 16px;
+        align-items: flex-start;
+    }
+
+    .login-card {
+        width: min(420px, 100%);
     }
 }

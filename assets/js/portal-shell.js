@@ -298,6 +298,17 @@ function applySidebarState(collapsed) {
   });
 }
 
+function isCompactNav() {
+  return window.matchMedia("(max-width: 1023px)").matches;
+}
+
+function setCompactNav(open) {
+  document.body.classList.toggle("shell-nav-open", open && isCompactNav());
+  document.querySelectorAll(".shell-nav-toggle").forEach((button) => {
+    button.setAttribute("aria-expanded", String(open && isCompactNav()));
+  });
+}
+
 function wireSidebarToggle() {
   const savedState = localStorage.getItem("contrack_sidebar_collapsed") === "1";
   applySidebarState(savedState);
@@ -318,6 +329,45 @@ function wireSidebarToggle() {
     toggleHost.appendChild(button);
   });
   applySidebarState(savedState);
+
+  const topbar = document.querySelector(".shell .topbar, body > .topbar");
+  if (topbar && !topbar.querySelector(".shell-nav-toggle")) {
+    const menu = document.createElement("button");
+    menu.type = "button";
+    menu.className = "shell-nav-toggle";
+    menu.setAttribute("aria-label", "Open menu");
+    menu.setAttribute("aria-expanded", "false");
+    menu.innerHTML = svg('<line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/>', 18, 18);
+    menu.addEventListener("click", (event) => {
+      event.stopPropagation();
+      setCompactNav(!document.body.classList.contains("shell-nav-open"));
+    });
+    topbar.prepend(menu);
+  }
+
+  if (!document.querySelector(".shell-nav-backdrop")) {
+    const backdrop = document.createElement("button");
+    backdrop.type = "button";
+    backdrop.className = "shell-nav-backdrop";
+    backdrop.setAttribute("aria-label", "Close menu");
+    backdrop.addEventListener("click", () => setCompactNav(false));
+    document.body.appendChild(backdrop);
+  }
+
+  document.querySelectorAll(".sidebar a").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (isCompactNav()) setCompactNav(false);
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (!isCompactNav()) setCompactNav(false);
+    if (window.Chart && typeof window.Chart.getChart === "function") {
+      document.querySelectorAll("canvas").forEach((canvas) => {
+        window.Chart.getChart(canvas)?.resize();
+      });
+    }
+  });
 }
 
 function highlightActiveNav() {
