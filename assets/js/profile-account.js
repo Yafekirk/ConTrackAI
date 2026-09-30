@@ -29,7 +29,7 @@ function setStatus(message, kind = "info") {
   if (el) {
     el.textContent = message;
     el.dataset.kind = kind;
-    el.style.color = kind === "error" ? "#b42318" : kind === "success" ? "#027a48" : "#475467";
+    el.style.color = kind === "error" ? "#EF4444" : kind === "success" ? "#065F46" : "#475467";
     return;
   }
   alert(message);

@@ -9,27 +9,27 @@
    CSS VARIABLES
    ============================ */
 :root {
-  --maroon:        #7a0f14;
-  --maroon-deep:   #5c0a0e;
-  --maroon-light:  #9a1c2a;
-  --maroon-pale:   #f9eef1;
-  --maroon-soft:   #f7dbe1;
-  --tan:           #e4c19c;
-  --tan-dark:      #E8A94A;
-  --sidebar-bg:    #3D1A1E;
+  --maroon:        #7A0C0C;
+  --maroon-deep:   #5a1218;
+  --maroon-light:  #991B1B;
+  --maroon-pale:   #FFF1F3;
+  --maroon-soft:   #FCE8EC;
+  --tan:           #F4C396;
+  --tan-dark:      #F4C396;
+  --sidebar-bg:    #5a1218;
   --sidebar-hover: rgba(255,255,255,0.07);
   --sidebar-active:rgba(255,255,255,0.13);
-  --green:         #42c26e;
-  --green-light:   #dff4e5;
-  --orange:        #7b5405;
-  --orange-light:  #f7f1de;
-  --red:           #ef4444;
-  --red-light:     #f9dfe4;
-  --blue:          #0e614d;
-  --blue-light:    #ddeee9;
-  --vendor-accent: #0e614d;
-  --vendor-light:  #c9f2d2;
-  --vendor-pale:   #EBF7FD;
+  --green:         #22C55E;
+  --green-light:   #E6F7ED;
+  --orange:        #5B3A00;
+  --orange-light:  #FFF7E0;
+  --red:           #EF4444;
+  --red-light:     #FCE8EC;
+  --blue:          #1a5276;
+  --blue-light:    #D6E4FF;
+  --vendor-accent: #065F46;
+  --vendor-light:  #C9F2D2;
+  --vendor-pale:   #E6F7ED;
   --gray-50:  #FAFAFA;
   --gray-100: #F8F8F8;
   --gray-200: #f3f4f6;
@@ -71,8 +71,8 @@ html, body {
    ============================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(113,26,32,0.2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(113,26,32,0.4); }
+::-webkit-scrollbar-thumb { background: rgba(122,12,12,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(122,12,12,0.4); }
 
 /* ============================
    LAYOUT SHELL
@@ -95,7 +95,7 @@ html, body {
   padding: 0 22px;
   gap: 14px;
   flex-shrink: 0;
-  border-bottom: 2px solid rgba(244,201,142,0.3);
+  border-bottom: 2px solid rgba(244,195,150,0.3);
   z-index: 100;
 }
 
@@ -203,7 +203,7 @@ html, body {
   position: absolute;
   top: -2px;
   right: -2px;
-  background: #e53935;
+  background: #EF4444;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -339,7 +339,7 @@ html, body {
   color: #fff;
 }
 .sb-item.active {
-  background: rgba(113,26,32,0.6);
+  background: rgba(122,12,12,0.6);
   color: #fff;
   font-weight: 600;
   border-left: 3px solid var(--tan);
@@ -355,7 +355,7 @@ html, body {
 }
 .sb-badge {
   margin-left: auto;
-  background: #e53935;
+  background: #EF4444;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -634,7 +634,7 @@ html, body {
 .pill-expiring  { background: var(--orange-light); color: var(--orange); }
 .pill-expired   { background: var(--red-light); color: var(--red); }
 .pill-pending   { background: var(--blue-light); color: var(--blue); }
-.pill-renewal   { background: #EDE9FE; color: #6D28D9; }
+.pill-renewal   { background: #D6E4FF; color: #1a5276; }
 .pill-approved  { background: var(--green-light); color: var(--green); }
 .pill-rejected  { background: var(--red-light); color: var(--red); }
 .pill-review    { background: #FEF3E2; color: #B45309; }
@@ -875,7 +875,7 @@ html, body {
 }
 .fgi:focus {
   border-color: var(--maroon);
-  box-shadow: 0 0 0 3px rgba(113,26,32,0.06);
+  box-shadow: 0 0 0 3px rgba(122,12,12,0.06);
 }
 .fgi:disabled {
   background: var(--gray-100);
@@ -922,7 +922,7 @@ html, body {
 .drop-zone {
   position: relative;
   overflow: hidden;
-  border: 2px dashed rgba(113,26,32,0.3);
+  border: 2px dashed rgba(122,12,12,0.3);
   border-radius: var(--radius);
   background: #fff;
   padding: 44px 20px;
@@ -948,7 +948,7 @@ html, body {
 .drop-icon {
   width: 52px;
   height: 52px;
-  border: 1.5px solid rgba(113,26,32,0.25);
+  border: 1.5px solid rgba(122,12,12,0.25);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1265,7 +1265,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  border-bottom: 2px solid rgba(244,201,142,0.3);
+  border-bottom: 2px solid rgba(244,195,150,0.3);
 }
 .notif-sidebar-title {
   font-size: 11px;
@@ -1324,7 +1324,7 @@ html, body {
   transition: background .15s;
 }
 .notif-item:hover { background: var(--gray-50); }
-.notif-item.unread { background: rgba(113,26,32,0.03); }
+.notif-item.unread { background: rgba(122,12,12,0.03); }
 
 .notif-icon-wrap {
   width: 38px;
@@ -1660,7 +1660,7 @@ html, body {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid rgba(122, 15, 20, 0.16);
+  border: 2px solid rgba(122, 12, 12, 0.16);
   border-top-color: var(--maroon);
   border-right-color: transparent;
   animation: nlp-orbit 1.7s linear infinite;

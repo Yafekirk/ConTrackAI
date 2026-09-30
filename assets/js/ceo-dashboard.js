@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           datasets: [
             {
               data: [active, exp30, expTot, pendN],
-              backgroundColor: ["#7a0f14", "#c4a574", "#3d1a1e", "#e4b4b8"],
+              backgroundColor: ["#7A0C0C", "#F4C396", "#5a1218", "#FCE8EC"],
               borderColor: "#fff",
               borderWidth: 3,
             },
@@ -171,7 +171,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           datasets: [
             {
               data: [va, vp, vr, ve],
-              backgroundColor: ["#7a0f14", "#9a1c2a", "#3d1a1e", "#c4a574"],
+              backgroundColor: ["#7A0C0C", "#991B1B", "#5a1218", "#F4C396"],
               borderRadius: 8,
               borderSkipped: false,
             },
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           },
           scales: {
             y: {
-              grid: { color: "rgba(122,15,20,0.06)" },
+              grid: { color: "rgba(122,12,12,0.06)" },
               ticks: {
                 color: "#8a6a6e",
                 font: { size: 11 },

@@ -258,7 +258,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 data: [approved, pendCount, rej],
 
-                backgroundColor: "rgba(113,26,32,.7)",
+                backgroundColor: "rgba(122,12,12,.7)",
 
                 borderRadius: 4,
 
@@ -332,7 +332,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 data: [hi || 0, med || 0, low || 0],
 
-                backgroundColor: ["#2D7135", "#E67E22", "#C53336"],
+                backgroundColor: ["#22C55E", "#F4C396", "#EF4444"],
 
                 borderWidth: 0,
 

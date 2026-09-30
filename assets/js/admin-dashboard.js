@@ -95,7 +95,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         datasets: [
           {
             data: [approved, pending, rejected, expiring],
-            backgroundColor: ["#2D7135", "#E67E22", "#C0392B", "#6D28D9"],
+            backgroundColor: ["#22C55E", "#F4C396", "#EF4444", "#1a5276"],
             borderWidth: 0,
           },
         ],
@@ -109,10 +109,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     const legend = document.getElementById("status-legend");
     const labels = [
-      { label: "Approved", color: "#2D7135", v: approved },
-      { label: "Pending", color: "#E67E22", v: pending },
-      { label: "Rejected", color: "#C0392B", v: rejected },
-      { label: "Net 30 (≤30d left)", color: "#6D28D9", v: expiring },
+      { label: "Approved", color: "#22C55E", v: approved },
+      { label: "Pending", color: "#F4C396", v: pending },
+      { label: "Rejected", color: "#EF4444", v: rejected },
+      { label: "Net 30 (≤30d left)", color: "#1a5276", v: expiring },
     ];
     if (legend) {
       legend.innerHTML = labels
@@ -137,7 +137,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         datasets: [
           {
             data: [approved, pending, rejected, expiring],
-            backgroundColor: "rgba(113,26,32,0.75)",
+            backgroundColor: "rgba(122,12,12,0.75)",
             borderRadius: 4,
           },
         ],

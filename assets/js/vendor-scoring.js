@@ -34,7 +34,7 @@ function setStatus(msg, kind = "info") {
   if (!el) return;
   el.textContent = msg || "";
   el.dataset.kind = kind;
-  el.style.color = kind === "error" ? "#b42318" : kind === "success" ? "#027a48" : "#475467";
+  el.style.color = kind === "error" ? "#EF4444" : kind === "success" ? "#065F46" : "#475467";
 }
 
 function ratingLabel(rating, score) {

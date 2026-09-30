@@ -15,7 +15,7 @@
 
 /* LEFT PANEL (BRANDING AREA) */
 .left-panel {
-    background: #fdeaea;
+    background: #FFF1F3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -37,7 +37,7 @@
 .divider {
     width: 2px;
     height: 120px;
-    background: #711A20;
+    background: #7A0C0C;
 }
 
 /* BRAND TEXT */
@@ -48,7 +48,7 @@
 }
 
 .brand-text span {
-    color: #F4C98E;
+    color: #F4C396;
 }
 
 .brand-text p {
@@ -58,7 +58,7 @@
 }
 /* RIGHT PANEL */
 .right-panel {
-    background: linear-gradient(135deg, #711A20, #c53336);
+    background: linear-gradient(135deg, #7A0C0C, #EF4444);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -92,7 +92,7 @@
 /* TITLE */
 .welcome {
     font-size: 28px;
-    color: #711A20;
+    color: #7A0C0C;
     font-weight: 700;
 }
 
@@ -130,7 +130,7 @@ select {
 /* FOCUS */
 .input-group input:focus,
 select:focus {
-    border-color: #D32F2F;
+    border-color: #EF4444;
     box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 
@@ -165,11 +165,11 @@ select:focus {
 }
 
 .terms input {
-    accent-color: #c53336;
+    accent-color: #EF4444;
 }
 
 .terms span {
-    color: #c53336;
+    color: #EF4444;
     font-weight: 500;
 }
 
@@ -177,7 +177,7 @@ select:focus {
 button {
     width: 100%;
     padding: 14px;
-    background: linear-gradient(135deg, #8b1e24, #c53336);
+    background: linear-gradient(135deg, #991B1B, #EF4444);
     color: white;
     border: none;
     border-radius: 10px;
@@ -198,7 +198,7 @@ button:hover {
 }
 
 .create-account a {
-    color: #c53336;
+    color: #EF4444;
     font-weight: 600;
     text-decoration: none;
 }

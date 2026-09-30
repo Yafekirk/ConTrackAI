@@ -35,7 +35,7 @@
         min-height: 156px;
         margin: 0 0 56px;
         padding: 20px 14px 16px;
-        background: #fdeaea;
+        background: #FFF1F3;
         overflow: hidden;
     }
 
@@ -71,7 +71,7 @@
     }
 
     .mobile-brand .brand-intro .intro-ai {
-        color: #e4c19c;
+        color: #F4C396;
     }
 
     .mobile-brand .brand-row {
@@ -93,7 +93,7 @@
         width: clamp(62px, 18vw, 130px);
         height: auto;
         flex: 0 0 auto;
-        filter: drop-shadow(0 10px 16px rgba(122, 15, 20, 0.16));
+        filter: drop-shadow(0 10px 16px rgba(122, 12, 12, 0.16));
         transform-origin: center;
         animation: logoSettle 1.2s cubic-bezier(.2, .8, .2, 1) 2.35s both;
     }
@@ -102,7 +102,7 @@
         width: 2px;
         height: clamp(48px, 12vw, 96px);
         flex: 0 0 auto;
-        background: #7a0f14;
+        background: #7A0C0C;
         transform-origin: center;
         animation: dividerDraw 0.75s ease 2.55s both;
     }

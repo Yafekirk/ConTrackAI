@@ -21,7 +21,7 @@ body {
 
 /* LEFT PANEL (BRANDING AREA) */
 .left-panel {
-    background: #fdeaea;
+    background: #FFF1F3;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -41,7 +41,7 @@ body {
     height: 340px;
     top: -100px;
     left: -110px;
-    background: radial-gradient(circle, rgba(122,15,20,0.14), transparent 66%);
+    background: radial-gradient(circle, rgba(122,12,12,0.14), transparent 66%);
     animation: panelGlow 6s ease-in-out infinite alternate;
 }
 
@@ -71,7 +71,7 @@ body {
 }
 
 .brand-intro .intro-gap { margin-left: 12px; }
-.brand-intro .intro-ai { color: #e4c19c; }
+.brand-intro .intro-ai { color: #F4C396; }
 
 /* BRAND LAYOUT */
 .brand-row {
@@ -90,7 +90,7 @@ body {
 /* LOGO */
 .logo {
     width: 190px;
-    filter: drop-shadow(0 14px 22px rgba(122,15,20,0.18));
+    filter: drop-shadow(0 14px 22px rgba(122,12,12,0.18));
     transform-origin: center;
     animation: logoSettle 1.2s cubic-bezier(.2,.8,.2,1) 2.35s both;
 }
@@ -99,7 +99,7 @@ body {
 .divider {
     width: 2px;
     height: 120px;
-    background: #7a0f14;
+    background: #7A0C0C;
     transform-origin: center;
     animation: dividerDraw 0.75s ease 2.55s both;
 }
@@ -113,7 +113,7 @@ body {
 }
 
 .brand-text span {
-    color: #e4c19c;
+    color: #F4C396;
 }
 
 .brand-text p {
@@ -232,7 +232,7 @@ body {
 
 /* RIGHT PANEL (RED BACKGROUND) */
 .right-panel {
-    background: linear-gradient(135deg, #7a0f14, #9a1c2a);
+    background: linear-gradient(135deg, #7A0C0C, #991B1B);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -304,7 +304,7 @@ body {
 /* TITLE */
 .welcome {
     font-size: 34px;
-    color: #7a0f14;
+    color: #7A0C0C;
     margin-bottom: 5px;
     
 }
@@ -345,12 +345,12 @@ body {
 
 /* Focus state */
 .input-group input:focus {
-    border-color: #D32F2F;
+    border-color: #EF4444;
     box-shadow: 0 0 0 2px rgba(211, 47, 47, 0.1);
 }
 
 .input-group input:focus {
-    border-color: #711A20;
+    border-color: #7A0C0C;
     background: #fff;
     outline: none;
 }
@@ -376,12 +376,12 @@ body {
 .options input[type="checkbox"] {
     width: 16px;
     height: 16px;
-    accent-color: #c53336; /* clean red */
+    accent-color: #EF4444; /* clean red */
     cursor: pointer;
 }
 
 .options a {
-    color: #c53336;
+    color: #EF4444;
     font-weight: 500;
     text-decoration: none;
 }
@@ -394,7 +394,7 @@ body {
 button {
     width: 100%;
     padding: 15px;
-    background: linear-gradient(135deg, #7a0f14, #9a1c2a);
+    background: linear-gradient(135deg, #7A0C0C, #991B1B);
     color: white;
     border: none;
     border-radius: 10px;
@@ -418,7 +418,7 @@ button:hover {
 }
 
 .btn-secondary {
-    color: #c53336;
+    color: #EF4444;
     font-weight: 600;
     text-decoration: none;
 }

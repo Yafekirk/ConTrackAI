@@ -1,7 +1,7 @@
 /* ============================================================
    ConTrack AI — Admin Panel Shared Stylesheet
    Matches original design system: Playfair Display + DM Sans
-   Maroon (#711A20) primary, Tan (#F4C98E) accent
+   Maroon (#7A0C0C) primary, Tan (#F4C396) accent
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
@@ -10,25 +10,25 @@
    CSS VARIABLES
    ============================================================ */
 :root {
-  --maroon:          #7a0f14;
-  --maroon-deep:     #5c0a0e;
-  --maroon-light:    #9a1c2a;
-  --maroon-pale:     #f9eef1;
-  --maroon-soft:     #f7dbe1;
-  --tan:             #e4c19c;
-  --sidebar-bg:      #3D1A1E;
+  --maroon:          #7A0C0C;
+  --maroon-deep:     #5a1218;
+  --maroon-light:    #991B1B;
+  --maroon-pale:     #FFF1F3;
+  --maroon-soft:     #FCE8EC;
+  --tan:             #F4C396;
+  --sidebar-bg:      #5a1218;
   --sidebar-hover:   rgba(255,255,255,0.07);
   --sidebar-active:  rgba(255,255,255,0.13);
-  --green:           #42c26e;
-  --green-light:     #dff4e5;
-  --orange:          #7b5405;
-  --orange-light:    #f7f1de;
-  --red:             #ef4444;
-  --red-light:       #f9dfe4;
-  --blue:            #0e614d;
-  --blue-light:      #ddeee9;
-  --purple:          #6D28D9;
-  --purple-light:    #EDE9FE;
+  --green:           #22C55E;
+  --green-light:     #E6F7ED;
+  --orange:          #5B3A00;
+  --orange-light:    #FFF7E0;
+  --red:             #EF4444;
+  --red-light:       #FCE8EC;
+  --blue:            #1a5276;
+  --blue-light:      #D6E4FF;
+  --purple:          #1a5276;
+  --purple-light:    #D6E4FF;
   --gray-100:        #F8F8F8;
   --gray-200:        #f3f4f6;
   --gray-300:        #cad2dc;
@@ -91,7 +91,7 @@ html, body {
   padding: 0 22px;
   gap: 14px;
   flex-shrink: 0;
-  border-bottom: 2px solid rgba(244,201,142,0.3);
+  border-bottom: 2px solid rgba(244,195,150,0.3);
 }
 
 .top-search-wrap {
@@ -178,7 +178,7 @@ html, body {
 .top-notif-badge {
   position: absolute;
   top: -2px; right: -2px;
-  background: #e53935;
+  background: #EF4444;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -266,7 +266,7 @@ html, body {
 }
 .sb-badge {
   margin-left: auto;
-  background: #e53935;
+  background: #EF4444;
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -593,7 +593,7 @@ html, body {
   justify-content: center;
   transition: all .15s;
 }
-.t-action-btn:hover { background: var(--maroon-soft); border-color: rgba(122,15,20,0.2); }
+.t-action-btn:hover { background: var(--maroon-soft); border-color: rgba(122,12,12,0.2); }
 .t-action-btn svg {
   width: 14px; height: 14px;
   stroke: var(--maroon);
@@ -906,7 +906,7 @@ html, body {
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  border-bottom: 2px solid rgba(244,201,142,0.3);
+  border-bottom: 2px solid rgba(244,195,150,0.3);
 }
 .notif-sidebar-title {
   font-size: 12px;
@@ -962,7 +962,7 @@ html, body {
   transition: background .15s;
 }
 .notif-item:hover { background: var(--gray-100); }
-.notif-item.unread { background: rgba(113,26,32,0.03); }
+.notif-item.unread { background: rgba(122,12,12,0.03); }
 
 .notif-icon-wrap {
   width: 40px; height: 40px;
@@ -1177,7 +1177,7 @@ html, body {
    UPLOAD / DROP ZONE
    ============================================================ */
 .drop-zone {
-  border: 2px dashed rgba(122,15,20,0.3);
+  border: 2px dashed rgba(122,12,12,0.3);
   border-radius: var(--radius);
   background: #fff;
   padding: 44px 20px;
@@ -1189,7 +1189,7 @@ html, body {
 .drop-zone:hover { background: var(--maroon-pale); border-color: var(--maroon); }
 .drop-icon {
   width: 52px; height: 52px;
-  border: 1.5px solid rgba(122,15,20,0.3);
+  border: 1.5px solid rgba(122,12,12,0.3);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -1226,7 +1226,7 @@ html, body {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 1px;
-  background: linear-gradient(135deg, #C2E5C5 0%, #9DD9F3 100%);
+  background: linear-gradient(135deg, #C9F2D2 0%, #9DD9F3 100%);
   color: var(--green);
   border: 1px solid rgba(45,113,53,0.2);
 }
@@ -1301,9 +1301,9 @@ html, body {
   font-weight: 700;
   letter-spacing: 0.5px;
 }
-.role-admin   { background: #C2E5C5; color: #2D7135; }
+.role-admin   { background: #C9F2D2; color: #22C55E; }
 .role-client  { background: #C9F2D2; color: #1C6B3F; }
-.role-manager { background: #F5CFCF; color: #C53336; }
+.role-manager { background: #FCE8EC; color: #EF4444; }
 .role-vendor  { background: #9DD9F3; color: #2E6B8A; }
 .role-ceo     { background: var(--maroon); color: #fff; }
 
@@ -1341,8 +1341,8 @@ html, body {
    ============================================================ */
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(122,15,20,0.2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(122,15,20,0.4); }
+::-webkit-scrollbar-thumb { background: rgba(122,12,12,0.2); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(122,12,12,0.4); }
 
 /* ============================================================
    UTILITY

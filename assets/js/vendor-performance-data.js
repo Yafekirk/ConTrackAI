@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           datasets: [
             {
               data: [has ? starRatingFromScore(overall) : 0, has ? Math.max(0, 5 - starRatingFromScore(overall)) : 5],
-              backgroundColor: ["#711A20", "#F0F0F0"],
+              backgroundColor: ["#7A0C0C", "#F0F0F0"],
               borderWidth: 0,
             },
           ],
@@ -116,7 +116,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           type: "line",
           data: {
             labels,
-            datasets: [{ data, borderColor: "#711A20", tension: 0.4, fill: false }],
+            datasets: [{ data, borderColor: "#7A0C0C", tension: 0.4, fill: false }],
           },
           options: {
             responsive: true,

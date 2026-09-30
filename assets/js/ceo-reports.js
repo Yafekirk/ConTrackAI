@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         type: "bar",
         data: {
           labels: monthLabels.length ? monthLabels : ["—"],
-          datasets: [{ data: monthData.length ? monthData : [0], backgroundColor: "rgba(113,26,32,0.75)", borderRadius: 4 }],
+          datasets: [{ data: monthData.length ? monthData : [0], backgroundColor: "rgba(122,12,12,0.75)", borderRadius: 4 }],
         },
         options: {
           responsive: true,
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         type: "bar",
         data: {
           labels: ["1.0–3.3", "3.4–3.7", "3.8–4.1", "4.2–4.5", "4.6–5.0"],
-          datasets: [{ data: buckets, backgroundColor: ["#C0392B", "#E67E22", "#F4A63A", "#2D7135", "#1a6b2e"], borderRadius: 4 }],
+          datasets: [{ data: buckets, backgroundColor: ["#EF4444", "#F4C396", "#F4C396", "#22C55E", "#065F46"], borderRadius: 4 }],
         },
         options: {
           responsive: true,

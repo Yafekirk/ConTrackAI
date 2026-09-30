@@ -24,7 +24,7 @@
   margin: 0 0 10px;
   font-size: 20px;
   font-weight: 700;
-  color: #7a0f14;
+  color: #7A0C0C;
 }
 
 .login-guard-dialog p {
@@ -55,6 +55,6 @@
 
 .login-guard-btn-primary {
   border: none;
-  background: #7a0f14;
+  background: #7A0C0C;
   color: #fff;
 }

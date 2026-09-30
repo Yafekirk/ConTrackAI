@@ -5,7 +5,7 @@
 
 body {
   margin: 0;
-  background: linear-gradient(135deg, #23090c, #7a0f14);
+  background: linear-gradient(135deg, #5a1218, #7A0C0C);
   min-height: 100vh;
 }
 
@@ -28,7 +28,7 @@ body {
 
 h1 {
   margin: 0 0 8px;
-  color: #711a20;
+  color: #7A0C0C;
 }
 
 p {
@@ -58,7 +58,7 @@ button {
   padding: 12px;
   color: #fff;
   cursor: pointer;
-  background: linear-gradient(135deg, #7a0f14, #9a1c2a);
+  background: linear-gradient(135deg, #7A0C0C, #991B1B);
 }
 
 .error {
@@ -71,6 +71,6 @@ button {
 .back-link {
   display: inline-block;
   margin-top: 10px;
-  color: #7a0f14;
+  color: #7A0C0C;
   font-weight: 600;
 }
