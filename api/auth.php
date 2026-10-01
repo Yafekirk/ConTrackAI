@@ -35,6 +35,8 @@ if ($email === "" || $password === "") {
     exit;
 }
 
+login_guard_reject_if_server_locked($email);
+
 $result = supabase_request(
     "GET",
     "users?email=eq." . urlencode($email) . "&select=id,name,company_name,email,role,password,is_disabled,last_login_at,last_seen_at&limit=1"
@@ -45,12 +47,23 @@ if (!$result["ok"]) {
     $hint = $result["error"] ?? null;
     $raw = is_string($result["raw"] ?? null) ? $result["raw"] : "";
     $message = "Authentication backend request failed";
+    // Configuration hints are only shown when CONTRACK_DEBUG=true; the detail is always logged.
+    $debug = env_flag("CONTRACK_DEBUG", false);
     if (stripos($raw, "Invalid API key") !== false || stripos($raw, "JWT") !== false) {
-        $message = "Supabase key is invalid. Check SUPABASE_SERVICE_ROLE_KEY in your PowerShell session.";
+        error_log("auth: Supabase key rejected: " . substr($raw, 0, 300));
+        if ($debug) {
+            $message = "Supabase key is invalid. Check SUPABASE_SERVICE_ROLE_KEY in your PowerShell session.";
+        }
     } elseif (stripos($raw, "column") !== false && stripos($raw, "does not exist") !== false) {
-        $message = "Database schema is outdated. Run sql/schema_phase1.sql in Supabase (users.is_disabled / audit_logs).";
+        error_log("auth: schema outdated: " . substr($raw, 0, 300));
+        if ($debug) {
+            $message = "Database schema is outdated. Run sql/schema_phase1.sql in Supabase (users.is_disabled / audit_logs).";
+        }
     } elseif ($hint) {
-        $message = $hint;
+        error_log("auth: backend error: " . substr((string)$hint, 0, 300));
+        if ($debug) {
+            $message = $hint;
+        }
     }
     echo json_encode(["error" => $message]);
     exit;
@@ -68,15 +81,16 @@ if (!empty($user["is_disabled"])) {
 }
 
 $stored = (string)($user["password"] ?? "");
-$valid = $stored !== "" && ($stored === $password || password_verify($password, $stored));
+$needsUpgrade = false;
+$valid = contrack_password_matches($stored, $password, $needsUpgrade);
 
 if (!$valid) {
     audit_log_event("login_failed", ["reason" => "bad_password", "email" => $email], (int)($user["id"] ?? 0));
     login_guard_reject_auth_failure();
 }
 
-// Auto-upgrade legacy plain text passwords to hash on successful login.
-if ($stored === $password) {
+// Auto-upgrade legacy plain text passwords (or outdated hashes) on successful login.
+if ($needsUpgrade) {
     $hashed = password_hash($password, PASSWORD_DEFAULT);
     $id = urlencode((string)$user["id"]);
     supabase_request("PATCH", "users?id=eq.{$id}", ["password" => $hashed]);
@@ -95,7 +109,7 @@ supabase_request(
 
 unset($user["password"]);
 login_guard_clear();
-set_session_user($user);
+contrack_start_authenticated_session($user);
 
 audit_log_event(
     "login_success",

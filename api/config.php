@@ -3,9 +3,13 @@ declare(strict_types=1);
 
 ini_set("display_errors", "0");
 ini_set("html_errors", "0");
-error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE & ~E_WARNING);
+// Never echo PHP errors to clients, but do log every notice/warning so bugs stay visible in the server log.
+ini_set("log_errors", "1");
+error_reporting(E_ALL & ~E_DEPRECATED);
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    // Reject session ids the server did not issue (blocks session fixation via a planted cookie).
+    ini_set("session.use_strict_mode", "1");
     // The session is the only credential the portals hold, so give it a full work day
     // instead of PHP's 24-minute default.
     $sessionLifetime = 8 * 60 * 60;
@@ -128,12 +132,12 @@ function normalize_role(string $role): string
 function require_session(): array
 {
     $user = get_session_user();
-    if ($user === null) {
+    if ($user === null || !contrack_session_revalidate()) {
         http_response_code(401);
         echo json_encode(["error" => "Sign in required"]);
         exit;
     }
-    return $user;
+    return get_session_user() ?? $user;
 }
 
 function require_roles(array $roles): string
@@ -160,6 +164,103 @@ function get_request_user_id(): ?int
         return null;
     }
     return (int)$value;
+}
+
+/**
+ * Start a fresh authenticated session after login/signup. Regenerating the id prevents session fixation.
+ */
+function contrack_start_authenticated_session(array $user): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_regenerate_id(true);
+    }
+    set_session_user($user);
+}
+
+function contrack_destroy_session(): void
+{
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        if (ini_get("session.use_cookies")) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), "", time() - 42000, $params["path"], $params["domain"], (bool)$params["secure"], (bool)$params["httponly"]);
+        }
+        session_destroy();
+    }
+}
+
+/**
+ * Re-check the signed-in account against the database once per request.
+ * Disabled or deleted accounts lose their session immediately, and role changes apply right away.
+ * A failed lookup keeps the session so a database hiccup does not sign everyone out.
+ */
+function contrack_session_revalidate(): bool
+{
+    static $result = null;
+    if ($result !== null) {
+        return $result;
+    }
+    $sessionUser = $_SESSION["contrack_user"] ?? null;
+    if (!is_array($sessionUser) || empty($sessionUser["id"])) {
+        // No real session (dev header auth or nobody signed in): nothing to revalidate.
+        return $result = true;
+    }
+    $id = (int)$sessionUser["id"];
+    $lookup = supabase_request(
+        "GET",
+        "users?id=eq.{$id}&select=id,name,company_name,email,role,is_disabled&limit=1"
+    );
+    if (!$lookup["ok"] || !is_array($lookup["data"])) {
+        error_log("session revalidation skipped: " . (string)($lookup["raw"] ?? $lookup["error"] ?? ""));
+        return $result = true;
+    }
+    $row = $lookup["data"][0] ?? null;
+    if (!is_array($row) || !empty($row["is_disabled"])) {
+        contrack_destroy_session();
+        return $result = false;
+    }
+    set_session_user($row);
+    return $result = true;
+}
+
+/**
+ * Message safe to show a client. The raw upstream body is always logged; it is only returned
+ * when CONTRACK_DEBUG=true (local development).
+ */
+function contrack_upstream_error(array $result, string $fallback): string
+{
+    $detail = (string)($result["raw"] ?? $result["error"] ?? "");
+    if ($detail !== "") {
+        error_log("upstream error ({$fallback}): " . substr($detail, 0, 1000));
+    }
+    if ($detail !== "" && env_flag("CONTRACK_DEBUG", false)) {
+        return $detail;
+    }
+    return $fallback;
+}
+
+/**
+ * Compare a submitted password with the stored value.
+ * Hashes use password_verify. Legacy plain text rows are compared in constant time and
+ * reported through $needsUpgrade so the caller can re-save them as hashes.
+ */
+function contrack_password_matches(string $stored, string $provided, bool &$needsUpgrade = false): bool
+{
+    $needsUpgrade = false;
+    if ($stored === "" || $provided === "") {
+        return false;
+    }
+    $info = password_get_info($stored);
+    if (($info["algo"] ?? null) !== null && $info["algo"] !== 0) {
+        $ok = password_verify($provided, $stored);
+        $needsUpgrade = $ok && password_needs_rehash($stored, PASSWORD_DEFAULT);
+        return $ok;
+    }
+    if (hash_equals($stored, $provided)) {
+        $needsUpgrade = true;
+        return true;
+    }
+    return false;
 }
 
 function set_session_user(array $user): void
@@ -210,6 +311,98 @@ function get_session_user(): ?array
         "role" => normalize_role(strtolower(trim((string)($headerRole ?? "vendor")))),
     ];
 }
+
+/**
+ * Central error reporting.
+ *  - Render: every message goes through error_log(), which the PHP server writes to stderr, so it
+ *    shows up in the Render service logs. Search for "[contrack]".
+ *  - Supabase: serious problems (uncaught exceptions, fatal errors, database/network failures) are also
+ *    saved as audit_logs rows with event_type = 'system_error'. Warnings and expected 4xx stay in the log only.
+ * At most 5 rows are written per request, and a failure while saving never raises another error.
+ */
+function contrack_record_error(string $kind, string $message, array $context = []): void
+{
+    static $busy = false;
+    static $stored = 0;
+
+    $line = "[contrack][{$kind}] {$message}";
+    if ($context !== []) {
+        $line .= " " . json_encode($context, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
+    }
+    error_log(substr($line, 0, 4000));
+
+    if ($busy || $stored >= 5 || env_value("SUPABASE_URL") === null || env_value("SUPABASE_SERVICE_ROLE_KEY") === null) {
+        return;
+    }
+    $busy = true;
+    $stored++;
+    try {
+        $sessionUser = $_SESSION["contrack_user"] ?? [];
+        supabase_request("POST", "audit_logs", [[
+            "event_type" => "system_error",
+            "details" => [
+                "kind" => $kind,
+                "message" => substr($message, 0, 1500),
+                "context" => $context,
+                "method" => (string)($_SERVER["REQUEST_METHOD"] ?? "CLI"),
+                "path" => (string)parse_url((string)($_SERVER["REQUEST_URI"] ?? ""), PHP_URL_PATH),
+                "user_id" => is_array($sessionUser) ? ($sessionUser["id"] ?? null) : null,
+                "role" => is_array($sessionUser) ? ($sessionUser["role"] ?? null) : null,
+            ],
+            "actor_user_id" => null,
+            "ip_address" => client_ip(),
+            "created_at" => gmdate("c"),
+        ]]);
+    } catch (Throwable $ignored) {
+        // Never let error reporting cause another error.
+    } finally {
+        $busy = false;
+    }
+}
+
+function contrack_note_upstream_failure(string $method, string $path, int $status, string $curlError, string $raw): void
+{
+    // Query strings can hold emails and ids, so only the table/endpoint name is reported.
+    $target = strtoupper($method) . " " . (string)strtok($path, "?");
+    $detail = $curlError !== "" ? $curlError : substr($raw, 0, 600);
+    $serious = $curlError !== "" || $status >= 500;
+    if (!$serious || strpos(ltrim($path, "/"), "audit_logs") === 0) {
+        error_log("[contrack][supabase] {$target} -> HTTP {$status}: " . substr($detail, 0, 600));
+        return;
+    }
+    contrack_record_error("supabase", "{$target} failed (HTTP {$status}): {$detail}");
+}
+
+set_error_handler(static function (int $severity, string $message, string $file, int $line): bool {
+    if ((error_reporting() & $severity) === 0) {
+        return false; // silenced with @ or excluded: keep PHP's default behaviour
+    }
+    error_log(sprintf("[contrack][php] %s in %s:%d", $message, basename($file), $line));
+    return true;
+});
+
+set_exception_handler(static function (Throwable $e): void {
+    contrack_record_error("exception", get_class($e) . ": " . $e->getMessage(), [
+        "file" => basename($e->getFile()),
+        "line" => $e->getLine(),
+    ]);
+    if (!headers_sent()) {
+        http_response_code(500);
+    }
+    echo json_encode(["error" => "Something went wrong on the server. It has been logged."]);
+    exit;
+});
+
+register_shutdown_function(static function (): void {
+    $last = error_get_last();
+    if ($last === null || !in_array($last["type"], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR, E_USER_ERROR], true)) {
+        return;
+    }
+    contrack_record_error("fatal", (string)$last["message"], [
+        "file" => basename((string)$last["file"]),
+        "line" => (int)$last["line"],
+    ]);
+});
 
 function supabase_request(string $method, string $path, ?array $payload = null): array
 {
@@ -263,6 +456,10 @@ function supabase_request(string $method, string $path, ?array $payload = null):
     $error = curl_error($ch);
     curl_close($ch);
 
+    if ($error || $status < 200 || $status >= 300) {
+        contrack_note_upstream_failure($method, $path, (int)$status, (string)$error, is_string($raw) ? $raw : "");
+    }
+
     if ($error) {
         $isTlsCertError = stripos($error, "unable to get local issuer certificate") !== false
             || stripos($error, "SSL certificate problem") !== false
@@ -286,12 +483,11 @@ function supabase_request(string $method, string $path, ?array $payload = null):
 
 function client_ip(): ?string
 {
-    $headers = [
-        "HTTP_CF_CONNECTING_IP",
-        "HTTP_X_FORWARDED_FOR",
-        "HTTP_X_REAL_IP",
-        "REMOTE_ADDR",
-    ];
+    // Forwarding headers are client-controlled. Only honour them when the app sits behind a
+    // proxy you trust (set CONTRACK_TRUST_PROXY=true there); otherwise use the socket address.
+    $headers = env_flag("CONTRACK_TRUST_PROXY", false)
+        ? ["HTTP_CF_CONNECTING_IP", "HTTP_X_FORWARDED_FOR", "HTTP_X_REAL_IP", "REMOTE_ADDR"]
+        : ["REMOTE_ADDR"];
     foreach ($headers as $key) {
         $raw = $_SERVER[$key] ?? null;
         if (!is_string($raw) || $raw === "") {
@@ -301,9 +497,59 @@ function client_ip(): ?string
             $parts = array_map("trim", explode(",", $raw));
             $raw = $parts[0] ?? $raw;
         }
+        if (filter_var($raw, FILTER_VALIDATE_IP) === false) {
+            continue;
+        }
         return substr($raw, 0, 128);
     }
     return null;
+}
+
+/**
+ * Cross-site request guard for state-changing calls. Browsers always send Origin (or Referer)
+ * on cross-site POST/PATCH/DELETE, so a request from another site is refused. Calls with neither
+ * header (curl, server-to-server) are not browser CSRF and pass through.
+ * Extra trusted origins can be listed in CONTRACK_ALLOWED_ORIGINS (comma separated).
+ */
+function contrack_enforce_same_origin(): void
+{
+    $method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? ""));
+    if ($method === "" || in_array($method, ["GET", "HEAD", "OPTIONS"], true)) {
+        return;
+    }
+    $source = (string)($_SERVER["HTTP_ORIGIN"] ?? "");
+    if ($source === "") {
+        $source = (string)($_SERVER["HTTP_REFERER"] ?? "");
+    }
+    if ($source === "") {
+        return;
+    }
+    $parts = parse_url($source);
+    $sourceHost = is_array($parts) ? strtolower((string)($parts["host"] ?? "")) : "";
+    if ($sourceHost !== "") {
+        $sourceAuthority = $sourceHost . (isset($parts["port"]) ? ":" . $parts["port"] : "");
+        $hosts = [strtolower((string)($_SERVER["HTTP_HOST"] ?? ""))];
+        if (env_flag("CONTRACK_TRUST_PROXY", false) && !empty($_SERVER["HTTP_X_FORWARDED_HOST"])) {
+            $hosts[] = strtolower(trim(explode(",", (string)$_SERVER["HTTP_X_FORWARDED_HOST"])[0]));
+        }
+        if (in_array($sourceAuthority, $hosts, true)) {
+            return;
+        }
+        $allowed = array_filter(array_map("trim", explode(",", strtolower((string)env_value("CONTRACK_ALLOWED_ORIGINS", "")))));
+        foreach ($allowed as $entry) {
+            $entryHost = parse_url($entry, PHP_URL_HOST);
+            $entryPort = parse_url($entry, PHP_URL_PORT);
+            $entryAuthority = is_string($entryHost) && $entryHost !== ""
+                ? $entryHost . ($entryPort ? ":" . $entryPort : "")
+                : $entry;
+            if ($entryAuthority === $sourceAuthority) {
+                return;
+            }
+        }
+    }
+    http_response_code(403);
+    echo json_encode(["error" => "Cross-site request blocked"]);
+    exit;
 }
 
 /**
@@ -404,3 +650,5 @@ function notify_role_users(string $role, string $title, string $message): void
     }
 }
 
+
+contrack_enforce_same_origin();

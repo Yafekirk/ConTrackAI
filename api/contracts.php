@@ -30,7 +30,8 @@ if ($view === "nlp_extract") {
             $tmp = (string)($_FILES["contract_pdf"]["tmp_name"] ?? "");
             $head = ($tmp !== "" && is_file($tmp)) ? (string)@file_get_contents($tmp, false, null, 0, 5) : "";
             $isPdf = str_ends_with($name, ".pdf") || str_starts_with($head, "%PDF");
-            if ($isPdf && $tmp !== "" && is_file($tmp) && ($err === UPLOAD_ERR_OK)) {
+            $uploadSize = (int)($_FILES["contract_pdf"]["size"] ?? 0);
+            if ($isPdf && $tmp !== "" && is_uploaded_file($tmp) && $uploadSize > 0 && $uploadSize <= 26 * 1024 * 1024 && ($err === UPLOAD_ERR_OK)) {
                 $pdfTmp = $tmp;
             }
         }
@@ -86,7 +87,7 @@ if ($view === "performance") {
     }
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
         exit;
     }
     $rows = is_array($result["data"]) ? $result["data"] : [];
@@ -175,7 +176,7 @@ if ($view === "stats") {
 
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
         exit;
     }
 
@@ -286,7 +287,7 @@ if ($view === "vendor_summary") {
     );
     if (!$cRes["ok"]) {
         http_response_code($cRes["status"]);
-        echo json_encode(["error" => $cRes["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($cRes, "Supabase request failed")]);
         exit;
     }
 
@@ -435,7 +436,7 @@ if ($view === "pending_approvals") {
     if ($result["ok"]) {
         echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -454,7 +455,7 @@ if ($view === "manager_pending") {
     if ($result["ok"]) {
         echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -472,7 +473,7 @@ if ($view === "manager_mine") {
     if ($result["ok"]) {
         echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -501,7 +502,7 @@ if ($view === "list") {
         }
         echo json_encode($rows);
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -519,7 +520,7 @@ if ($view === "renewals") {
     $result = supabase_request("GET", $path);
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
         exit;
     }
     $notices = [];
@@ -568,7 +569,7 @@ if ($view === "archive") {
     $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}", $payload);
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Failed to archive"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Failed to archive")]);
         exit;
     }
     audit_log_event("contract_archived", ["contract_id" => (string)$input["id"]], $userId);
@@ -619,6 +620,12 @@ if ($view === "manager_review") {
         $payload["status"] = "modification";
     }
     $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=eq.pending", $payload);
+    if ($result["ok"] && is_array($result["data"]) && $result["data"] === []) {
+        // The guarded update matched nothing (wrong id, or no longer pending): do not audit or notify.
+        http_response_code(409);
+        echo json_encode(["error" => "This contract is no longer pending review."]);
+        exit;
+    }
     http_response_code($result["status"]);
     if ($result["ok"]) {
         $reviewedRow = is_array($result["data"][0] ?? null) ? $result["data"][0] : [];
@@ -669,7 +676,7 @@ if ($view === "manager_review") {
         }
         echo json_encode($result["data"] ?? ["ok" => true]);
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -722,7 +729,7 @@ if ($view === "vendor_resubmit") {
     ]);
     if (!$result["ok"]) {
         http_response_code($result["status"] ?: 500);
-        echo json_encode(["error" => $result["raw"] ?? "Failed to resubmit"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Failed to resubmit")]);
         exit;
     }
     $title = (string)($row["contract_title"] ?? "Contract");
@@ -797,6 +804,12 @@ if ($view === "create") {
             exit;
         }
         $pdfBase64 = trim((string)($input["pdf_base64"] ?? ""));
+        // 26 MB of PDF is about 34.7 MB of base64; refuse anything larger before decoding or running NLP.
+        if (strlen($pdfBase64) > 36 * 1024 * 1024) {
+            http_response_code(413);
+            echo json_encode(["error" => "PDF is too large (26 MB maximum)."]);
+            exit;
+        }
     }
 
     $contractTextRaw = trim((string)($input["contract_text"] ?? ""));
@@ -893,6 +906,25 @@ if ($view === "create") {
         exit;
     }
 
+    $endTs = strtotime($endDate);
+    $startTs = $startDate !== "" ? strtotime($startDate) : null;
+    $inputError = null;
+    if ($endTs === false) {
+        $inputError = "end_date is not a valid date";
+    } elseif ($startDate !== "" && $startTs === false) {
+        $inputError = "start_date is not a valid date";
+    } elseif ($startTs !== null && $startTs > $endTs) {
+        $inputError = "start_date cannot be after end_date";
+    } elseif ($contractValue > 1e13) {
+        $inputError = "contract_value is too large";
+    }
+    if ($inputError !== null) {
+        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
+        http_response_code(400);
+        echo json_encode(["error" => $inputError]);
+        exit;
+    }
+
     $hasPdf = $pdfTmpPath !== null || $pdfBase64 !== "";
     if ($role === "vendor" && !$hasPdf) {
         nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
@@ -953,6 +985,7 @@ if ($view === "create") {
     if ($submissionText !== "") {
         $payload[0]["submission_text"] = $submissionText;
     }
+    $submittedOptionalKeys = array_keys($payload[0]);
     $result = supabase_request("POST", "vendor_contracts", $payload);
     if (!$result["ok"]) {
         $rawErr = (string)($result["raw"] ?? "");
@@ -977,6 +1010,15 @@ if ($view === "create") {
                 $result = supabase_request("POST", "vendor_contracts", $payload);
             }
         }
+    }
+    $droppedColumns = array_values(array_diff(
+        ["renewal_terms", "penalty_clause", "financial_obligations", "classification", "submission_text"],
+        array_keys($payload[0])
+    ));
+    $droppedNonEmpty = array_values(array_filter($droppedColumns, static fn(string $k): bool => in_array($k, $submittedOptionalKeys, true)));
+    if ($droppedNonEmpty !== []) {
+        // Older database schema: the insert only succeeded after removing these columns. Run sql/schema_phase1.sql.
+        error_log("contract create: saved without columns missing from the database: " . implode(",", $droppedNonEmpty));
     }
     http_response_code($result["status"]);
     if ($result["ok"] && is_array($result["data"]) && isset($result["data"][0])) {
@@ -1029,7 +1071,7 @@ if ($view === "create") {
         echo json_encode($row);
     } else {
         nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }
@@ -1091,10 +1133,14 @@ if ($view === "decision") {
         exit;
     }
 
+    $ceoNotesRaw = $input["ceo_notes"] ?? null;
+    $ceoNotes = is_scalar($ceoNotesRaw) ? substr(trim((string)$ceoNotesRaw), 0, 4000) : "";
+    $ceoNotes = $ceoNotes === "" ? null : $ceoNotes;
+
     $reviewedBy = "ceo_user:" . (string)(int)$ceoId;
     $payload = [
         "status" => $status,
-        "ceo_notes" => $input["ceo_notes"] ?? null,
+        "ceo_notes" => $ceoNotes,
         "reviewed_at" => gmdate("c"),
         "reviewed_by" => $reviewedBy,
     ];
@@ -1133,7 +1179,7 @@ if ($view === "decision") {
         }
         echo json_encode($result["data"] ?? ["ok" => true]);
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Supabase request failed"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
     }
     exit;
 }

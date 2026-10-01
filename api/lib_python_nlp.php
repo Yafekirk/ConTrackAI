@@ -113,14 +113,52 @@ function python_nlp_extract(string $text, ?string $pdfPath = null): ?array
     fwrite($pipes[0], $jsonIn);
     fclose($pipes[0]);
 
-    stream_set_blocking($pipes[1], true);
-    $stdout = stream_get_contents($pipes[1]);
-    $stderr = stream_get_contents($pipes[2]);
+    // Read output without blocking so a hung or runaway extractor cannot tie up the PHP worker.
+    $timeoutSeconds = (int)(getenv("CONTRACK_NLP_TIMEOUT") ?: 90);
+    if ($timeoutSeconds < 5) {
+        $timeoutSeconds = 90;
+    }
+    stream_set_blocking($pipes[1], false);
+    stream_set_blocking($pipes[2], false);
+    $stdout = "";
+    $stderr = "";
+    $code = -1;
+    $timedOut = false;
+    $deadline = microtime(true) + $timeoutSeconds;
+    while (true) {
+        $chunk = stream_get_contents($pipes[1]);
+        if (is_string($chunk) && $chunk !== "") {
+            $stdout .= $chunk;
+        }
+        $chunk = stream_get_contents($pipes[2]);
+        if (is_string($chunk) && $chunk !== "") {
+            $stderr .= $chunk;
+        }
+        $status = proc_get_status($proc);
+        if (!$status["running"]) {
+            $code = (int)$status["exitcode"];
+            break;
+        }
+        if (microtime(true) > $deadline) {
+            $timedOut = true;
+            proc_terminate($proc);
+            break;
+        }
+        usleep(20000);
+    }
+    $rest = stream_get_contents($pipes[1]);
+    $stdout .= is_string($rest) ? $rest : "";
+    $rest = stream_get_contents($pipes[2]);
+    $stderr .= is_string($rest) ? $rest : "";
     fclose($pipes[1]);
     fclose($pipes[2]);
-    $code = proc_close($proc);
+    proc_close($proc);
     if ($workPdf !== "" && $workPdf !== $pdfPath) {
         @unlink($workPdf);
+    }
+    if ($timedOut) {
+        error_log("python nlp timed out after {$timeoutSeconds}s; falling back to PHP extraction");
+        return null;
     }
     if ($code !== 0 && ($stdout === false || trim((string)$stdout) === "")) {
         error_log("python nlp failed: " . (string)$stderr);

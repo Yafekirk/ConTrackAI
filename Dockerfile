@@ -14,6 +14,9 @@ RUN python3 -m venv /opt/nlp-venv \
 
 ENV PYTHON_BINARY=/opt/nlp-venv/bin/python
 ENV CONTRACK_HTTPS=true
+# The platform proxy sets X-Forwarded-For; trust it only because this image runs behind that proxy.
+ENV CONTRACK_TRUST_PROXY=true
 
 EXPOSE 10000
-CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-10000} -t /app"]
+# router.php hides .git, sql, scripts, stored PDFs and other non-public paths from the built-in server.
+CMD ["sh", "-c", "php -S 0.0.0.0:${PORT:-10000} -t /app /app/router.php"]

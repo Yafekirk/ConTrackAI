@@ -3,3 +3,7 @@ __pycache__/
 *.pyc
 storage/contract_pdfs/*
 .cursor/
+.env
+.env.*
+*.local.ps1
+certs/cacert.pem

@@ -33,7 +33,7 @@ $rows = ($result["ok"] && is_array($result["data"])) ? $result["data"] : [];
 if (isset($_GET["download"])) {
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Failed to fetch NLP usage"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Failed to fetch NLP usage")]);
         exit;
     }
     header("Content-Type: text/csv; charset=utf-8");
@@ -87,4 +87,4 @@ if (isset($_GET["download"])) {
 }
 
 http_response_code($result["ok"] ? 200 : (int)$result["status"]);
-echo json_encode($result["ok"] ? $rows : ["error" => $result["raw"] ?? "Failed to fetch NLP usage"]);
+echo json_encode($result["ok"] ? $rows : ["error" => contrack_upstream_error($result, "Failed to fetch NLP usage")]);

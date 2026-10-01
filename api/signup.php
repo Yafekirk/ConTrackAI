@@ -108,25 +108,29 @@ if (!$created["ok"] || !is_array($created["data"]) || count($created["data"]) ==
 
         if ($invalidKey) {
             http_response_code(500);
-            echo json_encode(["error" => "Supabase key is invalid or missing. Re-check SUPABASE_SERVICE_ROLE_KEY before starting the PHP server."]);
+            error_log("signup: Supabase key rejected: " . substr($raw, 0, 300));
+            echo json_encode(["error" => env_flag("CONTRACK_DEBUG", false)
+                ? "Supabase key is invalid or missing. Re-check SUPABASE_SERVICE_ROLE_KEY before starting the PHP server."
+                : "Account service is temporarily unavailable."]);
             exit;
         }
 
         if ($missingCurl) {
             http_response_code(500);
-            echo json_encode(["error" => $lowLevelError]);
+            error_log("signup: " . $lowLevelError);
+            echo json_encode(["error" => env_flag("CONTRACK_DEBUG", false) ? $lowLevelError : "Account service is temporarily unavailable."]);
             exit;
         }
 
         http_response_code($created["status"] ?: 500);
-        echo json_encode(["error" => $raw !== "" ? $raw : ($lowLevelError !== "" ? $lowLevelError : "Failed to create account")]);
+        echo json_encode(["error" => contrack_upstream_error($created, "Failed to create account")]);
         exit;
     }
 }
 
 $user = $created["data"][0];
 unset($user["password"]);
-set_session_user($user);
+contrack_start_authenticated_session($user);
 
 audit_log_event("account_created", ["email" => $email, "role" => "vendor"], (int)($user["id"] ?? 0));
 audit_log_event(

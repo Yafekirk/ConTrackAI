@@ -105,7 +105,7 @@ if ($method === "GET" && $view === "criteria") {
         : "vendor_score_criteria?is_active=eq.true&select=id,code,name,description,weight,sort_order,is_active&order=sort_order.asc";
     $result = supabase_request("GET", $path);
     http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => $result["raw"] ?? "Failed to load criteria"]);
+    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => contrack_upstream_error($result, "Failed to load criteria")]);
     exit;
 }
 
@@ -118,7 +118,7 @@ if ($method === "GET" && $view === "vendors") {
         "users?or=(role.eq.vendor,role.eq.client,role.eq.vendor_client)&select=id,name,company_name,email,role,supplier_type,contact_number,is_disabled&order=name.asc"
     );
     if (!$users["ok"]) {
-        vendor_scores_json_error($users["status"] ?: 500, $users["raw"] ?? "Failed to load vendors.");
+        vendor_scores_json_error($users["status"] ?: 500, contrack_upstream_error($users, "Failed to load vendors."));
     }
     $latest = vendor_score_latest_by_vendor();
     $out = [];
@@ -166,7 +166,7 @@ if ($method === "GET" && ($view === "list" || $view === "summary")) {
 
     $result = supabase_request("GET", $path);
     if (!$result["ok"]) {
-        vendor_scores_json_error($result["status"] ?: 500, $result["raw"] ?? "Failed to load evaluations.");
+        vendor_scores_json_error($result["status"] ?: 500, contrack_upstream_error($result, "Failed to load evaluations."));
     }
     $rows = vendor_score_attach_people(is_array($result["data"]) ? $result["data"] : []);
     if ($view === "summary") {
@@ -248,7 +248,7 @@ if ($method === "POST" && $view === "criteria") {
     $patch["updated_at"] = gmdate("c");
     $result = supabase_request("PATCH", "vendor_score_criteria?id=eq.{$id}", $patch);
     if (!$result["ok"]) {
-        vendor_scores_json_error($result["status"] ?: 500, $result["raw"] ?? "Failed to update criterion.");
+        vendor_scores_json_error($result["status"] ?: 500, contrack_upstream_error($result, "Failed to update criterion."));
     }
     audit_log_event("vendor_score_criteria_updated", ["id" => $id, "fields" => array_keys($patch)], $actorId);
     echo json_encode($result["data"][0] ?? ["ok" => true]);
@@ -299,7 +299,7 @@ if ($method === "POST" && $view === "create") {
         "remarks" => $remarks === "" ? null : $remarks,
     ]]);
     if (!$insert["ok"] || !is_array($insert["data"][0] ?? null)) {
-        vendor_scores_json_error($insert["status"] ?: 500, $insert["raw"] ?? "Could not save the evaluation.");
+        vendor_scores_json_error($insert["status"] ?: 500, contrack_upstream_error($insert, "Could not save the evaluation."));
     }
     $eval = $insert["data"][0];
     if (!vendor_scores_persist_lines((string)$eval["id"], $calc["lines"])) {
@@ -363,6 +363,15 @@ if ($method === "POST" && $view === "update") {
 
     $overall = $calc["overall"];
     $rating = vendor_score_rating($overall);
+    // Keep the saved version so a failed write can be rolled back instead of leaving a half-updated score.
+    $previousLines = vendor_score_load_lines($id);
+    $previousHeader = [
+        "overall_score" => $eval["overall_score"] ?? null,
+        "rating" => $eval["rating"] ?? null,
+        "remarks" => $eval["remarks"] ?? null,
+        "evaluated_at" => $eval["evaluated_at"] ?? null,
+        "updated_at" => $eval["updated_at"] ?? null,
+    ];
     $patch = supabase_request("PATCH", "vendor_evaluations?id=eq." . urlencode($id), [
         "overall_score" => $overall,
         "rating" => $rating,
@@ -371,9 +380,18 @@ if ($method === "POST" && $view === "update") {
         "updated_at" => gmdate("c"),
     ]);
     if (!$patch["ok"] || !is_array($patch["data"][0] ?? null)) {
-        vendor_scores_json_error($patch["status"] ?: 500, $patch["raw"] ?? "Could not update the evaluation.");
+        vendor_scores_json_error($patch["status"] ?: 500, contrack_upstream_error($patch, "Could not update the evaluation."));
     }
     if (!vendor_scores_persist_lines($id, $calc["lines"])) {
+        supabase_request("PATCH", "vendor_evaluations?id=eq." . urlencode($id), $previousHeader);
+        $restored = vendor_scores_persist_lines($id, array_map(static fn(array $l): array => [
+            "criterion_id" => $l["criterion_id"] ?? 0,
+            "score" => $l["score"] ?? 0,
+            "weighted_score" => $l["weighted_score"] ?? 0,
+        ], $previousLines));
+        if (!$restored) {
+            error_log("vendor score update rollback failed for evaluation {$id}");
+        }
         vendor_scores_json_error(500, "Could not save criterion scores.");
     }
     audit_log_event(
@@ -402,7 +420,7 @@ if ($method === "POST" && $view === "delete") {
     }
     $del = supabase_request("DELETE", "vendor_evaluations?id=eq." . urlencode($id));
     if (!$del["ok"]) {
-        vendor_scores_json_error($del["status"] ?: 500, $del["raw"] ?? "Could not delete the evaluation.");
+        vendor_scores_json_error($del["status"] ?: 500, contrack_upstream_error($del, "Could not delete the evaluation."));
     }
     audit_log_event("vendor_evaluation_deleted", ["evaluation_id" => $id, "vendor_id" => $eval["vendor_id"] ?? null], $actorId);
     echo json_encode(["ok" => true, "id" => $id]);

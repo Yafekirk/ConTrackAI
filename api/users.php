@@ -13,7 +13,7 @@ if ($method === "GET") {
         "users?select=id,name,company_name,email,role,contact_number,supplier_type,created_at,last_login_at,last_seen_at,is_disabled&order=created_at.desc"
     );
     http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => $result["raw"] ?? "Failed to fetch users"]);
+    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => contrack_upstream_error($result, "Failed to fetch users")]);
     exit;
 }
 
@@ -75,7 +75,11 @@ if ($method === "POST") {
         unset($created["password"]);
         echo json_encode($created);
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Failed to create user"]);
+        $rawBody = (string)($result["raw"] ?? "");
+        $duplicate = stripos($rawBody, "duplicate key") !== false || stripos($rawBody, "23505") !== false;
+        echo json_encode(["error" => $duplicate
+            ? "Email is already registered"
+            : contrack_upstream_error($result, "Failed to create user")]);
     }
     exit;
 }
@@ -124,7 +128,13 @@ if ($method === "PATCH") {
         $patch["role"] = $r;
     }
     if (array_key_exists("is_disabled", $input)) {
-        $patch["is_disabled"] = (bool)$input["is_disabled"];
+        $disabledFlag = filter_var($input["is_disabled"], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+        if ($disabledFlag === null) {
+            http_response_code(400);
+            echo json_encode(["error" => "is_disabled must be true or false"]);
+            exit;
+        }
+        $patch["is_disabled"] = $disabledFlag;
     }
 
     if ($patch === []) {
@@ -147,7 +157,7 @@ if ($method === "PATCH") {
         );
         echo json_encode($result["data"] ?? ["ok" => true]);
     } else {
-        echo json_encode(["error" => $result["raw"] ?? "Failed to update user"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Failed to update user")]);
     }
     exit;
 }

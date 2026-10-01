@@ -90,7 +90,7 @@ if (($input["action"] ?? "") === "profile") {
     $updated = supabase_request("PATCH", "users?id=eq." . urlencode((string)$selfId), $patch);
     if (!$updated["ok"]) {
         http_response_code($updated["status"] ?: 500);
-        echo json_encode(["error" => $updated["raw"] ?? "Failed to update profile"]);
+        echo json_encode(["error" => contrack_upstream_error($updated, "Failed to update profile")]);
         exit;
     }
 
@@ -125,6 +125,24 @@ if ($passwordError !== null) {
 }
 
 $userId = (int)($sessionUser["id"] ?? 0);
+
+// Throttle guessing of the current password from a hijacked session: 5 misses in 15 minutes
+// pause further attempts for 60 seconds. A lookup failure never blocks a legitimate change.
+$recentMisses = supabase_request(
+    "GET",
+    "audit_logs?event_type=eq.password_change_failed&actor_user_id=eq.{$userId}"
+    . "&created_at=gte." . rawurlencode(gmdate("c", time() - 900))
+    . "&select=created_at&order=created_at.desc&limit=5"
+);
+if ($recentMisses["ok"] && is_array($recentMisses["data"]) && count($recentMisses["data"]) >= 5) {
+    $lastMiss = strtotime((string)($recentMisses["data"][0]["created_at"] ?? ""));
+    if ($lastMiss !== false && (time() - $lastMiss) < 60) {
+        http_response_code(429);
+        echo json_encode(["error" => "Too many incorrect attempts. Try again in a minute."]);
+        exit;
+    }
+}
+
 $result = supabase_request(
     "GET",
     "users?id=eq." . urlencode((string)$userId) . "&select=id,password&limit=1"
@@ -138,8 +156,9 @@ if (!$result["ok"] || !is_array($result["data"]) || count($result["data"]) === 0
 
 $row = $result["data"][0];
 $stored = (string)($row["password"] ?? "");
-$valid = $stored !== "" && ($stored === $current || password_verify($current, $stored));
+$valid = contrack_password_matches($stored, $current);
 if (!$valid) {
+    audit_log_event("password_change_failed", [], $userId);
     http_response_code(401);
     echo json_encode(["error" => "Current password is incorrect"]);
     exit;
@@ -154,7 +173,7 @@ $patch = supabase_request(
 
 if (!$patch["ok"]) {
     http_response_code($patch["status"] ?: 500);
-    echo json_encode(["error" => $patch["raw"] ?? "Failed to update password"]);
+    echo json_encode(["error" => contrack_upstream_error($patch, "Failed to update password")]);
     exit;
 }
 

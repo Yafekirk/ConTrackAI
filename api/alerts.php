@@ -24,7 +24,7 @@ if ($method === "GET") {
     $path = "alerts?user_id=eq.{$userId}&select=id,user_id,title,message,status,created_at&order=created_at.desc&limit={$limit}";
     $result = supabase_request("GET", $path);
     http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => $result["raw"] ?? "Failed to fetch alerts"]);
+    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => contrack_upstream_error($result, "Failed to fetch alerts")]);
     exit;
 }
 
@@ -46,7 +46,7 @@ if ($method === "PATCH") {
             ["status" => $status]
         );
         http_response_code($result["status"]);
-        echo json_encode($result["ok"] ? ["ok" => true] : ["error" => $result["raw"] ?? "Failed to update alerts"]);
+        echo json_encode($result["ok"] ? ["ok" => true] : ["error" => contrack_upstream_error($result, "Failed to update alerts")]);
         exit;
     }
     $id = (int)($input["id"] ?? 0);
@@ -61,7 +61,7 @@ if ($method === "PATCH") {
         ["status" => $status]
     );
     http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? ["ok" => true]) : ["error" => $result["raw"] ?? "Failed to update alert"]);
+    echo json_encode($result["ok"] ? ($result["data"] ?? ["ok" => true]) : ["error" => contrack_upstream_error($result, "Failed to update alert")]);
     exit;
 }
 

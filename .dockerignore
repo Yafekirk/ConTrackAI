@@ -2,3 +2,10 @@ nlp/.venv
 __pycache__
 *.pyc
 storage/contract_pdfs/*
+.git
+.gitignore
+.cursor
+.env
+.env.*
+*.local.ps1
+sql

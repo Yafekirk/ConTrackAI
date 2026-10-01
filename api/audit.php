@@ -28,13 +28,18 @@ $rows = ($result["ok"] && is_array($result["data"])) ? $result["data"] : [];
 if (isset($_GET["download"])) {
     if (!$result["ok"]) {
         http_response_code($result["status"]);
-        echo json_encode(["error" => $result["raw"] ?? "Failed to fetch audit logs"]);
+        echo json_encode(["error" => contrack_upstream_error($result, "Failed to fetch audit logs")]);
         exit;
     }
     header("Content-Type: text/csv; charset=utf-8");
     header("Content-Disposition: attachment; filename=\"contrack-audit-log.csv\"");
     $out = fopen("php://output", "w");
     fputcsv($out, ["id", "event_type", "details", "actor_user_id", "ip_address", "created_at"]);
+    // Neutralise spreadsheet formulas: cells starting with = + - @ (or a tab/CR) get a leading apostrophe.
+    $csvSafe = static function ($value): string {
+        $text = (string)$value;
+        return $text !== "" && strpos("=+-@\t\r", $text[0]) !== false ? "'" . $text : $text;
+    };
     foreach ($rows as $row) {
         $details = $row["details"] ?? "";
         if (is_array($details) || is_object($details)) {
@@ -42,10 +47,10 @@ if (isset($_GET["download"])) {
         }
         fputcsv($out, [
             $row["id"] ?? "",
-            $row["event_type"] ?? "",
-            (string)$details,
+            $csvSafe($row["event_type"] ?? ""),
+            $csvSafe($details),
             $row["actor_user_id"] ?? "",
-            $row["ip_address"] ?? "",
+            $csvSafe($row["ip_address"] ?? ""),
             $row["created_at"] ?? "",
         ]);
     }
@@ -55,4 +60,4 @@ if (isset($_GET["download"])) {
 }
 
 http_response_code($result["status"]);
-echo json_encode($result["ok"] ? $rows : ["error" => $result["raw"] ?? "Failed to fetch audit logs"]);
+echo json_encode($result["ok"] ? $rows : ["error" => contrack_upstream_error($result, "Failed to fetch audit logs")]);

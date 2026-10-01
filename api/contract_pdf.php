@@ -14,7 +14,7 @@ if ($contractId === "") {
     exit;
 }
 
-if (get_session_user() === null) {
+if (get_session_user() === null || !contrack_session_revalidate()) {
     http_response_code(401);
     header("Content-Type: text/plain; charset=utf-8");
     echo "Sign in required";
