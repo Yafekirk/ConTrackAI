@@ -1,10 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
 /* RESET */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'DM Sans', sans-serif;
 }
+
+body { font-size: 14px; }
 
 /* LAYOUT */
 .container {
@@ -42,7 +46,8 @@
 
 /* BRAND TEXT */
 .brand-text h1 {
-    font-size: 34px;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
     font-weight: 700;
     margin-left: 14px;
 }
@@ -91,6 +96,7 @@
 
 /* TITLE */
 .welcome {
+    font-family: 'Playfair Display', serif;
     font-size: 28px;
     color: #7A0C0C;
     font-weight: 700;
@@ -116,6 +122,7 @@
 select {
     width: 100%;
     padding: 12px;
+    font-size: 13px;
     border-radius: 10px;
     border: 1px solid #F5C2C2;
     background: #ffffff;
@@ -177,6 +184,7 @@ select:focus {
 button {
     width: 100%;
     padding: 14px;
+    font-size: 12px;
     background: linear-gradient(135deg, #991B1B, #EF4444);
     color: white;
     border: none;

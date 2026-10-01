@@ -1,15 +1,18 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
 /* RESET */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'DM Sans', sans-serif;
 }
 
 /* BODY BACKGROUND (LEFT SIDE LOOK) */
 body {
     height: 100vh;
     background: #f3f4f6;
+    font-size: 14px;
 }
 
 /* MAIN LAYOUT */
@@ -53,7 +56,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 2px;
-    font-family: 'Segoe UI', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     font-size: clamp(26px, 2.7vw, 34px);
     font-weight: 700;
     letter-spacing: 0;
@@ -106,7 +109,8 @@ body {
 
 /* BRAND TEXT */
 .brand-text h1 {
-    font-size: 34px;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
     font-weight: 700;
     margin-left: 14px;
     animation: titleSlideIn 0.65s ease 2.75s both;
@@ -303,7 +307,8 @@ body {
 
 /* TITLE */
 .welcome {
-    font-size: 34px;
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
     color: #7A0C0C;
     margin-bottom: 5px;
     
@@ -327,6 +332,7 @@ body {
 .input-group input {
     width: 100%;
     padding: 14px;
+    font-size: 13px;
     border-radius: 10px;
 
     /* NEW COLORS */
@@ -394,6 +400,7 @@ body {
 button {
     width: 100%;
     padding: 15px;
+    font-size: 12px;
     background: linear-gradient(135deg, #7A0C0C, #991B1B);
     color: white;
     border: none;

@@ -23,7 +23,7 @@ function ensureStarStyles() {
   style.textContent = `
 .star-rating{display:inline-flex;align-items:center;gap:8px;line-height:1;vertical-align:middle;white-space:nowrap;}
 .star-rating-icons{display:inline-flex;align-items:center;gap:4px;}
-.star-rating-num{font-family:Georgia,"Times New Roman",serif;font-weight:700;color:#7A0C0C;letter-spacing:0.02em;}
+.star-rating-num{font-family:"Playfair Display",serif;font-weight:700;color:#7A0C0C;letter-spacing:0.02em;}
 .star-rating--pill{padding:6px 12px 6px 8px;border-radius:999px;background:linear-gradient(180deg,#fff 0%,#FFF1F3 100%);border:1px solid #f0c4c8;box-shadow:inset 0 1px 0 #fff,0 6px 14px rgba(122,12,12,.08);}
 .star-rating--empty{color:#8a8082;font-size:13px;font-weight:600;}
 .star-gem{position:relative;display:inline-block;flex:0 0 auto;filter:drop-shadow(0 1px 0 rgba(74,10,16,.35)) drop-shadow(0 4px 4px rgba(122,12,12,.18));}
@@ -37,7 +37,7 @@ function ensureStarStyles() {
 .star-pick-star:hover .star-gem,.star-pick-star:focus-within .star-gem{transform:translateY(-5px) rotateX(16deg) scale(1.1);filter:drop-shadow(0 2px 0 rgba(74,10,16,.4)) drop-shadow(0 10px 8px rgba(122,12,12,.28));}
 .star-pick-hit{position:absolute;inset:0;z-index:2;width:100%;height:100%;padding:0;border:0;background:transparent;cursor:pointer;}
 .star-pick-hit:focus-visible{outline:2px solid #F4C396;outline-offset:3px;border-radius:6px;}
-.star-pick-value{margin-left:auto;min-width:58px;text-align:center;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,#fff,#FFF1F3);border:1px solid #f0c4c8;box-shadow:inset 0 1px 0 #fff,0 3px 0 #e7c5c8;font-family:Georgia,"Times New Roman",serif;font-size:18px;font-weight:700;color:#7A0C0C;}
+.star-pick-value{margin-left:auto;min-width:58px;text-align:center;padding:8px 10px;border-radius:12px;background:linear-gradient(180deg,#fff,#FFF1F3);border:1px solid #f0c4c8;box-shadow:inset 0 1px 0 #fff,0 3px 0 #e7c5c8;font-family:"Playfair Display",serif;font-size:18px;font-weight:700;color:#7A0C0C;}
 .criterion-star-list{display:flex;flex-direction:column;gap:4px;}
 .criterion-star-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,#fff,#fbf4f4);border:1px solid #f3e0e2;}
 .criterion-star-name{font-size:13px;font-weight:600;color:#3d3336;}

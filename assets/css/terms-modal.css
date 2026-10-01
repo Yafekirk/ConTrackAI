@@ -5,6 +5,8 @@
    ============================================================ */
 
 .terms-overlay {
+    font-family: "DM Sans", sans-serif;
+    font-size: 14px;
     position: fixed;
     inset: 0;
     z-index: 60;
@@ -55,6 +57,7 @@
 .terms-head h2 {
     flex: 1;
     margin: 0;
+    font-family: "Playfair Display", serif;
     font-size: 20px;
     font-weight: 700;
     color: #7A0C0C;
@@ -111,7 +114,7 @@
 
 .terms-intro {
     margin: 0 0 18px;
-    font-size: 13.5px;
+    font-size: 14px;
     color: #333;
     line-height: 1.6;
 }
@@ -124,7 +127,8 @@
 
 .terms-section h3 {
     margin: 0 0 10px;
-    font-size: 15px;
+    font-family: "Playfair Display", serif;
+    font-size: 16px;
     font-weight: 700;
     color: #a9161c;
 }
@@ -137,7 +141,7 @@
 
 .terms-section li {
     margin-bottom: 7px;
-    font-size: 13.5px;
+    font-size: 14px;
     color: #3d3d3d;
     line-height: 1.55;
 }
@@ -171,7 +175,7 @@
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    font-size: 13.5px;
+    font-size: 14px;
     color: #3d3d3d;
     line-height: 1.5;
     cursor: pointer;
@@ -236,7 +240,7 @@
 
 .terms-error {
     margin: 12px 0 0;
-    font-size: 12.5px;
+    font-size: 12px;
     color: #ef4444;
     text-align: center;
 }
@@ -309,7 +313,7 @@
     border-radius: 8px;
     background: #FFF1F3;
     color: #7A0C0C;
-    font-size: 12.5px;
+    font-size: 12px;
     line-height: 1.5;
     text-align: center;
 }
@@ -322,7 +326,7 @@
     .terms-overlay { padding: 12px; }
     .terms-modal { max-height: 92vh; border-radius: 10px; }
     .terms-head { padding: 16px 18px 13px; }
-    .terms-head h2 { font-size: 17.5px; }
+    .terms-head h2 { font-size: 20px; }
     .terms-body { padding: 16px 18px 18px; }
     .terms-foot { padding: 14px 18px 18px; }
 }

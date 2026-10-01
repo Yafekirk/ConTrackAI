@@ -421,7 +421,8 @@ body > .main-wrap .sidebar .sb-logo-area {
 
 .shell .sidebar .sb-logo-text,
 body > .main-wrap .sidebar .sb-logo-text {
-  font-size: 20px !important;
+  font-family: "Playfair Display", serif !important;
+  font-size: 19px !important;
   line-height: 1 !important;
   white-space: nowrap;
 }
@@ -952,4 +953,49 @@ html, body {
   margin-top: 3px;
   accent-color: #7A0C0C;
   flex-shrink: 0;
+}
+
+/* Vendor type scale: DM Sans body, Playfair titles */
+body,
+button,
+input,
+select,
+textarea {
+  font-family: "DM Sans", sans-serif;
+}
+
+.page-title,
+.modal-title,
+.stat-number,
+.del-title,
+.drop-title {
+  font-family: "Playfair Display", serif;
+}
+
+.page-title {
+  font-size: 28px;
+}
+
+.stat-number {
+  font-size: 38px;
+}
+
+.btn,
+.fgi,
+.fgta,
+.filter-search,
+.filter-select,
+.top-search {
+  font-family: "DM Sans", sans-serif;
+}
+
+.fgi,
+.fgta,
+.filter-search,
+.top-search {
+  font-size: 13px;
+}
+
+.btn {
+  font-size: 12px;
 }
