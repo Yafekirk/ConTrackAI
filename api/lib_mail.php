@@ -2,12 +2,18 @@
 declare(strict_types=1);
 
 /**
- * Sends mail through Brevo's HTTPS API when BREVO_API_KEY is set.
- * Otherwise uses Gmail SMTP (smtp.gmail.com:587). Render's free plan blocks that SMTP port.
+ * Sends mail through the Gmail API when Google OAuth values are set (works on Render's free plan
+ * and is accepted by Gmail). Otherwise Brevo, then Gmail SMTP. Render's free plan blocks SMTP.
  * Returns null on success, or a short error the caller can show.
  */
 function contrack_send_mail(string $to, string $subject, string $body): ?string
 {
+    $refresh = trim((string)env_value("GOOGLE_REFRESH_TOKEN", ""));
+    $clientId = trim((string)env_value("GOOGLE_CLIENT_ID", ""));
+    $clientSecret = trim((string)env_value("GOOGLE_CLIENT_SECRET", ""));
+    if ($refresh !== "" && $clientId !== "" && $clientSecret !== "") {
+        return contrack_send_mail_gmail_api($to, $subject, $body, $clientId, $clientSecret, $refresh);
+    }
     $brevoKey = trim((string)env_value("BREVO_API_KEY", ""));
     if ($brevoKey !== "") {
         return contrack_send_mail_brevo($to, $subject, $body, $brevoKey);
@@ -128,6 +134,88 @@ function contrack_send_mail(string $to, string $subject, string $body): ?string
         return "Gmail did not accept the message.";
     }
     return null;
+}
+
+function contrack_send_mail_gmail_api(
+    string $to,
+    string $subject,
+    string $body,
+    string $clientId,
+    string $clientSecret,
+    string $refreshToken
+): ?string {
+    $fromEmail = trim((string)env_value("MAIL_SMTP_USER", ""));
+    if ($fromEmail === "" || filter_var($fromEmail, FILTER_VALIDATE_EMAIL) === false) {
+        return "Set MAIL_SMTP_USER to the Gmail account that sends the codes.";
+    }
+    $fromName = trim((string)env_value("MAIL_FROM_NAME", "ConTrack AI"));
+    if ($fromName === "") {
+        $fromName = "ConTrack AI";
+    }
+
+    $tokenBody = http_build_query([
+        "client_id" => $clientId,
+        "client_secret" => $clientSecret,
+        "refresh_token" => $refreshToken,
+        "grant_type" => "refresh_token",
+    ]);
+    $token = contrack_https_json("POST", "https://oauth2.googleapis.com/token", $tokenBody, [
+        "content-type: application/x-www-form-urlencoded",
+    ]);
+    if ($token["status"] !== 200) {
+        return "Google rejected the mail sign-in. Check the client id, secret, and refresh token.";
+    }
+    $access = (string)($token["json"]["access_token"] ?? "");
+    if ($access === "") {
+        return "Google did not return a mail sign-in.";
+    }
+
+    $encodedName = "=?UTF-8?B?" . base64_encode($fromName) . "?=";
+    $safeSubject = str_replace(["\r", "\n"], "", $subject);
+    $rfc822 = "From: {$encodedName} <{$fromEmail}>\r\n"
+        . "To: <{$to}>\r\n"
+        . "Subject: {$safeSubject}\r\n"
+        . "MIME-Version: 1.0\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n"
+        . "\r\n"
+        . str_replace(["\r\n", "\r"], "\n", $body);
+    $raw = rtrim(strtr(base64_encode($rfc822), "+/", "-_"), "=");
+    $sent = contrack_https_json(
+        "POST",
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        json_encode(["raw" => $raw]) ?: "{}",
+        [
+            "content-type: application/json",
+            "authorization: Bearer {$access}",
+        ]
+    );
+    if ($sent["status"] === 200) {
+        return null;
+    }
+    return "Gmail did not accept the message.";
+}
+
+/** @return array{status:int,json:array<string,mixed>} */
+function contrack_https_json(string $method, string $url, string $body, array $headers): array
+{
+    if (!function_exists("curl_init")) {
+        return ["status" => 0, "json" => []];
+    }
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    $ca = resolve_supabase_ca_bundle();
+    if ($ca !== null) {
+        curl_setopt($ch, CURLOPT_CAINFO, $ca);
+    }
+    $raw = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+    $decoded = json_decode(is_string($raw) ? $raw : "", true);
+    return ["status" => $status, "json" => is_array($decoded) ? $decoded : []];
 }
 
 function contrack_send_mail_brevo(string $to, string $subject, string $body, string $apiKey): ?string
