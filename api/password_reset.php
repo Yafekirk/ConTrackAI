@@ -27,9 +27,11 @@ if ($emailError !== null) {
     exit;
 }
 
+// Match the address saved at signup or when an admin creates the account, ignoring letter case.
+$escapedEmail = str_replace(["\\", "%", "_"], ["\\\\", "\\%", "\\_"], $email);
 $userResult = supabase_request(
     "GET",
-    "users?email=eq." . rawurlencode($email) . "&select=id,email,is_disabled&limit=1"
+    "users?email=ilike." . rawurlencode($escapedEmail) . "&select=id,email,role,is_disabled&limit=1"
 );
 if (!$userResult["ok"]) {
     http_response_code(500);

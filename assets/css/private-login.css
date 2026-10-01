@@ -74,7 +74,8 @@ button {
 }
 
 .back-link {
-  display: inline-block;
+  display: block;
+  width: fit-content;
   margin-top: 10px;
   color: #7A0C0C;
   font-weight: 600;
