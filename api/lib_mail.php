@@ -2,11 +2,16 @@
 declare(strict_types=1);
 
 /**
- * Sends mail through Gmail SMTP (smtp.gmail.com:587, STARTTLS, app password).
+ * Sends mail through Brevo's HTTPS API when BREVO_API_KEY is set.
+ * Otherwise uses Gmail SMTP (smtp.gmail.com:587). Render's free plan blocks that SMTP port.
  * Returns null on success, or a short error the caller can show.
  */
 function contrack_send_mail(string $to, string $subject, string $body): ?string
 {
+    $brevoKey = trim((string)env_value("BREVO_API_KEY", ""));
+    if ($brevoKey !== "") {
+        return contrack_send_mail_brevo($to, $subject, $body, $brevoKey);
+    }
     $user = trim((string)env_value("MAIL_SMTP_USER", ""));
     $pass = str_replace(" ", "", trim((string)env_value("MAIL_SMTP_PASSWORD", "")));
     $fromName = trim((string)env_value("MAIL_FROM_NAME", "ConTrack AI"));
@@ -123,6 +128,71 @@ function contrack_send_mail(string $to, string $subject, string $body): ?string
         return "Gmail did not accept the message.";
     }
     return null;
+}
+
+function contrack_send_mail_brevo(string $to, string $subject, string $body, string $apiKey): ?string
+{
+    $fromName = trim((string)env_value("MAIL_FROM_NAME", "ConTrack AI"));
+    if ($fromName === "") {
+        $fromName = "ConTrack AI";
+    }
+    $fromEmail = trim((string)env_value("BREVO_SENDER_EMAIL", ""));
+    if ($fromEmail === "") {
+        $fromEmail = trim((string)env_value("MAIL_SMTP_USER", ""));
+    }
+    if ($fromEmail === "" || filter_var($fromEmail, FILTER_VALIDATE_EMAIL) === false) {
+        return "Set MAIL_SMTP_USER to the Gmail address you verified in Brevo.";
+    }
+    if (!function_exists("curl_init")) {
+        return "PHP cURL is required to send mail.";
+    }
+
+    $payload = json_encode([
+        "sender" => ["name" => $fromName, "email" => $fromEmail],
+        "to" => [["email" => $to]],
+        "subject" => $subject,
+        "textContent" => $body,
+    ], JSON_UNESCAPED_UNICODE);
+    if ($payload === false) {
+        return "Could not prepare the email.";
+    }
+
+    $ch = curl_init("https://api.brevo.com/v3/smtp/email");
+    $headers = [
+        "accept: application/json",
+        "content-type: application/json",
+        "api-key: {$apiKey}",
+    ];
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $payload);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    $ca = resolve_supabase_ca_bundle();
+    if ($ca !== null) {
+        curl_setopt($ch, CURLOPT_CAINFO, $ca);
+    }
+    $raw = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($raw === false) {
+        return $curlError !== "" ? "Could not reach Brevo." : "Could not reach Brevo.";
+    }
+    if ($status === 201 || $status === 202) {
+        return null;
+    }
+
+    $decoded = json_decode((string)$raw, true);
+    $message = is_array($decoded) ? (string)($decoded["message"] ?? "") : "";
+    if ($status === 401) {
+        return "Brevo rejected the API key. Check BREVO_API_KEY on the server.";
+    }
+    if (stripos($message, "sender") !== false) {
+        return "Brevo rejected the sender. Use the same Gmail address you verified in Brevo.";
+    }
+    return "Brevo did not accept the message.";
 }
 
 /** @return array{0:int,1:string} */
