@@ -155,6 +155,7 @@ document.addEventListener("DOMContentLoaded", () => {
         contact_number: contactNumber,
         supplier_type: supplierType,
         password,
+        confirm_password: confirmPassword,
         accepted_terms: true,
       });
       const user = result.user || {};

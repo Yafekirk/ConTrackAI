@@ -1,6 +1,6 @@
 import { setApiContext, getContracts } from "/assets/js/api-client.js";
 import { isNet30Expiring, net30BadgeHtml } from "/assets/js/contract-flags.js";
-import { contractRef } from "/assets/js/contract-intel.js";
+import { contractRef, bindCsvExport } from "/assets/js/contract-intel.js";
 
 function esc(s) {
   return String(s ?? "")
@@ -86,6 +86,9 @@ globalThis.openContractDetail = function (id) {
 document.addEventListener("DOMContentLoaded", async () => {
   const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
   setApiContext({ role: saved.role || "admin", userId: saved.id || null });
+
+  bindCsvExport("export-contracts-csv", () => adminContractRows, "contracts.csv");
+  bindCsvExport("export-contracts-csv-2", () => adminContractRows, "contracts.csv");
 
   const body = document.getElementById("admin-contracts-body");
   const showing = document.querySelector(".t-showing");

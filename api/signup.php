@@ -34,6 +34,13 @@ $password = (string)($input["password"] ?? "");
 $contactNumber = contrack_normalize_contact((string)($input["contact_number"] ?? ""));
 $supplierType = trim((string)($input["supplier_type"] ?? ""));
 
+$confirmPassword = (string)($input["confirm_password"] ?? "");
+if (!hash_equals($password, $confirmPassword)) {
+    http_response_code(400);
+    echo json_encode(["error" => "Passwords do not match."]);
+    exit;
+}
+
 $errors = [
     contrack_company_error($companyName, true),
     contrack_email_error($email),

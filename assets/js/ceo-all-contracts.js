@@ -1,5 +1,5 @@
 import { getContracts, getDashboardStats, setApiContext } from "/assets/js/api-client.js";
-import { contractRef } from "/assets/js/contract-intel.js";
+import { contractRef, bindCsvExport } from "/assets/js/contract-intel.js";
 
 const formatPeso = (value) =>
   new Intl.NumberFormat("en-PH", {
@@ -203,6 +203,7 @@ if (!globalThis.closeModal) {
 document.addEventListener("DOMContentLoaded", async () => {
   const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
   setApiContext({ role: saved.role || "ceo", userId: saved.id || null });
+  bindCsvExport("export-contracts-csv", () => allRows, "ceo-all-contracts.csv");
 
   try {
     const [rowsRes, statsRes] = await Promise.allSettled([

@@ -1,3 +1,30 @@
+﻿/* Brand lockup: center "ConTrack AI" over the tagline below it.
+   Only alignment is changed here; sizes, fonts and colors come from
+   each page's own styles. */
+
+.brand-row .brand-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.brand-row .brand-text h1 {
+    margin-left: 0;
+    font-size: 34px;
+}
+
+/* Heading font: DM Sans (bold) to match the caption's sans-serif family */
+.login-card .welcome {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 34px;
+    line-height: 1.15;
+    /* thicker strokes: DM Sans is only loaded up to 700, so add a thin outline */
+    -webkit-text-stroke: 0.7px currentColor;
+    paint-order: stroke fill;
+}
+
 /* Title brand shown above the form card on phone and tablet.
    Desktop keeps the side panel. */
 
@@ -109,7 +136,7 @@
 
     .mobile-brand .brand-text h1 {
         margin-left: 0;
-        font-size: clamp(16px, 4.4vw, 30px);
+        font-size: clamp(18px, 5vw, 34px);
         font-weight: 700;
         line-height: 1.1;
         color: #1a1a1a;

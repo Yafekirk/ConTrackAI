@@ -2,6 +2,7 @@ import { setApiContext, getContracts, getDashboardStats, openContractPdfInNewTab
 import { applyVendorIdentity } from "/assets/js/vendor-session.js";
 import { starRatingHtml } from "/assets/js/star-rating.js";
 import {
+  bindCsvExport,
   contractRef,
   formatPaymentTerms,
   isArchivedContract,
@@ -213,6 +214,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const user = applyVendorIdentity();
   if (!user?.id) return;
   setApiContext({ role: "vendor", userId: user.id });
+  bindCsvExport("export-contracts-csv", () => allContracts, "my-contracts.csv");
 
   try {
     await loadContracts();

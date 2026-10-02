@@ -91,6 +91,31 @@ export function riskFromRow(row) {
   return "low";
 }
 
+/** Export contract rows (as returned by the contracts API) to CSV. */
+export function exportContractsCsv(rows, filename = "contracts.csv") {
+  const list = Array.isArray(rows) ? rows : [];
+  downloadCsv(
+    filename,
+    ["Contract No", "Title", "Vendor", "Value", "Payment Terms", "Start Date", "End Date", "Status", "Risk"],
+    list.map((r) => [
+      contractRef(r),
+      r.contract_title || "",
+      r.vendor_name || "",
+      r.contract_value ?? "",
+      formatPaymentTerms(r.payment_terms),
+      r.start_date || "",
+      r.end_date || "",
+      r.status || "",
+      r.risk || "",
+    ]),
+  );
+}
+
+/** Wire a button to export whatever rows `getRows()` returns at click time. */
+export function bindCsvExport(buttonId, getRows, filename) {
+  document.getElementById(buttonId)?.addEventListener("click", () => exportContractsCsv(getRows(), filename));
+}
+
 export function downloadCsv(filename, headers, rows) {
   const escape = (val) => {
     const s = String(val ?? "");

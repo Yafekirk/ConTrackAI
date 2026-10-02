@@ -4,6 +4,7 @@ import {
   createUser,
   updateUser,
 } from "/assets/js/api-client.js";
+import { downloadCsv } from "/assets/js/contract-intel.js";
 
 function esc(s) {
   return String(s ?? "")
@@ -49,6 +50,20 @@ document.addEventListener("DOMContentLoaded", async () => {
   const stPending = document.getElementById("um-stat-pending");
 
   let usersCache = [];
+  document.getElementById("export-users-csv")?.addEventListener("click", () => {
+    downloadCsv(
+      "users.csv",
+      ["ID", "Name", "Email", "Role", "Status", "Last Login"],
+      usersCache.map((u) => [
+        u.id,
+        u.company_name || u.name || "",
+        u.email || "",
+        u.role || "",
+        u.is_disabled ? "disabled" : "active",
+        u.last_login_at || "",
+      ]),
+    );
+  });
 
   async function load() {
     try {

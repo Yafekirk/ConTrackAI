@@ -4,50 +4,52 @@ declare(strict_types=1);
 require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_validation.php";
 
-$method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
-if (!in_array($method, ["GET", "POST"], true)) {
-    http_response_code(405);
-    echo json_encode(["error" => "Method not allowed"]);
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+/** Send a JSON error response and stop. */
+function account_fail(int $status, string $message): void
+{
+    http_response_code($status);
+    echo json_encode(["error" => $message]);
     exit;
 }
 
-$sessionUser = require_session();
+// ---------------------------------------------------------------------------
+// GET: read own profile
+// ---------------------------------------------------------------------------
 
 // Lets any signed-in user read their own profile without admin rights.
-if ($method === "GET") {
+function account_handle_get(array $sessionUser): void
+{
     $selfId = urlencode((string)($sessionUser["id"] ?? 0));
     $me = supabase_request(
         "GET",
         "users?id=eq.{$selfId}&select=id,name,company_name,email,role,contact_number,supplier_type,created_at,last_login_at,notify_alerts&limit=1"
     );
     if (!$me["ok"] || !is_array($me["data"][0] ?? null)) {
-        http_response_code(500);
-        echo json_encode(["error" => "Unable to load your profile"]);
-        exit;
+        account_fail(500, "Unable to load your profile");
     }
     echo json_encode($me["data"][0]);
     exit;
 }
 
-$input = json_decode(file_get_contents("php://input"), true);
-if (!is_array($input)) {
-    http_response_code(400);
-    echo json_encode(["error" => "Invalid request body"]);
-    exit;
-}
+// ---------------------------------------------------------------------------
+// POST action=profile: self-service profile update
+// Role and is_disabled stay admin-only (api/users.php).
+// ---------------------------------------------------------------------------
 
-// Self-service profile update. Role and is_disabled stay admin-only (api/users.php).
-if (($input["action"] ?? "") === "profile") {
-    $selfId = (int)($sessionUser["id"] ?? 0);
+/** Validate the input and build the column patch. Exits on validation error. */
+function account_build_profile_patch(array $input): array
+{
     $patch = [];
 
     if (array_key_exists("company_name", $input)) {
         $company = trim((string)$input["company_name"]);
         $companyError = contrack_company_error($company, true);
         if ($companyError !== null) {
-            http_response_code(400);
-            echo json_encode(["error" => $companyError]);
-            exit;
+            account_fail(400, $companyError);
         }
         $patch["company_name"] = $company;
         $patch["name"] = $company;
@@ -55,9 +57,7 @@ if (($input["action"] ?? "") === "profile") {
         $name = trim((string)$input["name"]);
         $nameError = contrack_name_error($name);
         if ($nameError !== null) {
-            http_response_code(400);
-            echo json_encode(["error" => $nameError]);
-            exit;
+            account_fail(400, $nameError);
         }
         $patch["name"] = $name;
     }
@@ -73,25 +73,27 @@ if (($input["action"] ?? "") === "profile") {
         } else {
             $contactError = contrack_contact_error($contact, false);
             if ($contactError !== null) {
-                http_response_code(400);
-                echo json_encode(["error" => $contactError]);
-                exit;
+                account_fail(400, $contactError);
             }
             $patch["contact_number"] = $contact;
         }
     }
 
     if ($patch === []) {
-        http_response_code(400);
-        echo json_encode(["error" => "No profile fields to update"]);
-        exit;
+        account_fail(400, "No profile fields to update");
     }
+
+    return $patch;
+}
+
+function account_handle_profile_update(array $sessionUser, array $input): void
+{
+    $selfId = (int)($sessionUser["id"] ?? 0);
+    $patch = account_build_profile_patch($input);
 
     $updated = supabase_request("PATCH", "users?id=eq." . urlencode((string)$selfId), $patch);
     if (!$updated["ok"]) {
-        http_response_code($updated["status"] ?: 500);
-        echo json_encode(["error" => contrack_upstream_error($updated, "Failed to update profile")]);
-        exit;
+        account_fail($updated["status"] ?: 500, contrack_upstream_error($updated, "Failed to update profile"));
     }
 
     if (isset($patch["name"])) {
@@ -100,6 +102,7 @@ if (($input["action"] ?? "") === "profile") {
     if (isset($patch["company_name"])) {
         $_SESSION["contrack_user"]["company_name"] = $patch["company_name"];
     }
+
     audit_log_event("profile_updated", ["fields" => array_keys($patch)], $selfId);
     echo json_encode([
         "ok" => true,
@@ -109,73 +112,99 @@ if (($input["action"] ?? "") === "profile") {
     exit;
 }
 
-$current = (string)($input["current_password"] ?? "");
-$new = (string)($input["new_password"] ?? "");
-if ($current === "" || $new === "") {
-    http_response_code(400);
-    echo json_encode(["error" => "current_password and new_password are required"]);
-    exit;
-}
+// ---------------------------------------------------------------------------
+// POST (default): change password
+// ---------------------------------------------------------------------------
 
-$passwordError = contrack_password_error($new);
-if ($passwordError !== null) {
-    http_response_code(400);
-    echo json_encode(["error" => $passwordError]);
-    exit;
-}
-
-$userId = (int)($sessionUser["id"] ?? 0);
-
-// Throttle guessing of the current password from a hijacked session: 5 misses in 15 minutes
-// pause further attempts for 60 seconds. A lookup failure never blocks a legitimate change.
-$recentMisses = supabase_request(
-    "GET",
-    "audit_logs?event_type=eq.password_change_failed&actor_user_id=eq.{$userId}"
-    . "&created_at=gte." . rawurlencode(gmdate("c", time() - 900))
-    . "&select=created_at&order=created_at.desc&limit=5"
-);
-if ($recentMisses["ok"] && is_array($recentMisses["data"]) && count($recentMisses["data"]) >= 5) {
-    $lastMiss = strtotime((string)($recentMisses["data"][0]["created_at"] ?? ""));
-    if ($lastMiss !== false && (time() - $lastMiss) < 60) {
-        http_response_code(429);
-        echo json_encode(["error" => "Too many incorrect attempts. Try again in a minute."]);
-        exit;
+/**
+ * Throttle guessing of the current password from a hijacked session: 5 misses in 15 minutes
+ * pause further attempts for 60 seconds. A lookup failure never blocks a legitimate change.
+ */
+function account_enforce_password_throttle(int $userId): void
+{
+    $recentMisses = supabase_request(
+        "GET",
+        "audit_logs?event_type=eq.password_change_failed&actor_user_id=eq.{$userId}"
+        . "&created_at=gte." . rawurlencode(gmdate("c", time() - 900))
+        . "&select=created_at&order=created_at.desc&limit=5"
+    );
+    if ($recentMisses["ok"] && is_array($recentMisses["data"]) && count($recentMisses["data"]) >= 5) {
+        $lastMiss = strtotime((string)($recentMisses["data"][0]["created_at"] ?? ""));
+        if ($lastMiss !== false && (time() - $lastMiss) < 60) {
+            account_fail(429, "Too many incorrect attempts. Try again in a minute.");
+        }
     }
 }
 
-$result = supabase_request(
-    "GET",
-    "users?id=eq." . urlencode((string)$userId) . "&select=id,password&limit=1"
-);
+function account_handle_password_change(array $sessionUser, array $input): void
+{
+    $current = (string)($input["current_password"] ?? "");
+    $new = (string)($input["new_password"] ?? "");
+    if ($current === "" || $new === "") {
+        account_fail(400, "current_password and new_password are required");
+    }
 
-if (!$result["ok"] || !is_array($result["data"]) || count($result["data"]) === 0) {
-    http_response_code(500);
-    echo json_encode(["error" => "Unable to load user record"]);
+    $passwordError = contrack_password_error($new);
+    if ($passwordError !== null) {
+        account_fail(400, $passwordError);
+    }
+
+    $userId = (int)($sessionUser["id"] ?? 0);
+
+    account_enforce_password_throttle($userId);
+
+    $result = supabase_request(
+        "GET",
+        "users?id=eq." . urlencode((string)$userId) . "&select=id,password&limit=1"
+    );
+    if (!$result["ok"] || !is_array($result["data"]) || count($result["data"]) === 0) {
+        account_fail(500, "Unable to load user record");
+    }
+
+    $row = $result["data"][0];
+    $stored = (string)($row["password"] ?? "");
+    if (!contrack_password_matches($stored, $current)) {
+        audit_log_event("password_change_failed", [], $userId);
+        account_fail(401, "Current password is incorrect");
+    }
+
+    $hashed = password_hash($new, PASSWORD_DEFAULT);
+    $patch = supabase_request(
+        "PATCH",
+        "users?id=eq." . urlencode((string)$userId),
+        ["password" => $hashed]
+    );
+    if (!$patch["ok"]) {
+        account_fail($patch["status"] ?: 500, contrack_upstream_error($patch, "Failed to update password"));
+    }
+
+    audit_log_event("password_changed", [], $userId);
+    echo json_encode(["ok" => true]);
     exit;
 }
 
-$row = $result["data"][0];
-$stored = (string)($row["password"] ?? "");
-$valid = contrack_password_matches($stored, $current);
-if (!$valid) {
-    audit_log_event("password_change_failed", [], $userId);
-    http_response_code(401);
-    echo json_encode(["error" => "Current password is incorrect"]);
-    exit;
+// ---------------------------------------------------------------------------
+// Request dispatch
+// ---------------------------------------------------------------------------
+
+$method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
+if (!in_array($method, ["GET", "POST"], true)) {
+    account_fail(405, "Method not allowed");
 }
 
-$hashed = password_hash($new, PASSWORD_DEFAULT);
-$patch = supabase_request(
-    "PATCH",
-    "users?id=eq." . urlencode((string)$userId),
-    ["password" => $hashed]
-);
+$sessionUser = require_session();
 
-if (!$patch["ok"]) {
-    http_response_code($patch["status"] ?: 500);
-    echo json_encode(["error" => contrack_upstream_error($patch, "Failed to update password")]);
-    exit;
+if ($method === "GET") {
+    account_handle_get($sessionUser);
 }
 
-audit_log_event("password_changed", [], $userId);
-echo json_encode(["ok" => true]);
+$input = json_decode(file_get_contents("php://input"), true);
+if (!is_array($input)) {
+    account_fail(400, "Invalid request body");
+}
+
+if (($input["action"] ?? "") === "profile") {
+    account_handle_profile_update($sessionUser, $input);
+}
+
+account_handle_password_change($sessionUser, $input);

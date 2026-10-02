@@ -7,7 +7,7 @@ import {
   postManagerReview,
 } from "/assets/js/api-client.js";
 import { isNet30Expiring, net30BadgeHtml } from "/assets/js/contract-flags.js";
-import { contractRef } from "/assets/js/contract-intel.js";
+import { contractRef, bindCsvExport } from "/assets/js/contract-intel.js";
 import { askManagerConfirm } from "/assets/js/manager-confirm.js";
 import { renderStarRating } from "/assets/js/star-rating.js";
 
@@ -243,6 +243,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   };
+  bindCsvExport("export-contracts-csv", () => contractRows, "manager-contracts.csv");
   bind("mgr-contract-approve", "escalate_to_ceo");
   bind("mgr-contract-modify", "modification");
   bind("mgr-contract-reject", "reject");

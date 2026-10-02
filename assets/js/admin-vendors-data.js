@@ -6,6 +6,7 @@ import {
   getVendorEvaluations,
   getVendorEvaluation,
 } from "/assets/js/api-client.js";
+import { downloadCsv } from "/assets/js/contract-intel.js";
 import { criteriaStarsHtml, renderStarRating, starRatingHtml } from "/assets/js/star-rating.js";
 
 function formatPeso(v) {
@@ -117,7 +118,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const scoreOf = (id) => {
       const s = summaryByVendor[String(id)];
       if (!s?.has_manual_score) return 0;
-      return Number(s.vendor_score ?? s.ai_score || 0);
+      return Number((s.vendor_score ?? s.ai_score) || 0);
     };
 
     // Average across vendors that have a stored evaluation.
@@ -168,6 +169,21 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>`;
       })
       .join("");
+
+    document.getElementById("export-vendors-csv")?.addEventListener("click", () => {
+      downloadCsv(
+        "vendors.csv",
+        ["Company", "Email", "Supplier Type", "Contracts", "Score", "Status"],
+        vendorUsers.map((u) => [
+          u.company_name || u.name || "",
+          u.email || "",
+          u.supplier_type || "",
+          countByVendor[String(u.id)] ?? 0,
+          scoreOf(u.id) || "",
+          u.is_disabled ? "disabled" : "active",
+        ]),
+      );
+    });
 
     body.onclick = (event) => {
       const btn = event.target.closest("[data-vendor-id]");
