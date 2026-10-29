@@ -75,9 +75,9 @@ function validateSupplier(value) {
 
 function validatePassword(password) {
   if (!password) return "Password is required.";
-  if (password.length < 8 || password.length > 64) return "Password must be 8–64 characters.";
-  if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
-    return "Password must include at least one letter and one number.";
+  if (password.length < 8 || password.length > 24) return "Password must be 8–24 characters.";
+  if (!/[0-9]/.test(password) || !/[A-Z]/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
+    return "Password must include at least 1 number, 1 uppercase letter, and 1 special character.";
   }
   return "";
 }

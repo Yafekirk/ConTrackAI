@@ -174,6 +174,14 @@ function wirePassword() {
       setStatus("Enter your current password and a new password.", "error");
       return;
     }
+    if (next.length < 8 || next.length > 24) {
+      setStatus("Password must be 8–24 characters.", "error");
+      return;
+    }
+    if (!/[0-9]/.test(next) || !/[A-Z]/.test(next) || !/[^A-Za-z0-9]/.test(next)) {
+      setStatus("Password must include at least 1 number, 1 uppercase letter, and 1 special character.", "error");
+      return;
+    }
     if (next !== confirm) {
       setStatus("The new passwords do not match.", "error");
       return;

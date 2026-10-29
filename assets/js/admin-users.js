@@ -174,6 +174,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     const role = document.getElementById("sel-add-role")?.value || "admin";
     const pw = document.getElementById("inp-add-pass")?.value || "";
     const pw2 = document.getElementById("inp-add-pass2")?.value || "";
+    if (pw.length < 8 || pw.length > 24) {
+      alert("Password must be 8–24 characters.");
+      return;
+    }
+    if (!/[0-9]/.test(pw) || !/[A-Z]/.test(pw) || !/[^A-Za-z0-9]/.test(pw)) {
+      alert("Password must include at least 1 number, 1 uppercase letter, and 1 special character.");
+      return;
+    }
     if (pw !== pw2) {
       alert("Passwords do not match");
       return;

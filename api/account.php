@@ -168,12 +168,11 @@ function account_handle_password_change(array $sessionUser, array $input): void
         account_fail(401, "Current password is incorrect");
     }
 
-    $hashed = password_hash($new, PASSWORD_DEFAULT);
-    $patch = supabase_request(
-        "PATCH",
-        "users?id=eq." . urlencode((string)$userId),
-        ["password" => $hashed]
-    );
+    if (contrack_password_was_used($userId, $stored, $new)) {
+        account_fail(400, "You already used this password before. Choose a new one.");
+    }
+
+    $patch = contrack_set_password($userId, $stored, $new);
     if (!$patch["ok"]) {
         account_fail($patch["status"] ?: 500, contrack_upstream_error($patch, "Failed to update password"));
     }

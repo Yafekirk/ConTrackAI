@@ -173,8 +173,20 @@ if ($action === "reset") {
         exit;
     }
 
-    $hashed = password_hash($password, PASSWORD_DEFAULT);
-    $patch = supabase_request("PATCH", "users?id=eq.{$userId}", ["password" => $hashed]);
+    $current = supabase_request("GET", "users?id=eq.{$userId}&select=password&limit=1");
+    if (!$current["ok"]) {
+        http_response_code(500);
+        echo json_encode(["error" => "Could not update the password."]);
+        exit;
+    }
+    $currentHash = (string)($current["data"][0]["password"] ?? "");
+    if (contrack_password_was_used($userId, $currentHash, $password)) {
+        http_response_code(400);
+        echo json_encode(["error" => "You already used this password before. Choose a new one."]);
+        exit;
+    }
+
+    $patch = contrack_set_password($userId, $currentHash, $password);
     if (!$patch["ok"]) {
         http_response_code(500);
         echo json_encode(["error" => "Could not update the password."]);

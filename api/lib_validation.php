@@ -91,15 +91,17 @@ function contrack_supplier_error(string $type, bool $required): ?string
 
 function contrack_password_error(string $password): ?string
 {
-    $len = strlen($password);
     if ($password === "") {
         return "Password is required.";
     }
-    if ($len < 8 || $len > 64) {
-        return "Password must be 8–64 characters.";
+    $len = function_exists("mb_strlen") ? mb_strlen($password, "UTF-8") : strlen($password);
+    if ($len < 8 || $len > 24) {
+        return "Password must be 8–24 characters.";
     }
-    if (!preg_match("/[A-Za-z]/", $password) || !preg_match("/[0-9]/", $password)) {
-        return "Password must include at least one letter and one number.";
+    if (!preg_match("/[0-9]/", $password)
+        || !preg_match("/[A-Z]/", $password)
+        || !preg_match("/[^A-Za-z0-9]/", $password)) {
+        return "Password must include at least 1 number, 1 uppercase letter, and 1 special character.";
     }
     return null;
 }

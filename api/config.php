@@ -263,6 +263,55 @@ function contrack_password_matches(string $stored, string $provided, bool &$need
     return false;
 }
 
+/**
+ * True when $candidate equals the user's current password or any earlier one kept in
+ * password_history. A missing history table only skips the history part of the check.
+ */
+function contrack_password_was_used(int $userId, string $currentStored, string $candidate): bool
+{
+    if (contrack_password_matches($currentStored, $candidate)) {
+        return true;
+    }
+    $history = supabase_request(
+        "GET",
+        "password_history?user_id=eq.{$userId}&select=password_hash"
+    );
+    if (!$history["ok"] || !is_array($history["data"])) {
+        error_log("password_history lookup failed: " . (string)($history["raw"] ?? $history["error"] ?? ""));
+        return false;
+    }
+    foreach ($history["data"] as $row) {
+        if (contrack_password_matches((string)($row["password_hash"] ?? ""), $candidate)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/** Save a new password and move the replaced one into password_history. */
+function contrack_set_password(int $userId, string $currentStored, string $newPassword): array
+{
+    $patch = supabase_request(
+        "PATCH",
+        "users?id=eq.{$userId}",
+        ["password" => password_hash($newPassword, PASSWORD_DEFAULT)]
+    );
+    if ($patch["ok"] && $currentStored !== "") {
+        $info = password_get_info($currentStored);
+        $oldHash = (($info["algo"] ?? null) !== null && $info["algo"] !== 0)
+            ? $currentStored
+            : password_hash($currentStored, PASSWORD_DEFAULT);
+        $saved = supabase_request("POST", "password_history", [[
+            "user_id" => $userId,
+            "password_hash" => $oldHash,
+        ]]);
+        if (!$saved["ok"]) {
+            error_log("password_history insert failed: " . (string)($saved["raw"] ?? $saved["error"] ?? ""));
+        }
+    }
+    return $patch;
+}
+
 function set_session_user(array $user): void
 {
     $_SESSION["contrack_user"] = [
