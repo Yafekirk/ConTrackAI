@@ -179,10 +179,10 @@ function openReview(id, editable) {
       <div class="mgr-decision-label">DECISION</div>
       <div class="mgr-decision-row">
         <button type="button" class="mgr-decision mgr-decision-approve" data-decision="escalate_to_ceo">Approve</button>
-        <button type="button" class="mgr-decision mgr-decision-modify" data-decision="modification">Modify</button>
+        <button type="button" class="mgr-decision mgr-decision-modify" data-decision="modification">Update</button>
         <button type="button" class="mgr-decision mgr-decision-reject" data-decision="reject">Reject</button>
       </div>
-      <p class="mgr-decision-hint">Approve and Reject go to the CEO. Modify sends the contract back to the vendor so they can change it and resubmit.</p>
+      <p class="mgr-decision-hint">Approve and Reject go to the CEO. Update sends the contract back to the vendor so they can change it and resubmit.</p>
     `;
     footer.parentNode.insertBefore(wrap, footer);
     footer.classList.add("modal-footer--review");
