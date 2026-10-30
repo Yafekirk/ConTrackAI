@@ -55,12 +55,20 @@ if (($segments[0] ?? "") === "api" && strpos($file, "lib_") === 0) {
     $deny();
 }
 
-// Pages go out with no-cache so browsers revalidate and pick up a deploy instead of showing a stale copy.
-// The built-in server drops router headers when it serves a file itself, so HTML is sent from here.
-if (preg_match('/\.html?$/', $file) === 1) {
+// Pages, scripts and styles go out with no-cache so browsers revalidate and pick up a deploy instead of
+// showing a stale copy. The built-in server drops router headers when it serves a file itself, so these
+// are sent from here.
+$noCacheTypes = [
+    "html" => "text/html; charset=utf-8",
+    "htm" => "text/html; charset=utf-8",
+    "js" => "text/javascript; charset=utf-8",
+    "css" => "text/css; charset=utf-8",
+];
+$ext = strtolower((string)pathinfo($file, PATHINFO_EXTENSION));
+if (isset($noCacheTypes[$ext])) {
     $path = realpath(__DIR__ . $normalized);
     if ($path !== false && is_file($path) && strpos($path, realpath(__DIR__)) === 0) {
-        header("Content-Type: text/html; charset=utf-8");
+        header("Content-Type: " . $noCacheTypes[$ext]);
         header("Cache-Control: no-cache, must-revalidate");
         header("Content-Length: " . (string)filesize($path));
         readfile($path);
