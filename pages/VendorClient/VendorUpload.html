@@ -253,23 +253,7 @@
             </div>
           </div>
 
-          <div class="card tpl-card">
-            <div class="card-header">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div class="tpl-num">NLP</div>
-                <div>
-                  <div class="tpl-card-kicker">CONTRACT TEXT (FOR NLP AUTO-FILL)</div>
-                  <div class="tpl-card-hint">Paste contract text after upload, or run NLP on the PDF</div>
-                </div>
-              </div>
-            </div>
-            <div class="card-body">
-              <textarea id="contractTextInput" class="fgta" style="height:130px;" placeholder="Contract text appears here after you upload a PDF..."></textarea>
-              <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">
-                <button id="extractContractBtn" type="button" class="btn btn-outline">Run NLP Auto-Fill</button>
-              </div>
-            </div>
-          </div>
+          <textarea id="contractTextInput" hidden aria-hidden="true"></textarea>
 
           <div class="card tpl-card">
             <div class="card-header">

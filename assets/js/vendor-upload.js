@@ -200,18 +200,9 @@ function startNlpLoader() {
   const overlay = document.getElementById("nlp-extract-overlay");
   const dropZone = document.getElementById("drop-zone");
   const status = document.getElementById("nlp-extract-status");
-  const extractBtn = document.getElementById("extractContractBtn");
-  const ticket = document.getElementById("doc-ticket");
   const started = performance.now();
   let stage = 0;
   let timer = null;
-
-  // The loader lives inside the drop zone, so bring it back while a re-run of NLP is in progress.
-  const ticketWasVisible = Boolean(ticket && ticket.style.display !== "none");
-  if (ticketWasVisible) {
-    ticket.style.display = "none";
-    if (dropZone) dropZone.style.display = "block";
-  }
 
   if (status) status.textContent = NLP_STAGE_LABELS[0];
   if (overlay) {
@@ -220,7 +211,6 @@ function startNlpLoader() {
     overlay.setAttribute("aria-hidden", "false");
   }
   dropZone?.classList.add("is-extracting");
-  if (extractBtn) extractBtn.disabled = true;
   timer = window.setInterval(() => {
     if (stage < NLP_STAGE_LABELS.length - 1) {
       stage += 1;
@@ -245,11 +235,6 @@ function startNlpLoader() {
       overlay.setAttribute("aria-hidden", "true");
     }
     dropZone?.classList.remove("is-extracting");
-    if (extractBtn) extractBtn.disabled = false;
-    if (ticketWasVisible) {
-      if (dropZone) dropZone.style.display = "none";
-      ticket.style.display = "grid";
-    }
   };
 
   return { finish };
@@ -296,7 +281,6 @@ function applyExtracted(fields, extracted, contractTextInput) {
 document.addEventListener("DOMContentLoaded", () => {
   const user = getSessionUser();
   const fields = getFieldElements();
-  const extractBtn = document.getElementById("extractContractBtn");
   const contractTextInput = document.getElementById("contractTextInput");
   const submitBtn = document.getElementById("submitContractBtn");
 
@@ -345,7 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.warn("NLP returned no fields", extracted);
         const status = document.getElementById("nlp-extract-status");
         if (status) {
-          status.textContent = "No clauses could be read from this PDF. Try another file or paste the contract text.";
+          status.textContent = "No clauses could be read from this PDF. Try another file or fill in the fields below.";
         }
       }
     } catch (error) {
@@ -354,21 +338,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  extractBtn?.addEventListener("click", async () => {
-    try {
-      await runNlpAutofill();
-    } catch (error) {
-      console.error("NLP extraction failed", error);
-    }
-  });
-
   /** Increments per chosen file so a slow duplicate check for an older file is ignored. */
   let fileSelectionToken = 0;
   /** Object URL of lastPdfFile for the PDF viewer modal. */
   let pdfUrl = null;
   let isSubmitted = false;
   const submitBtnDefaultHtml = submitBtn?.innerHTML || "";
-  const lockableInputs = () => [...Object.values(fields), contractTextInput, extractBtn].filter(Boolean);
+  const lockableInputs = () => [...Object.values(fields), contractTextInput].filter(Boolean);
 
   const UPLOAD_VIEW_TEXT = {
     drop: ["UPLOAD DOCUMENT", "PDF only, max 25MB — labeled template files extract cleanly"],
@@ -541,7 +517,6 @@ document.addEventListener("DOMContentLoaded", () => {
     hideAlerts();
     lockableInputs().forEach((el) => {
       el.disabled = false;
-      if (el === extractBtn) return;
       el.value = "";
     });
     if (fields.currency) fields.currency.value = "PHP";
