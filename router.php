@@ -55,5 +55,18 @@ if (($segments[0] ?? "") === "api" && strpos($file, "lib_") === 0) {
     $deny();
 }
 
+// Pages go out with no-cache so browsers revalidate and pick up a deploy instead of showing a stale copy.
+// The built-in server drops router headers when it serves a file itself, so HTML is sent from here.
+if (preg_match('/\.html?$/', $file) === 1) {
+    $path = realpath(__DIR__ . $normalized);
+    if ($path !== false && is_file($path) && strpos($path, realpath(__DIR__)) === 0) {
+        header("Content-Type: text/html; charset=utf-8");
+        header("Cache-Control: no-cache, must-revalidate");
+        header("Content-Length: " . (string)filesize($path));
+        readfile($path);
+        exit;
+    }
+}
+
 // Anything else: let the built-in server serve the file or run the endpoint as usual.
 return false;
