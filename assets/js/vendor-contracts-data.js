@@ -144,7 +144,7 @@ function renderTable() {
     row.style.gridTemplateColumns = "2fr 1.5fr 2fr 1.2fr 1fr 1fr";
     row.innerHTML = `
       <div><div class="t-cell-primary">${item.contract_title || "Untitled"}</div><div class="t-cell-meta">${contractRef(item)} · ${formatPaymentTerms(item.payment_terms)}</div></div>
-      <div class="t-cell-secondary">₱${Number(item.contract_value || 0).toLocaleString()}</div>
+      <div class="t-cell-secondary">${formatPeso(item.contract_value)}</div>
       <div class="t-cell-meta">${formatDate(item.start_date)} → ${formatDate(item.end_date)}</div>
       <div><span class="pill ${monitorPillClass(item)}">${monitorLabel(item)}</span></div>
       <div><span class="pill pill-${risk}">${risk.toUpperCase()}</span></div>

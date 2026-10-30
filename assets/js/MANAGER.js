@@ -123,7 +123,7 @@ async function refreshNotificationsFromApi() {
 
       title: `Review queue: ${row.contract_title || "Contract"}`,
 
-      desc: `${row.vendor_name || "Vendor"} · ₱${Number(row.contract_value || 0).toLocaleString()}`,
+      desc: `${row.vendor_name || "Vendor"} · ₱${Number(row.contract_value || 0).toLocaleString("en-PH", { maximumFractionDigits: 0 })}`,
 
       time: row.uploaded_at ? new Date(row.uploaded_at).toLocaleString() : "",
 

@@ -249,8 +249,9 @@ function extract_contract_fields(string $text): array
     );
     $parts = [];
     if (!empty($result["contract_value"])) {
-        $ccy = $result["currency"] ?: "PHP";
-        $parts[] = "Contract value " . $ccy . " " . number_format((float)$result["contract_value"], 2);
+        $ccy = strtoupper((string)($result["currency"] ?: "PHP"));
+        $symbol = $ccy === "USD" ? "$" : ($ccy === "EUR" ? "€" : "₱");
+        $parts[] = "Contract value " . $symbol . number_format((float)$result["contract_value"], 2);
     }
     if (!empty($result["payment_terms"])) {
         $parts[] = "Payment: " . format_payment_terms_duration((string)$result["payment_terms"]);
@@ -460,7 +461,7 @@ function enrich_contract_row(array $row): array
     if (empty($row["financial_obligations"])) {
         $bits = [];
         if (!empty($row["contract_value"])) {
-            $bits[] = "PHP " . number_format((float)$row["contract_value"], 2);
+            $bits[] = "₱" . number_format((float)$row["contract_value"], 2);
         }
         if (!empty($row["payment_terms"])) {
             $bits[] = "Payment terms: " . $row["payment_terms"];

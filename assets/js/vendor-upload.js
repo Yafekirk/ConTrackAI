@@ -101,6 +101,14 @@ function normalizeCurrency(extracted, selectEl) {
   return code;
 }
 
+function formatMoney(value, currency) {
+  const n = parseValue(value);
+  const code = String(currency || "PHP").toUpperCase();
+  const symbol = code === "USD" ? "$" : code === "EUR" ? "€" : "₱";
+  const digits = Number.isInteger(n) ? 0 : 2;
+  return `${symbol}${n.toLocaleString("en-PH", { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`;
+}
+
 function setBrief(key, value) {
   const el = document.querySelector(`[data-brief="${key}"]`);
   if (!el) return;
@@ -122,7 +130,7 @@ function updateExtractBrief(fields) {
   const renewal = fields.renewalTerms?.value || "";
   const parties = [client, vendor].filter(Boolean).join(" / ");
   const term = start && end ? `${start} to ${end}` : start || end;
-  const money = value ? `${currency} ${value}` : "";
+  const money = value ? formatMoney(value, currency) : "";
   setBrief("title", title);
   setBrief("type", type);
   setBrief("parties", parties);

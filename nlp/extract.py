@@ -305,7 +305,8 @@ def assemble(text: str, scored: list[tuple[str, str, float]]) -> dict:
 
     bits = []
     if result["contract_value"]:
-        bits.append(f"Contract value {result['currency']} {result['contract_value']:,.2f}")
+        symbol = {"USD": "$", "EUR": "€"}.get(str(result["currency"] or "").upper(), "₱")
+        bits.append(f"Contract value {symbol}{result['contract_value']:,.2f}")
     if result["payment_terms"]:
         bits.append(f"Payment: {result['payment_terms']}")
     if result["penalty_clause"]:
