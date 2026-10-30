@@ -18,12 +18,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     const overall = Number(perf.overall_score || 0);
     const has = !!perf.has_manual_score;
     const overallEl = document.getElementById("overall-score");
-    renderStarRating(overallEl, has ? overall : null, { size: 15, pill: true });
+    if (overallEl) {
+      if (has) renderStarRating(overallEl, overall, { size: 15, pill: true });
+      else overallEl.innerHTML = `<span class="star-rating star-rating--empty" style="font-size:16px;">Not yet rated</span>`;
+    }
     const scaleLabel = document.querySelector(".perf-score-label");
-    if (scaleLabel) scaleLabel.textContent = has ? "OUT OF 5" : "";
+    if (scaleLabel) scaleLabel.style.display = has ? "" : "none";
 
     const badge = document.querySelector(".perf-score-ring .stat-badge");
-    if (badge) badge.textContent = has ? perf.rating_label || "Scored" : "Not scored yet";
+    if (badge) {
+      if (has) badge.textContent = perf.rating_label || "Scored";
+      else badge.style.display = "none";
+    }
 
     const criteriaHost = document.getElementById("criteria-stars");
     if (criteriaHost) {
@@ -75,27 +81,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderStarRating(document.getElementById("perf-low"), scores.length ? Math.min(...scores) : null, { size: 14, plain: true });
     renderStarRating(document.getElementById("perf-current"), has ? overall : null, { size: 14, plain: true });
     renderStarRating(document.getElementById("perf-high"), scores.length ? Math.max(...scores) : null, { size: 14, plain: true });
-
-    const ringCtx = document.getElementById("score-ring-chart");
-    if (ringCtx && window.Chart) {
-      new window.Chart(ringCtx, {
-        type: "doughnut",
-        data: {
-          datasets: [
-            {
-              data: [has ? starRatingFromScore(overall) : 0, has ? Math.max(0, 5 - starRatingFromScore(overall)) : 5],
-              backgroundColor: ["#7A0C0C", "#F0F0F0"],
-              borderWidth: 0,
-            },
-          ],
-        },
-        options: {
-          cutout: "78%",
-          responsive: false,
-          plugins: { legend: { display: false }, tooltip: { enabled: false } },
-        },
-      });
-    }
 
     const trendCtx = document.getElementById("trend-chart");
     if (trendCtx && window.Chart) {

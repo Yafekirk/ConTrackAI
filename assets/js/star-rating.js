@@ -63,6 +63,7 @@ function gemStarHtml(size) {
 }
 
 export function starRatingFromScore(score) {
+  if (score == null || score === "") return null;
   const n = Number(score);
   if (!Number.isFinite(n)) return null;
   const clamped = Math.min(100, Math.max(0, n));
