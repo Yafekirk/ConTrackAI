@@ -101,12 +101,54 @@ function normalizeCurrency(extracted, selectEl) {
   return code;
 }
 
+function currencySymbol(currency) {
+  const code = String(currency || "PHP").toUpperCase();
+  return code === "USD" ? "$" : code === "EUR" ? "€" : "₱";
+}
+
 function formatMoney(value, currency) {
   const n = parseValue(value);
-  const code = String(currency || "PHP").toUpperCase();
-  const symbol = code === "USD" ? "$" : code === "EUR" ? "€" : "₱";
   const digits = Number.isInteger(n) ? 0 : 2;
-  return `${symbol}${n.toLocaleString("en-PH", { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`;
+  return `${currencySymbol(currency)}${n.toLocaleString("en-PH", { minimumFractionDigits: digits, maximumFractionDigits: 2 })}`;
+}
+
+/** As-you-type version of formatMoney: keeps a trailing "." or partial decimals the user is still typing. */
+function formatMoneyInput(raw, currency) {
+  const cleaned = String(raw || "").replace(/[^\d.]/g, "");
+  if (!cleaned) return "";
+  const dot = cleaned.indexOf(".");
+  const intPart = (dot === -1 ? cleaned : cleaned.slice(0, dot)).replace(/^0+(?=\d)/, "") || "0";
+  const decPart = dot === -1 ? null : cleaned.slice(dot + 1).replace(/\./g, "").slice(0, 2);
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${currencySymbol(currency)}${grouped}${decPart === null ? "" : `.${decPart}`}`;
+}
+
+function refreshValueField(fields) {
+  if (!fields.value || !fields.value.value.trim()) return;
+  fields.value.value = formatMoney(fields.value.value, fields.currency?.value);
+}
+
+function bindValueFormatting(fields) {
+  const input = fields.value;
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const caret = input.selectionStart ?? input.value.length;
+    const significantBefore = input.value.slice(0, caret).replace(/[^\d.]/g, "").length;
+    input.value = formatMoneyInput(input.value, fields.currency?.value);
+    let pos = 0;
+    let seen = 0;
+    while (pos < input.value.length && seen < significantBefore) {
+      if (/[\d.]/.test(input.value[pos])) seen += 1;
+      pos += 1;
+    }
+    if (significantBefore === 0) pos = input.value ? 1 : 0;
+    input.setSelectionRange(pos, pos);
+  });
+  input.addEventListener("blur", () => refreshValueField(fields));
+  fields.currency?.addEventListener("change", () => {
+    refreshValueField(fields);
+    updateExtractBrief(fields);
+  });
 }
 
 function setBrief(key, value) {
@@ -302,6 +344,7 @@ function applyExtracted(fields, extracted, contractTextInput) {
   if (fields.clientSignatory && extracted.client_signatory) fields.clientSignatory.value = extracted.client_signatory;
   if (fields.vendorSignatory && extracted.vendor_signatory) fields.vendorSignatory.value = extracted.vendor_signatory;
   if (fields.signedDate && extracted.signed_date) fields.signedDate.value = extracted.signed_date;
+  refreshValueField(fields);
   updateExtractBrief(fields);
 }
 
@@ -310,6 +353,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const fields = getFieldElements();
   const contractTextInput = document.getElementById("contractTextInput");
   const submitBtn = document.getElementById("submitContractBtn");
+  bindValueFormatting(fields);
 
   const requireLogin = () => {
     alert("Please log in as a vendor (session missing). Open the login page and sign in again.");
