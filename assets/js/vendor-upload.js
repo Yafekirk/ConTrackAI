@@ -1,9 +1,35 @@
 import {
   setApiContext,
+  checkDuplicatePdf,
   extractContractFields,
   extractContractFromPdf,
   submitContractFormData,
 } from "/assets/js/api-client.js";
+
+function showAlert(id, message, label = "DUPLICATE CONTRACT BLOCKED") {
+  const box = document.getElementById(id);
+  if (!box) return;
+  const labelEl = box.querySelector("[data-alert-label]");
+  const bodyEl = box.querySelector("[data-alert-body]");
+  if (labelEl) labelEl.textContent = label;
+  if (bodyEl) bodyEl.textContent = message;
+  box.style.display = "flex";
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function hideAlerts() {
+  ["upload-alert", "submit-alert"].forEach((id) => {
+    const box = document.getElementById(id);
+    if (box) box.style.display = "none";
+  });
+}
+
+/** Hex SHA-256 of the file, or null where Web Crypto is unavailable (non-HTTPS origins). */
+async function sha256Hex(file) {
+  if (!globalThis.crypto?.subtle || typeof file?.arrayBuffer !== "function") return null;
+  const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function isPdfFile(file) {
   if (!file) return false;
@@ -277,6 +303,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /** Last PDF chosen by the vendor — submitted with the contract so managers/CEO can open the full document. */
   let lastPdfFile = null;
+  /** Extraction result for lastPdfFile; lets Submit skip a second extractor run. */
+  let lastExtraction = null;
 
   const runNlpAutofill = async (opts = {}) => {
     const text = contractTextInput?.value.trim() || "";
@@ -290,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : await extractContractFields(text);
       const extracted = result?.extracted || result || {};
       applyExtracted(fields, extracted, contractTextInput);
+      lastExtraction = { file: usePdf ? lastPdfFile : null, data: extracted };
       const filled = [
         extracted.contract_title,
         extracted.contract_type,
@@ -321,6 +350,23 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  /** Increments per chosen file so a slow duplicate check for an older file is ignored. */
+  let fileSelectionToken = 0;
+
+  const originalClearFile = window.clearFile;
+  const clearSelectedFile = () => {
+    fileSelectionToken += 1;
+    if (typeof originalClearFile === "function") originalClearFile();
+    lastPdfFile = null;
+    lastExtraction = null;
+    if (contractTextInput) contractTextInput.value = "";
+    resetExtractBrief();
+  };
+  window.clearFile = () => {
+    clearSelectedFile();
+    hideAlerts();
+  };
+
   const originalShowFile = window.showFile;
   window.showFile = async (file) => {
     if (!isPdfFile(file)) {
@@ -329,24 +375,36 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("file-input") && (document.getElementById("file-input").value = "");
       return;
     }
+    hideAlerts();
+    const token = ++fileSelectionToken;
     if (typeof originalShowFile === "function") {
       originalShowFile(file);
     }
-    lastPdfFile = file && isPdfFile(file) ? file : null;
-    if (!file || !isPdfFile(file)) return;
+    lastPdfFile = file;
+    lastExtraction = null;
+
+    if (user?.id) {
+      try {
+        const hash = await sha256Hex(file);
+        const check = hash ? await checkDuplicatePdf(hash, file.size) : null;
+        if (token !== fileSelectionToken) return;
+        if (check?.duplicate) {
+          clearSelectedFile();
+          showAlert("upload-alert", check.error || "This PDF has already been submitted. Make a change to the contract before submitting it again.");
+          return;
+        }
+      } catch (error) {
+        // The submit endpoint repeats this check, so a failed pre-check only delays the block.
+        console.warn("Duplicate pre-check failed", error);
+      }
+    }
+    if (token !== fileSelectionToken) return;
+
     try {
       await runNlpAutofill();
     } catch (error) {
       console.error("PDF NLP extraction failed", error);
     }
-  };
-
-  const originalClearFile = window.clearFile;
-  window.clearFile = () => {
-    if (typeof originalClearFile === "function") originalClearFile();
-    lastPdfFile = null;
-    if (contractTextInput) contractTextInput.value = "";
-    resetExtractBrief();
   };
 
   window.handleFile = async (input) => {
@@ -363,16 +421,96 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  const submitBtnDefaultHtml = submitBtn?.innerHTML || "";
+  const lockableInputs = () => [...Object.values(fields), contractTextInput, extractBtn].filter(Boolean);
+  let submittedPdfUrl = null;
+  let isSubmitted = false;
+
+  const setUploadCardMode = (submitted) => {
+    const show = (id, visible, display = "block") => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = visible ? display : "none";
+    };
+    show("drop-zone", !submitted);
+    show("file-preview", false);
+    show("upload-ai-info", !submitted, "flex");
+    show("submitted-pdf", submitted);
+    const kicker = document.getElementById("upload-card-kicker");
+    const hint = document.getElementById("upload-card-hint");
+    if (kicker) kicker.textContent = submitted ? "SUBMITTED DOCUMENT" : "UPLOAD DOCUMENT";
+    if (hint) {
+      hint.textContent = submitted
+        ? "This is the PDF you submitted for review"
+        : "PDF only, max 25MB — labeled template files extract cleanly";
+    }
+  };
+
+  const enterSubmittedState = (file, row) => {
+    isSubmitted = true;
+    if (submittedPdfUrl) URL.revokeObjectURL(submittedPdfUrl);
+    submittedPdfUrl = URL.createObjectURL(file);
+    const frame = document.getElementById("submitted-pdf-frame");
+    const openLink = document.getElementById("submitted-pdf-open");
+    if (frame) frame.src = submittedPdfUrl;
+    if (openLink) openLink.href = submittedPdfUrl;
+    const nameEl = document.getElementById("submitted-pdf-name");
+    if (nameEl) nameEl.textContent = file.name || "contract.pdf";
+    const subEl = document.getElementById("submitted-pdf-sub");
+    if (subEl) {
+      const code = String(row?.contract_code || "").trim();
+      subEl.textContent = code
+        ? `Submitted as ${code} — awaiting manager review`
+        : "Submitted — awaiting manager review";
+    }
+    setUploadCardMode(true);
+    lockableInputs().forEach((el) => { el.disabled = true; });
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitted";
+    }
+  };
+
+  window.resetUploadForm = () => {
+    isSubmitted = false;
+    const frame = document.getElementById("submitted-pdf-frame");
+    if (frame) frame.removeAttribute("src");
+    if (submittedPdfUrl) {
+      URL.revokeObjectURL(submittedPdfUrl);
+      submittedPdfUrl = null;
+    }
+    clearSelectedFile();
+    hideAlerts();
+    lockableInputs().forEach((el) => {
+      el.disabled = false;
+      if (el === extractBtn) return;
+      el.value = "";
+    });
+    if (fields.currency) fields.currency.value = "PHP";
+    if (fields.vendorName && user) fields.vendorName.value = user.company_name || user.name || "";
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = submitBtnDefaultHtml;
+    }
+    setUploadCardMode(false);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   submitBtn?.addEventListener("click", async (event) => {
     event.preventDefault();
+    if (isSubmitted) return;
     if (!user?.id) {
       requireLogin();
       return;
     }
-    try {
-      await runNlpAutofill({ showLoader: false });
-    } catch (error) {
-      console.error("Submit NLP extraction failed", error);
+    hideAlerts();
+    // Only extract when this PDF has not been read yet; re-running would also overwrite the vendor's edits.
+    const alreadyExtracted = lastExtraction && lastExtraction.file === lastPdfFile;
+    if (!alreadyExtracted) {
+      try {
+        await runNlpAutofill({ showLoader: false });
+      } catch (error) {
+        console.error("Submit NLP extraction failed", error);
+      }
     }
 
     const title = fields.title?.value.trim() || "";
@@ -394,6 +532,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     submitBtn.disabled = true;
+    let submittedRow = null;
     try {
       const fileName = document.getElementById("file-name")?.textContent?.trim() || "";
       const commonFields = {
@@ -417,6 +556,12 @@ document.addEventListener("DOMContentLoaded", () => {
         vendor_signatory: fields.vendorSignatory?.value || "",
         signed_date: fields.signedDate?.value || "",
       };
+      const extractedForFile = lastExtraction && lastExtraction.file === lastPdfFile ? lastExtraction.data : null;
+      if (extractedForFile?.engine) {
+        commonFields.nlp_engine = String(extractedForFile.engine);
+        commonFields.financial_obligations = extractedForFile.financial_obligations || "";
+        commonFields.classification = extractedForFile.classification || "";
+      }
 
       const usePdfUpload = lastPdfFile && isPdfFile(lastPdfFile);
 
@@ -424,21 +569,24 @@ document.addEventListener("DOMContentLoaded", () => {
         const fd = new FormData();
         Object.entries(commonFields).forEach(([k, v]) => fd.append(k, v));
         fd.append("contract_pdf", lastPdfFile, lastPdfFile.name);
-        await submitContractFormData(fd);
+        submittedRow = await submitContractFormData(fd);
       } else {
         alert("A PDF file is required. Word documents are not accepted.");
         return;
       }
-      if (typeof window.openModal === "function") {
-        window.openModal("modal-success");
-      } else {
-        window.location.href = "/pages/VendorClient/VendorContracts.html";
-      }
     } catch (error) {
       const msg = error?.message || "Failed to submit contract";
-      alert(msg);
+      const isDuplicate = error?.status === 409 || error?.data?.duplicate === true;
+      showAlert("submit-alert", msg, isDuplicate ? "DUPLICATE CONTRACT BLOCKED" : "SUBMISSION FAILED");
+      return;
     } finally {
-      submitBtn.disabled = false;
+      if (!isSubmitted) submitBtn.disabled = false;
+    }
+    enterSubmittedState(lastPdfFile, submittedRow);
+    if (typeof window.openModal === "function") {
+      window.openModal("modal-success");
+    } else {
+      window.location.href = "/pages/VendorClient/VendorContracts.html";
     }
   });
 });

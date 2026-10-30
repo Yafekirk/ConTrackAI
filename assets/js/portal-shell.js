@@ -23,6 +23,8 @@
  *      storage cleared).
  * ================================================================ */
 
+import { startLiveSync } from "/assets/js/live-sync.js";
+
 const ROLE_FOLDER_MAP = {
   Admin:         "admin",
   CEO:           "ceo",
@@ -83,7 +85,8 @@ function readLocalUser() {
 
 async function readSessionUser() {
   try {
-    const response = await fetch("/api/session.php", { method: "GET" });
+    // heartbeat=1 also records last_seen_at, so page load needs only this one session call.
+    const response = await fetch("/api/session.php?heartbeat=1", { method: "GET", cache: "no-store" });
     if (!response.ok) return null;
     const payload = await response.json().catch(() => null);
     return payload?.user || null;
@@ -466,8 +469,9 @@ async function bootstrap() {
   const ping = () => {
     fetch("/api/session.php?heartbeat=1", { method: "GET", credentials: "same-origin" }).catch(() => {});
   };
-  ping();
   setInterval(ping, 120000);
+
+  startLiveSync();
 }
 
 if (document.readyState === "loading") {

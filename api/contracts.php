@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_contract_pdf.php";
+require_once __DIR__ . "/lib_contract_duplicates.php";
 require_once __DIR__ . "/lib_contract_intel.php";
 require_once __DIR__ . "/lib_python_nlp.php";
 require_once __DIR__ . "/lib_vendor_score.php";
@@ -11,6 +12,31 @@ $view = $_GET["view"] ?? "stats";
 require_session();
 $role = normalize_role(get_request_role());
 $userId = get_request_user_id();
+
+if ($view === "duplicate_check") {
+    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
+        http_response_code(405);
+        echo json_encode(["error" => "Method not allowed"]);
+        exit;
+    }
+    $input = json_decode(file_get_contents("php://input"), true);
+    $pdfSha256 = is_array($input) ? (string)($input["pdf_sha256"] ?? "") : "";
+    $pdfSize = is_array($input) && isset($input["pdf_size"]) ? (int)$input["pdf_size"] : null;
+    $match = $userId !== null
+        ? contract_duplicate_match_pdf(contract_duplicate_vendor_rows($userId), $pdfSha256, $pdfSize)
+        : null;
+    if ($match === null) {
+        echo json_encode(["duplicate" => false]);
+        exit;
+    }
+    echo json_encode([
+        "duplicate" => true,
+        "reason" => "pdf",
+        "error" => contract_duplicate_message($match, "pdf"),
+        "duplicate_of" => contract_duplicate_summary($match),
+    ]);
+    exit;
+}
 
 if ($view === "nlp_extract") {
     if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
@@ -277,14 +303,13 @@ if ($view === "stats") {
 
 if ($view === "vendor_summary") {
     require_roles(["ceo", "manager", "admin"]);
-    $cRes = supabase_request(
-        "GET",
-        "vendor_contracts?select=vendor_id,vendor_name,contract_type,contract_value,status,end_date"
-    );
-    $uRes = supabase_request(
-        "GET",
-        "users?role=eq.vendor&select=id,name,company_name,email,role,created_at&order=name.asc"
-    );
+    $batch = supabase_request_many([
+        "contracts" => ["GET", "vendor_contracts?select=vendor_id,vendor_name,contract_type,contract_value,status,end_date"],
+        "users" => ["GET", "users?role=eq.vendor&select=id,name,company_name,email,role,created_at&order=name.asc"],
+        "scores" => ["GET", VENDOR_SCORE_LATEST_PATH],
+    ]);
+    $cRes = $batch["contracts"];
+    $uRes = $batch["users"];
     if (!$cRes["ok"]) {
         http_response_code($cRes["status"]);
         echo json_encode(["error" => contrack_upstream_error($cRes, "Supabase request failed")]);
@@ -351,7 +376,7 @@ if ($view === "vendor_summary") {
     }
     unset($bundle);
 
-    $latestScores = vendor_score_latest_by_vendor();
+    $latestScores = vendor_score_latest_by_vendor($batch["scores"]);
     $out = [];
     foreach ($agg as $vid => $bundle) {
         $contracts = $bundle["contracts"];
@@ -820,7 +845,22 @@ if ($view === "create") {
     }
 
     $nlpStarted = microtime(true);
-    $nlp = python_nlp_extract($contractTextRaw, $pdfTmpPath);
+    // The upload page already ran the extractor on this PDF (view=nlp_extract) and the vendor
+    // reviewed the result, so a second Python run here only repeats several seconds of work.
+    // The fast PHP pass still fills any optional field the form left empty.
+    $clientEngine = (string)($input["nlp_engine"] ?? "");
+    $clientExtracted = in_array($clientEngine, ["python-ml", "php-regex"], true)
+        && trim((string)($input["contract_title"] ?? "")) !== ""
+        && trim((string)($input["contract_type"] ?? "")) !== ""
+        && (float)($input["contract_value"] ?? 0) > 0
+        && trim((string)($input["end_date"] ?? "")) !== "";
+    $nlp = null;
+    if ($clientExtracted) {
+        $nlp = extract_contract_fields($contractTextRaw);
+        $nlp["engine"] = $clientEngine;
+    } else {
+        $nlp = python_nlp_extract($contractTextRaw, $pdfTmpPath);
+    }
     if (!is_array($nlp)) {
         $nlp = extract_contract_fields($contractTextRaw);
         $nlp["engine"] = "php-regex";
@@ -931,6 +971,54 @@ if ($view === "create") {
         http_response_code(400);
         echo json_encode(["error" => "A PDF file is required. Word documents are not accepted."]);
         exit;
+    }
+
+    if ($userId !== null) {
+        $existingRows = contract_duplicate_vendor_rows($userId);
+        $duplicateReason = "pdf";
+        $duplicateRow = null;
+        if ($pdfTmpPath !== null) {
+            $duplicateRow = contract_duplicate_match_pdf(
+                $existingRows,
+                (string)@hash_file("sha256", $pdfTmpPath),
+                (int)@filesize($pdfTmpPath)
+            );
+        } elseif ($pdfBase64 !== "") {
+            $decodedPdf = base64_decode((string)preg_replace('/\s+/', "", $pdfBase64), true);
+            if ($decodedPdf !== false) {
+                $duplicateRow = contract_duplicate_match_pdf($existingRows, hash("sha256", $decodedPdf), strlen($decodedPdf));
+            }
+        }
+        if ($duplicateRow === null) {
+            $duplicateReason = "terms";
+            $duplicateRow = contract_duplicate_match_terms($existingRows, [
+                "contract_title" => $contractTitle,
+                "contract_type" => $contractType,
+                "contract_value" => $contractValue,
+                "start_date" => $startDate,
+                "end_date" => $endDate,
+                "payment_terms" => $paymentTerms,
+                "scope_of_work" => $scope,
+                "renewal_terms" => $renewalTerms,
+                "penalty_clause" => $penaltyClause,
+            ]);
+        }
+        if ($duplicateRow !== null) {
+            nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
+            audit_log_event("contract_duplicate_blocked", [
+                "duplicate_of" => (string)($duplicateRow["id"] ?? ""),
+                "reason" => $duplicateReason,
+                "title" => $contractTitle,
+            ], $userId);
+            http_response_code(409);
+            echo json_encode([
+                "error" => contract_duplicate_message($duplicateRow, $duplicateReason),
+                "duplicate" => true,
+                "reason" => $duplicateReason,
+                "duplicate_of" => contract_duplicate_summary($duplicateRow),
+            ]);
+            exit;
+        }
     }
 
     $srcFile = trim((string)($input["source_file_name"] ?? ""));

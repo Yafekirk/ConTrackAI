@@ -43,7 +43,7 @@
       <div style="font-family:var(--font-display);font-size:22px;color:var(--gray-900);margin-bottom:8px;">Contract Submitted!</div>
       <div style="font-size:13px;color:var(--gray-500);line-height:1.6;margin-bottom:24px;">Your contract PDF has been submitted successfully. Our AI will extract key information and it will be sent to the manager.</div>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button class="btn btn-ghost" onclick="closeModal('modal-success')">Submit Another</button>
+        <button class="btn btn-ghost" onclick="closeModal('modal-success'); window.resetUploadForm && window.resetUploadForm();">Submit Another</button>
         <a href="/pages/VendorClient/VendorContracts.html"><button class="btn btn-primary">View My Contracts</button></a>
       </div>
     </div>
@@ -162,12 +162,33 @@
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                 </div>
                 <div>
-                  <div class="tpl-card-kicker">UPLOAD DOCUMENT</div>
-                  <div class="tpl-card-hint">PDF only, max 25MB — labeled template files extract cleanly</div>
+                  <div class="tpl-card-kicker" id="upload-card-kicker">UPLOAD DOCUMENT</div>
+                  <div class="tpl-card-hint" id="upload-card-hint">PDF only, max 25MB — labeled template files extract cleanly</div>
                 </div>
               </div>
             </div>
             <div class="card-body">
+              <div class="info-box info-box-red submit-alert" id="upload-alert" role="alert" style="display:none;">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <div>
+                  <div class="info-box-label" data-alert-label>DUPLICATE CONTRACT BLOCKED</div>
+                  <div class="info-box-body" data-alert-body></div>
+                </div>
+              </div>
+
+              <div class="submitted-pdf" id="submitted-pdf" style="display:none;">
+                <div class="submitted-pdf-bar">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <div class="submitted-pdf-meta">
+                    <div class="submitted-pdf-name" id="submitted-pdf-name">—</div>
+                    <div class="submitted-pdf-sub" id="submitted-pdf-sub">Submitted — awaiting manager review</div>
+                  </div>
+                  <a class="btn btn-outline btn-sm" id="submitted-pdf-open" href="#" target="_blank" rel="noopener">Open in new tab</a>
+                  <button class="btn btn-primary btn-sm" type="button" onclick="window.resetUploadForm && window.resetUploadForm()">Submit Another</button>
+                </div>
+                <iframe class="submitted-pdf-frame" id="submitted-pdf-frame" title="Submitted contract PDF"></iframe>
+              </div>
+
               <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
                 <div class="drop-icon">
                   <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -200,7 +221,7 @@
                 </button>
               </div>
 
-              <div class="info-box info-box-green" style="margin-top:14px;margin-bottom:0;">
+              <div class="info-box info-box-green" id="upload-ai-info" style="margin-top:14px;margin-bottom:0;">
                 <svg viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636-.707.707M21 12h-1M4 12H3m3.343-5.657-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                 <div>
                   <div class="info-box-label">AI Extraction Enabled</div>
@@ -412,6 +433,14 @@
                 <label class="fgl">SIGNED DATE</label>
                 <input id="vendor-contract-signed-date" class="fgi" type="date">
               </div>
+            </div>
+          </div>
+
+          <div class="info-box info-box-red submit-alert" id="submit-alert" role="alert" style="display:none;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div>
+              <div class="info-box-label" data-alert-label>DUPLICATE CONTRACT BLOCKED</div>
+              <div class="info-box-body" data-alert-body></div>
             </div>
           </div>
 

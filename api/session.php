@@ -32,6 +32,7 @@ if ($method === "GET") {
             $user = get_session_user();
         }
     }
+    contrack_release_session();
 
     // Lightweight heartbeat: bumps last_seen_at for defensible "recent activity" (not faux concurrent users).
     if (isset($_GET["heartbeat"]) && $_GET["heartbeat"] !== "0") {

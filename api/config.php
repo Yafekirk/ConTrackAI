@@ -137,7 +137,27 @@ function require_session(): array
         echo json_encode(["error" => "Sign in required"]);
         exit;
     }
-    return get_session_user() ?? $user;
+    $user = get_session_user() ?? $user;
+    // PHP holds an exclusive lock on the session file until the request ends, which makes every
+    // parallel API call from the same browser wait in line. Release it once the user is known;
+    // the few writers reopen it through contrack_session_reopen().
+    contrack_release_session();
+    return $user;
+}
+
+function contrack_release_session(): void
+{
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_write_close();
+    }
+}
+
+/** Reacquire the session after contrack_release_session() so it can be written again. */
+function contrack_session_reopen(): void
+{
+    if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
+        session_start();
+    }
 }
 
 function require_roles(array $roles): string
@@ -179,6 +199,7 @@ function contrack_start_authenticated_session(array $user): void
 
 function contrack_destroy_session(): void
 {
+    contrack_session_reopen();
     $_SESSION = [];
     if (session_status() === PHP_SESSION_ACTIVE) {
         if (ini_get("session.use_cookies")) {
@@ -190,8 +211,10 @@ function contrack_destroy_session(): void
 }
 
 /**
- * Re-check the signed-in account against the database once per request.
- * Disabled or deleted accounts lose their session immediately, and role changes apply right away.
+ * Re-check the signed-in account against the database at most every CONTRACK_REVALIDATE_SECONDS
+ * (default 30). A page fires several API calls at once, so checking on every single call doubled
+ * the database round trips. Disabled or deleted accounts lose their session within that window,
+ * and role changes apply within it.
  * A failed lookup keeps the session so a database hiccup does not sign everyone out.
  */
 function contrack_session_revalidate(): bool
@@ -203,6 +226,11 @@ function contrack_session_revalidate(): bool
     $sessionUser = $_SESSION["contrack_user"] ?? null;
     if (!is_array($sessionUser) || empty($sessionUser["id"])) {
         // No real session (dev header auth or nobody signed in): nothing to revalidate.
+        return $result = true;
+    }
+    $ttl = max(0, (int)(env_value("CONTRACK_REVALIDATE_SECONDS", "30") ?? 30));
+    $checkedAt = (int)($_SESSION["contrack_checked_at"] ?? 0);
+    if ($ttl > 0 && $checkedAt > 0 && (time() - $checkedAt) < $ttl) {
         return $result = true;
     }
     $id = (int)$sessionUser["id"];
@@ -314,6 +342,8 @@ function contrack_set_password(int $userId, string $currentStored, string $newPa
 
 function set_session_user(array $user): void
 {
+    contrack_session_reopen();
+    $_SESSION["contrack_checked_at"] = time();
     $_SESSION["contrack_user"] = [
         "id" => (int)($user["id"] ?? 0),
         "name" => (string)($user["name"] ?? ""),
@@ -453,21 +483,11 @@ register_shutdown_function(static function (): void {
     ]);
 });
 
-function supabase_request(string $method, string $path, ?array $payload = null): array
+/** Apply URL, headers, TLS and body options for one Supabase REST call to a (fresh or reset) handle. */
+function supabase_configure_handle($ch, string $method, string $path, ?array $payload): void
 {
-    if (!function_exists("curl_init")) {
-        return [
-            "ok" => false,
-            "status" => 500,
-            "error" => "PHP cURL extension is not enabled. Enable extension=curl in php.ini and restart PHP server.",
-            "raw" => null,
-        ];
-    }
-
     $url = rtrim(require_env("SUPABASE_URL"), "/") . "/rest/v1/" . ltrim($path, "/");
     $serviceRoleKey = require_env("SUPABASE_SERVICE_ROLE_KEY");
-
-    $ch = curl_init($url);
     $headers = [
         "apikey: {$serviceRoleKey}",
         "Authorization: Bearer {$serviceRoleKey}",
@@ -476,15 +496,24 @@ function supabase_request(string $method, string $path, ?array $payload = null):
         "Prefer: return=representation",
     ];
 
+    curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    // Accept gzip: list endpoints return sizeable JSON.
+    curl_setopt($ch, CURLOPT_ENCODING, "");
+    // Never let a stalled upstream hang the PHP worker indefinitely.
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
     // TLS settings for Windows/dev environments:
     // - Prefer strict verification with a CA bundle when available.
     // - Allow explicit insecure mode only when SUPABASE_TLS_INSECURE=true.
+    static $caBundlePath = false;
+    if ($caBundlePath === false) {
+        $caBundlePath = resolve_supabase_ca_bundle();
+    }
     $tlsInsecure = env_flag("SUPABASE_TLS_INSECURE", false);
-    $caBundlePath = resolve_supabase_ca_bundle();
     if ($caBundlePath !== null && !$tlsInsecure) {
         curl_setopt($ch, CURLOPT_CAINFO, $caBundlePath);
     }
@@ -499,12 +528,92 @@ function supabase_request(string $method, string $path, ?array $payload = null):
     if ($payload !== null) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     }
+}
+
+function supabase_curl_missing(): array
+{
+    return [
+        "ok" => false,
+        "status" => 500,
+        "error" => "PHP cURL extension is not enabled. Enable extension=curl in php.ini and restart PHP server.",
+        "raw" => null,
+    ];
+}
+
+function supabase_request(string $method, string $path, ?array $payload = null): array
+{
+    if (!function_exists("curl_init")) {
+        return supabase_curl_missing();
+    }
+
+    // One handle per PHP request: curl keeps the HTTPS connection to Supabase open between calls,
+    // so only the first call pays for the TCP + TLS handshake.
+    static $ch = null;
+    if ($ch === null) {
+        $ch = curl_init();
+    } else {
+        curl_reset($ch);
+    }
+    supabase_configure_handle($ch, $method, $path, $payload);
 
     $raw = curl_exec($ch);
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
-    curl_close($ch);
 
+    return supabase_finish_response($method, $path, $raw, (int)$status, (string)$error);
+}
+
+/**
+ * Run several independent Supabase calls at the same time.
+ * $requests maps a key to [method, path, payload?]; the result maps the same keys to supabase_request()-style arrays.
+ */
+function supabase_request_many(array $requests): array
+{
+    if ($requests === []) {
+        return [];
+    }
+    if (!function_exists("curl_multi_init")) {
+        $out = [];
+        foreach ($requests as $key => $req) {
+            $out[$key] = supabase_request((string)$req[0], (string)$req[1], $req[2] ?? null);
+        }
+        return $out;
+    }
+
+    $mh = curl_multi_init();
+    $handles = [];
+    foreach ($requests as $key => $req) {
+        $ch = curl_init();
+        supabase_configure_handle($ch, (string)$req[0], (string)$req[1], $req[2] ?? null);
+        curl_multi_add_handle($mh, $ch);
+        $handles[$key] = $ch;
+    }
+
+    do {
+        $status = curl_multi_exec($mh, $running);
+        if ($running > 0) {
+            curl_multi_select($mh, 1.0);
+        }
+    } while ($running > 0 && $status === CURLM_OK);
+
+    $out = [];
+    foreach ($handles as $key => $ch) {
+        $raw = curl_multi_getcontent($ch);
+        $httpStatus = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = (string)curl_error($ch);
+        if ($error === "" && $httpStatus === 0) {
+            $error = "request did not complete";
+        }
+        $out[$key] = supabase_finish_response((string)$requests[$key][0], (string)$requests[$key][1], $raw, $httpStatus, $error);
+        curl_multi_remove_handle($mh, $ch);
+        curl_close($ch);
+    }
+    curl_multi_close($mh);
+    return $out;
+}
+
+function supabase_finish_response(string $method, string $path, $raw, int $status, string $error): array
+{
     if ($error || $status < 200 || $status >= 300) {
         contrack_note_upstream_failure($method, $path, (int)$status, (string)$error, is_string($raw) ? $raw : "");
     }
@@ -684,6 +793,8 @@ function notify_role_users(string $role, string $title, string $message): void
         error_log("notify_role_users failed for {$role}: " . (string)($result["raw"] ?? $result["error"] ?? ""));
         return;
     }
+    $now = gmdate("c");
+    $rows = [];
     foreach ($result["data"] as $row) {
         if (!is_array($row)) {
             continue;
@@ -694,8 +805,22 @@ function notify_role_users(string $role, string $title, string $message): void
             user_wants_alerts($id, $wants);
         }
         if ($id > 0 && $wants) {
-            create_user_alert($id, $title, $message);
+            $rows[] = [
+                "user_id" => $id,
+                "title" => substr(trim($title), 0, 200),
+                "message" => substr(trim($message), 0, 2000),
+                "status" => "unread",
+                "created_at" => $now,
+            ];
         }
+    }
+    if ($rows === []) {
+        return;
+    }
+    // One insert for every recipient instead of a round trip per user.
+    $insert = supabase_request("POST", "alerts", $rows);
+    if (!$insert["ok"]) {
+        error_log("alerts insert failed: " . (string)($insert["raw"] ?? $insert["error"] ?? ""));
     }
 }
 

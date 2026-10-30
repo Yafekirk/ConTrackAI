@@ -147,9 +147,20 @@ export async function submitContractFormData(formData) {
       parsed && typeof parsed === "object" && parsed.error
         ? parsed.error
         : `API error (${response.status}): ${rawText || response.statusText}`;
-    throw new Error(msg);
+    const error = new Error(msg);
+    error.status = response.status;
+    error.data = parsed;
+    throw error;
   }
   return parsed;
+}
+
+/** Asks whether this vendor already submitted a byte-identical PDF (SHA-256 computed in the browser). */
+export async function checkDuplicatePdf(pdfSha256, pdfSize) {
+  return apiRequest("/contracts.php?view=duplicate_check", {
+    method: "POST",
+    body: JSON.stringify({ pdf_sha256: pdfSha256, pdf_size: pdfSize }),
+  });
 }
 
 /** Direct URL — navigation omits X-User-* headers; prefer {@link openContractPdfInNewTab}. */

@@ -96,6 +96,7 @@ function account_handle_profile_update(array $sessionUser, array $input): void
         account_fail($updated["status"] ?: 500, contrack_upstream_error($updated, "Failed to update profile"));
     }
 
+    contrack_session_reopen();
     if (isset($patch["name"])) {
         $_SESSION["contrack_user"]["name"] = $patch["name"];
     }

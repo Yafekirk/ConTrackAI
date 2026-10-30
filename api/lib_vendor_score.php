@@ -131,12 +131,12 @@ function vendor_score_calculate(array $criteria, array $scoresById): array
  *
  * @return array<int, array<string, mixed>>
  */
-function vendor_score_latest_by_vendor(): array
+const VENDOR_SCORE_LATEST_PATH = "vendor_evaluations?select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at,updated_at&order=evaluated_at.desc&limit=2000";
+
+/** @param array|null $prefetched a supabase_request() result for VENDOR_SCORE_LATEST_PATH, when already fetched */
+function vendor_score_latest_by_vendor(?array $prefetched = null): array
 {
-    $result = supabase_request(
-        "GET",
-        "vendor_evaluations?select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at,updated_at&order=evaluated_at.desc&limit=2000"
-    );
+    $result = $prefetched ?? supabase_request("GET", VENDOR_SCORE_LATEST_PATH);
     if (!$result["ok"] || !is_array($result["data"])) {
         return [];
     }
