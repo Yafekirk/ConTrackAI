@@ -201,9 +201,17 @@ function startNlpLoader() {
   const dropZone = document.getElementById("drop-zone");
   const status = document.getElementById("nlp-extract-status");
   const extractBtn = document.getElementById("extractContractBtn");
+  const ticket = document.getElementById("doc-ticket");
   const started = performance.now();
   let stage = 0;
   let timer = null;
+
+  // The loader lives inside the drop zone, so bring it back while a re-run of NLP is in progress.
+  const ticketWasVisible = Boolean(ticket && ticket.style.display !== "none");
+  if (ticketWasVisible) {
+    ticket.style.display = "none";
+    if (dropZone) dropZone.style.display = "block";
+  }
 
   if (status) status.textContent = NLP_STAGE_LABELS[0];
   if (overlay) {
@@ -238,6 +246,10 @@ function startNlpLoader() {
     }
     dropZone?.classList.remove("is-extracting");
     if (extractBtn) extractBtn.disabled = false;
+    if (ticketWasVisible) {
+      if (dropZone) dropZone.style.display = "none";
+      ticket.style.display = "grid";
+    }
   };
 
   return { finish };
@@ -352,6 +364,80 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /** Increments per chosen file so a slow duplicate check for an older file is ignored. */
   let fileSelectionToken = 0;
+  /** Object URL of lastPdfFile for the PDF viewer modal. */
+  let pdfUrl = null;
+  let isSubmitted = false;
+  const submitBtnDefaultHtml = submitBtn?.innerHTML || "";
+  const lockableInputs = () => [...Object.values(fields), contractTextInput, extractBtn].filter(Boolean);
+
+  const UPLOAD_VIEW_TEXT = {
+    drop: ["UPLOAD DOCUMENT", "PDF only, max 25MB — labeled template files extract cleanly"],
+    ready: ["UPLOADED DOCUMENT", "Review the extracted fields below, then submit"],
+    submitted: ["SUBMITTED DOCUMENT", "This contract was sent for manager review"],
+  };
+
+  /** "drop" shows the upload box; "ready" and "submitted" replace it with the document ticket. */
+  const setUploadView = (view) => {
+    const hasFile = view !== "drop";
+    const dropZone = document.getElementById("drop-zone");
+    const ticket = document.getElementById("doc-ticket");
+    const aiInfo = document.getElementById("upload-ai-info");
+    if (dropZone) dropZone.style.display = hasFile ? "none" : "block";
+    if (ticket) {
+      ticket.style.display = hasFile ? "grid" : "none";
+      if (hasFile) ticket.dataset.state = view;
+    }
+    if (aiInfo) aiInfo.style.display = hasFile ? "none" : "flex";
+    const [kicker, hint] = UPLOAD_VIEW_TEXT[view] || UPLOAD_VIEW_TEXT.drop;
+    const kickerEl = document.getElementById("upload-card-kicker");
+    const hintEl = document.getElementById("upload-card-hint");
+    if (kickerEl) kickerEl.textContent = kicker;
+    if (hintEl) hintEl.textContent = hint;
+  };
+
+  const formatBytes = (bytes) => {
+    const n = Number(bytes) || 0;
+    if (n >= 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+    return `${Math.max(1, Math.round(n / 1024))} KB`;
+  };
+
+  const renderTicket = (file, statusText, verb) => {
+    const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const nameEl = document.getElementById("doc-ticket-name");
+    const metaEl = document.getElementById("doc-ticket-meta");
+    const statusEl = document.getElementById("doc-ticket-status-text");
+    if (nameEl) {
+      nameEl.textContent = file?.name || "contract.pdf";
+      nameEl.title = file?.name || "";
+    }
+    if (metaEl) metaEl.textContent = `${formatBytes(file?.size)} · ${verb} ${time}`;
+    if (statusEl) statusEl.textContent = statusText;
+  };
+
+  const pdfFrame = document.getElementById("pdf-modal-frame");
+  const closePdfViewer = () => {
+    if (typeof window.closeModal === "function") window.closeModal("modal-pdf");
+    pdfFrame?.removeAttribute("src");
+  };
+  const openPdfViewer = () => {
+    if (!pdfUrl) return;
+    const nameEl = document.getElementById("pdf-modal-name");
+    const openLink = document.getElementById("pdf-modal-open");
+    if (nameEl) nameEl.textContent = lastPdfFile?.name || "contract.pdf";
+    if (openLink) openLink.href = pdfUrl;
+    if (pdfFrame) pdfFrame.src = pdfUrl;
+    if (typeof window.openModal === "function") window.openModal("modal-pdf");
+  };
+  document.getElementById("show-pdf-btn")?.addEventListener("click", openPdfViewer);
+  document.getElementById("pdf-modal-close")?.addEventListener("click", closePdfViewer);
+  document.getElementById("modal-pdf")?.addEventListener("click", (event) => {
+    if (event.target === event.currentTarget) closePdfViewer();
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && document.getElementById("modal-pdf")?.classList.contains("open")) {
+      closePdfViewer();
+    }
+  });
 
   const originalClearFile = window.clearFile;
   const clearSelectedFile = () => {
@@ -361,6 +447,12 @@ document.addEventListener("DOMContentLoaded", () => {
     lastExtraction = null;
     if (contractTextInput) contractTextInput.value = "";
     resetExtractBrief();
+    closePdfViewer();
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+      pdfUrl = null;
+    }
+    setUploadView("drop");
   };
   window.clearFile = () => {
     clearSelectedFile();
@@ -405,6 +497,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("PDF NLP extraction failed", error);
     }
+    if (token !== fileSelectionToken) return;
+    if (pdfUrl) URL.revokeObjectURL(pdfUrl);
+    pdfUrl = URL.createObjectURL(file);
+    renderTicket(file, "Uploaded · Ready to submit", "Uploaded");
+    setUploadView("ready");
   };
 
   window.handleFile = async (input) => {
@@ -421,48 +518,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  const submitBtnDefaultHtml = submitBtn?.innerHTML || "";
-  const lockableInputs = () => [...Object.values(fields), contractTextInput, extractBtn].filter(Boolean);
-  let submittedPdfUrl = null;
-  let isSubmitted = false;
-
-  const setUploadCardMode = (submitted) => {
-    const show = (id, visible, display = "block") => {
-      const el = document.getElementById(id);
-      if (el) el.style.display = visible ? display : "none";
-    };
-    show("drop-zone", !submitted);
-    show("file-preview", false);
-    show("upload-ai-info", !submitted, "flex");
-    show("submitted-pdf", submitted);
-    const kicker = document.getElementById("upload-card-kicker");
-    const hint = document.getElementById("upload-card-hint");
-    if (kicker) kicker.textContent = submitted ? "SUBMITTED DOCUMENT" : "UPLOAD DOCUMENT";
-    if (hint) {
-      hint.textContent = submitted
-        ? "This is the PDF you submitted for review"
-        : "PDF only, max 25MB — labeled template files extract cleanly";
-    }
-  };
-
   const enterSubmittedState = (file, row) => {
     isSubmitted = true;
-    if (submittedPdfUrl) URL.revokeObjectURL(submittedPdfUrl);
-    submittedPdfUrl = URL.createObjectURL(file);
-    const frame = document.getElementById("submitted-pdf-frame");
-    const openLink = document.getElementById("submitted-pdf-open");
-    if (frame) frame.src = submittedPdfUrl;
-    if (openLink) openLink.href = submittedPdfUrl;
-    const nameEl = document.getElementById("submitted-pdf-name");
-    if (nameEl) nameEl.textContent = file.name || "contract.pdf";
-    const subEl = document.getElementById("submitted-pdf-sub");
-    if (subEl) {
-      const code = String(row?.contract_code || "").trim();
-      subEl.textContent = code
-        ? `Submitted as ${code} — awaiting manager review`
-        : "Submitted — awaiting manager review";
-    }
-    setUploadCardMode(true);
+    if (!pdfUrl) pdfUrl = URL.createObjectURL(file);
+    const code = String(row?.contract_code || "").trim();
+    renderTicket(
+      file,
+      code ? `Submitted as ${code} · Awaiting manager review` : "Submitted · Awaiting manager review",
+      "Submitted",
+    );
+    setUploadView("submitted");
     lockableInputs().forEach((el) => { el.disabled = true; });
     if (submitBtn) {
       submitBtn.disabled = true;
@@ -472,12 +537,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.resetUploadForm = () => {
     isSubmitted = false;
-    const frame = document.getElementById("submitted-pdf-frame");
-    if (frame) frame.removeAttribute("src");
-    if (submittedPdfUrl) {
-      URL.revokeObjectURL(submittedPdfUrl);
-      submittedPdfUrl = null;
-    }
     clearSelectedFile();
     hideAlerts();
     lockableInputs().forEach((el) => {
@@ -491,9 +550,13 @@ document.addEventListener("DOMContentLoaded", () => {
       submitBtn.disabled = false;
       submitBtn.innerHTML = submitBtnDefaultHtml;
     }
-    setUploadCardMode(false);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  document.getElementById("new-contract-btn")?.addEventListener("click", () => {
+    if (!isSubmitted && lastPdfFile && !window.confirm("Discard this contract and start a new one?")) return;
+    window.resetUploadForm();
+  });
 
   submitBtn?.addEventListener("click", async (event) => {
     event.preventDefault();
@@ -534,7 +597,7 @@ document.addEventListener("DOMContentLoaded", () => {
     submitBtn.disabled = true;
     let submittedRow = null;
     try {
-      const fileName = document.getElementById("file-name")?.textContent?.trim() || "";
+      const fileName = lastPdfFile?.name || "";
       const commonFields = {
         contract_title: title,
         contract_type: ctype,
@@ -546,7 +609,7 @@ document.addEventListener("DOMContentLoaded", () => {
         penalty_clause: fields.penalty?.value || "",
         scope: fields.scope?.value || "",
         contract_text: contractTextInput?.value || "",
-        source_file_name: fileName === "—" ? "" : fileName,
+        source_file_name: fileName,
         vendor_name: fields.vendorName?.value || user.company_name || user.name || "",
         client_name: fields.clientName?.value || "",
         vendor_address: fields.vendorAddress?.value || "",

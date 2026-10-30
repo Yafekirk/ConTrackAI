@@ -43,10 +43,30 @@
       <div style="font-family:var(--font-display);font-size:22px;color:var(--gray-900);margin-bottom:8px;">Contract Submitted!</div>
       <div style="font-size:13px;color:var(--gray-500);line-height:1.6;margin-bottom:24px;">Your contract PDF has been submitted successfully. Our AI will extract key information and it will be sent to the manager.</div>
       <div style="display:flex;gap:10px;justify-content:center;">
-        <button class="btn btn-ghost" onclick="closeModal('modal-success'); window.resetUploadForm && window.resetUploadForm();">Submit Another</button>
+        <button class="btn btn-ghost" onclick="closeModal('modal-success'); window.resetUploadForm && window.resetUploadForm();">Submit New Contract</button>
         <a href="/pages/VendorClient/VendorContracts.html"><button class="btn btn-primary">View My Contracts</button></a>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- PDF VIEWER MODAL -->
+<div class="modal-overlay" id="modal-pdf">
+  <div class="modal pdf-modal" role="dialog" aria-modal="true" aria-labelledby="pdf-modal-name">
+    <div class="pdf-modal-header">
+      <div class="pdf-modal-heading">
+        <div class="pdf-modal-kicker">CONTRACT PDF</div>
+        <div class="pdf-modal-name" id="pdf-modal-name">—</div>
+      </div>
+      <a class="doc-btn doc-btn-new doc-btn-compact" id="pdf-modal-open" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+        Open in new tab
+      </a>
+      <button class="modal-close" id="pdf-modal-close" type="button" title="Close">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <iframe class="pdf-modal-frame" id="pdf-modal-frame" title="Contract PDF"></iframe>
   </div>
 </div>
 
@@ -176,17 +196,27 @@
                 </div>
               </div>
 
-              <div class="submitted-pdf" id="submitted-pdf" style="display:none;">
-                <div class="submitted-pdf-bar">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  <div class="submitted-pdf-meta">
-                    <div class="submitted-pdf-name" id="submitted-pdf-name">—</div>
-                    <div class="submitted-pdf-sub" id="submitted-pdf-sub">Submitted — awaiting manager review</div>
-                  </div>
-                  <a class="btn btn-outline btn-sm" id="submitted-pdf-open" href="#" target="_blank" rel="noopener">Open in new tab</a>
-                  <button class="btn btn-primary btn-sm" type="button" onclick="window.resetUploadForm && window.resetUploadForm()">Submit Another</button>
+              <div class="doc-ticket" id="doc-ticket" data-state="ready" style="display:none;">
+                <div class="doc-ticket-sheet" aria-hidden="true">
+                  <span class="doc-ticket-fold"></span>
+                  <span class="doc-ticket-lines"><i></i><i></i><i></i><i></i></span>
+                  <span class="doc-ticket-tag">PDF</span>
                 </div>
-                <iframe class="submitted-pdf-frame" id="submitted-pdf-frame" title="Submitted contract PDF"></iframe>
+                <div class="doc-ticket-info">
+                  <span class="doc-ticket-status"><span class="doc-ticket-dot"></span><span id="doc-ticket-status-text">Uploaded · Ready to submit</span></span>
+                  <div class="doc-ticket-name" id="doc-ticket-name">—</div>
+                  <div class="doc-ticket-meta" id="doc-ticket-meta">—</div>
+                </div>
+                <div class="doc-ticket-actions">
+                  <button class="doc-btn doc-btn-show" id="show-pdf-btn" type="button">
+                    <svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Show PDF file
+                  </button>
+                  <button class="doc-btn doc-btn-new" id="new-contract-btn" type="button">
+                    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Submit new contract?
+                  </button>
+                </div>
               </div>
 
               <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
@@ -211,14 +241,6 @@
                   <div class="nlp-drop-status" id="nlp-extract-status" aria-live="polite">Reading the uploaded PDF…</div>
                   <div class="nlp-drop-bar"><span class="nlp-progress-bar"></span></div>
                 </div>
-              </div>
-
-              <div id="file-preview" style="display:none;padding:12px;background:var(--green-light);border-radius:var(--radius-sm);margin-top:12px;align-items:center;gap:10px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                <span id="file-name" style="font-size:13px;font-weight:600;color:var(--green);flex:1;">—</span>
-                <button class="btn-icon" onclick="clearFile()" title="Remove file">
-                  <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                </button>
               </div>
 
               <div class="info-box info-box-green" id="upload-ai-info" style="margin-top:14px;margin-bottom:0;">
@@ -585,12 +607,8 @@ if (dz) {
 }
 
 function handleFile(input) { if (input.files[0]) showFile(input.files[0]); }
-function showFile(file) {
-  document.getElementById('file-name').textContent = file.name;
-  document.getElementById('file-preview').style.display = 'flex';
-}
+function showFile(file) {}
 function clearFile() {
-  document.getElementById('file-preview').style.display = 'none';
   document.getElementById('file-input').value = '';
 }
 
