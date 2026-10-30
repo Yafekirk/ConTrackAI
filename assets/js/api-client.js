@@ -37,7 +37,10 @@ async function apiRequest(path, options = {}) {
       parsed && typeof parsed === "object" && parsed.error
         ? parsed.error
         : `API error (${response.status}): ${rawText || response.statusText}`;
-    throw new Error(msg);
+    const error = new Error(msg);
+    error.status = response.status;
+    error.data = parsed;
+    throw error;
   }
 
   return parsed;
@@ -112,7 +115,10 @@ export async function extractContractFromPdf(file, extraText = "") {
       parsed && typeof parsed === "object" && parsed.error
         ? parsed.error
         : `API error (${response.status}): ${rawText || response.statusText}`;
-    throw new Error(msg);
+    const error = new Error(msg);
+    error.status = response.status;
+    error.data = parsed;
+    throw error;
   }
   return parsed;
 }

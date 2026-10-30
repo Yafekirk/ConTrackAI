@@ -17,6 +17,25 @@ function showAlert(id, message, label = "DUPLICATE CONTRACT BLOCKED") {
   box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+const SESSION_EXPIRED_MESSAGE =
+  "Your session has expired (this happens when the site is updated). Sign out, sign in again, then re-upload the PDF.";
+
+function isSessionExpired(error) {
+  return error?.status === 401;
+}
+
+/** Plain-language reason for a failed request, shown to the vendor instead of a generic failure. */
+function describeRequestError(error) {
+  if (isSessionExpired(error)) return SESSION_EXPIRED_MESSAGE;
+  if (error?.status === 502 || error?.status === 503 || error?.status === 504) {
+    return "The server took too long or is restarting. Wait a minute, then upload the PDF again.";
+  }
+  if (error instanceof TypeError) {
+    return "Could not reach the server. Check your connection, then upload the PDF again.";
+  }
+  return error?.message || "Something went wrong. Please upload the PDF again.";
+}
+
 function hideAlerts() {
   ["upload-alert", "submit-alert"].forEach((id) => {
     const box = document.getElementById(id);
@@ -462,6 +481,12 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
       } catch (error) {
+        if (token !== fileSelectionToken) return;
+        if (isSessionExpired(error)) {
+          clearSelectedFile();
+          showAlert("upload-alert", SESSION_EXPIRED_MESSAGE, "SIGN IN REQUIRED");
+          return;
+        }
         // The submit endpoint repeats this check, so a failed pre-check only delays the block.
         console.warn("Duplicate pre-check failed", error);
       }
@@ -472,6 +497,17 @@ document.addEventListener("DOMContentLoaded", () => {
       await runNlpAutofill();
     } catch (error) {
       console.error("PDF NLP extraction failed", error);
+      if (token !== fileSelectionToken) return;
+      if (isSessionExpired(error)) {
+        clearSelectedFile();
+        showAlert("upload-alert", SESSION_EXPIRED_MESSAGE, "SIGN IN REQUIRED");
+        return;
+      }
+      showAlert(
+        "upload-alert",
+        `${describeRequestError(error)} You can also fill in the fields below by hand.`,
+        "EXTRACTION FAILED",
+      );
     }
     if (token !== fileSelectionToken) return;
     if (pdfUrl) URL.revokeObjectURL(pdfUrl);
@@ -613,9 +649,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
     } catch (error) {
-      const msg = error?.message || "Failed to submit contract";
       const isDuplicate = error?.status === 409 || error?.data?.duplicate === true;
-      showAlert("submit-alert", msg, isDuplicate ? "DUPLICATE CONTRACT BLOCKED" : "SUBMISSION FAILED");
+      const label = isDuplicate ? "DUPLICATE CONTRACT BLOCKED" : isSessionExpired(error) ? "SIGN IN REQUIRED" : "SUBMISSION FAILED";
+      showAlert("submit-alert", isDuplicate ? error.message : describeRequestError(error), label);
       return;
     } finally {
       if (!isSubmitted) submitBtn.disabled = false;

@@ -379,3 +379,14 @@ VALUES
   ('communication', 'Communication & responsiveness', 'Clarity, availability, and how quickly issues are resolved.', 0.1500, 50),
   ('innovation', 'Innovation / value-add', 'Process improvements or extras that reduce cost or risk for the company.', 0.1000, 60)
 ON CONFLICT (code) DO NOTHING;
+
+-- Login sessions (api/lib_session_store.php). id is the SHA-256 of the session cookie, never the raw value.
+-- Keeping sessions here instead of container files means a redeploy does not sign everyone out.
+CREATE TABLE IF NOT EXISTS public.app_sessions (
+  id text PRIMARY KEY,
+  data text NOT NULL DEFAULT '',
+  expires_at timestamptz NOT NULL,
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_app_sessions_expires_at ON public.app_sessions (expires_at);
+ALTER TABLE public.app_sessions ENABLE ROW LEVEL SECURITY;

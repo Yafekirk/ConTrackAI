@@ -22,6 +22,11 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         // Set CONTRACK_HTTPS=true once the site is served over TLS.
         "secure" => env_flag("CONTRACK_HTTPS", false),
     ]);
+    if (env_value("SUPABASE_URL") !== null && env_value("SUPABASE_SERVICE_ROLE_KEY") !== null
+        && !env_flag("CONTRACK_FILE_SESSIONS", false)) {
+        require_once __DIR__ . "/lib_session_store.php";
+        session_set_save_handler(new ContrackSessionStore($sessionLifetime), true);
+    }
     session_start();
 }
 
