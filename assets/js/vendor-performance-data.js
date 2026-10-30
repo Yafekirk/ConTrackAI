@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const recWrap = document.getElementById("perf-notes");
     if (recWrap) {
       recWrap.innerHTML = has
-        ? `<div style="font-size:13px;line-height:1.6;">Rating: <strong>${esc(perf.rating_label || "")}</strong><br>${esc(perf.remarks || "No remarks.")}</div>`
+        ? `<div style="font-size:13px;line-height:1.6;">Rating: <strong>${esc(perf.rating_label || "")}</strong><br>Remarks: ${esc(perf.remarks || "No remarks.")}</div>`
         : `<div class="empty-state-desc">Evaluations recorded by managers, the CEO, or an admin appear here.</div>`;
     }
 
