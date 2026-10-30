@@ -83,8 +83,10 @@ function fillModal(row) {
   const detailRows = document.querySelectorAll("#modal-detail .detail-row .detail-val");
   const vendorScore = vendorScores[String(row.vendor_id)];
   if (detailRows[0]) detailRows[0].textContent = row.vendor_name || "—";
-  if (detailRows[1]) renderStarRating(detailRows[1], vendorScore == null || vendorScore === "" ? null : vendorScore, { size: 15 });
-  if (detailRows[2]) detailRows[2].textContent = row.ceo_notes || "—";
+  // Risk level stays blank until vendor evaluations produce real risk data.
+  if (detailRows[1]) detailRows[1].textContent = "—";
+  if (detailRows[2]) renderStarRating(detailRows[2], vendorScore == null || vendorScore === "" ? null : vendorScore, { size: 15 });
+  if (detailRows[3]) detailRows[3].textContent = row.ceo_notes || "—";
 
   const pending = String(row.status || "").toLowerCase() === "pending";
   setReviewVisible(pending);
