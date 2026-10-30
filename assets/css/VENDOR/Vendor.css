@@ -914,6 +914,23 @@ html, body {
   padding-right: 36px;
 }
 .fgsel:focus { border-color: var(--maroon); }
+.fgi[readonly],
+.fgta[readonly],
+.fgsel.is-locked {
+  background-color: var(--gray-50, #f8f8f8);
+  cursor: default;
+}
+.fgi[readonly]:focus,
+.fgta[readonly]:focus {
+  border-color: var(--gray-300);
+  box-shadow: none;
+}
+.fgta[readonly] { resize: none; }
+.fgsel.is-locked {
+  pointer-events: none;
+  background-image: none;
+  padding-right: 12px;
+}
 .form-actions { display: flex; gap: 12px; margin-top: 20px; }
 
 /* ============================

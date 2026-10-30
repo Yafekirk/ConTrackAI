@@ -337,7 +337,7 @@
             </div>
             <div class="card-body">
               <label class="fgl">SCOPE OF WORK</label>
-              <textarea id="vendor-contract-scope" class="fgta" style="height:110px;" placeholder="Briefly describe the scope of this contract..."></textarea>
+              <textarea id="vendor-contract-scope" class="fgta" style="height:110px;" readonly placeholder="Filled in from the uploaded contract"></textarea>
             </div>
           </div>
 
@@ -355,11 +355,11 @@
               <div class="form-row r2" style="margin-bottom:14px;">
                 <div>
                   <label class="fgl">CONTRACT VALUE</label>
-                  <input id="vendor-contract-value" class="fgi" type="text" inputmode="decimal" placeholder="₱0.00">
+                  <input id="vendor-contract-value" class="fgi" type="text" readonly placeholder="₱0.00">
                 </div>
                 <div>
                   <label class="fgl">CURRENCY</label>
-                  <select id="vendor-contract-currency" class="fgsel">
+                  <select id="vendor-contract-currency" class="fgsel is-locked" tabindex="-1" aria-readonly="true">
                     <option value="PHP">PHP (₱)</option>
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -368,7 +368,7 @@
               </div>
               <div style="margin-bottom:14px;">
                 <label class="fgl">PAYMENT TERMS</label>
-                <select id="vendor-contract-payment" class="fgsel">
+                <select id="vendor-contract-payment" class="fgsel is-locked" tabindex="-1" aria-readonly="true">
                   <option value="">Select...</option>
                   <option value="15 Days">15 Days</option>
                   <option value="30 Days">30 Days</option>
@@ -381,7 +381,7 @@
               </div>
               <div>
                 <label class="fgl">PENALTY CLAUSE</label>
-                <textarea id="vendor-contract-penalty" class="fgta" style="height:72px;" placeholder="Late fees, liquidated damages, or other penalties extracted from the contract..."></textarea>
+                <textarea id="vendor-contract-penalty" class="fgta" style="height:72px;" readonly placeholder="Filled in from the uploaded contract"></textarea>
               </div>
             </div>
           </div>
