@@ -156,11 +156,11 @@
 
 .terms-body::-webkit-scrollbar-thumb {
     border-radius: 9px;
-    background: #e3c6c8;
+    background: #c1c1c1;
 }
 
 .terms-body::-webkit-scrollbar-thumb:hover {
-    background: #cfa4a8;
+    background: #a8a8a8;
 }
 
 /* ── Footer: agreement + action ───────────────────────────── */

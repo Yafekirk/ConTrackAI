@@ -1117,8 +1117,8 @@ body > .main-wrap .sidebar .sb-item {
 
 /* Content scrollbar */
 .shell .content::-webkit-scrollbar { width: 10px; }
-.shell .content::-webkit-scrollbar-thumb { background: rgba(61, 26, 30, 0.2); border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
-.shell .content::-webkit-scrollbar-thumb:hover { background: rgba(61, 26, 30, 0.35); background-clip: content-box; }
+.shell .content::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 10px; border: 2px solid transparent; background-clip: content-box; }
+.shell .content::-webkit-scrollbar-thumb:hover { background: #a8a8a8; background-clip: content-box; }
 
 /* Skeleton / empty helpers (opt-in classes) */
 .skeleton { background: linear-gradient(90deg, #eee 25%, #f6f6f6 37%, #eee 63%); background-size: 400% 100%; animation: polish-shimmer 1.4s ease infinite; border-radius: 6px; color: transparent !important; }

@@ -55,8 +55,8 @@ html, body { height: 100%; font-family: var(--font-body); font-size: 14px; color
 /* ── Scrollbar ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar          { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track    { background: transparent; }
-::-webkit-scrollbar-thumb    { background: rgba(122,12,12,0.2); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(122,12,12,0.4); }
+::-webkit-scrollbar-thumb    { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 
 /* ── Shell ─────────────────────────────────────────────────────── */
 .shell { display: flex; flex-direction: column; height: 100vh; }
