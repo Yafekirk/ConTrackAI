@@ -26,7 +26,8 @@ function account_handle_get(array $sessionUser): void
     $selfId = urlencode((string)($sessionUser["id"] ?? 0));
     $me = supabase_request(
         "GET",
-        "users?id=eq.{$selfId}&select=id,name,company_name,email,role,contact_number,supplier_type,created_at,last_login_at,notify_alerts&limit=1"
+        "users?id=eq.{$selfId}&select=id,name,company_name,email,role,contact_number,supplier_type,created_at,last_login_at,"
+        . "notify_alerts,notify_announcements,position_title,department,theme_preference&limit=1"
     );
     if (!$me["ok"] || !is_array($me["data"][0] ?? null)) {
         account_fail(500, "Unable to load your profile");
@@ -39,6 +40,23 @@ function account_handle_get(array $sessionUser): void
 // POST action=profile: self-service profile update
 // Role and is_disabled stay admin-only (api/users.php).
 // ---------------------------------------------------------------------------
+
+/** Optional short label (position, department). Empty clears it. Exits on validation error. */
+function account_optional_label(array $input, string $key, string $label): ?string
+{
+    $value = trim((string)$input[$key]);
+    if ($value === "") {
+        return null;
+    }
+    $len = function_exists("mb_strlen") ? mb_strlen($value) : strlen($value);
+    if ($len > 80) {
+        account_fail(400, "{$label} must be 80 characters or fewer.");
+    }
+    if (preg_match("/[\\x00-\\x1F\\x7F]/", $value)) {
+        account_fail(400, "{$label} cannot include line breaks.");
+    }
+    return $value;
+}
 
 /** Validate the input and build the column patch. Exits on validation error. */
 function account_build_profile_patch(array $input): array
@@ -64,6 +82,24 @@ function account_build_profile_patch(array $input): array
 
     if (array_key_exists("notify_alerts", $input)) {
         $patch["notify_alerts"] = filter_var($input["notify_alerts"], FILTER_VALIDATE_BOOLEAN);
+    }
+    if (array_key_exists("notify_announcements", $input)) {
+        $patch["notify_announcements"] = filter_var($input["notify_announcements"], FILTER_VALIDATE_BOOLEAN);
+    }
+
+    if (array_key_exists("position_title", $input)) {
+        $patch["position_title"] = account_optional_label($input, "position_title", "Position");
+    }
+    if (array_key_exists("department", $input)) {
+        $patch["department"] = account_optional_label($input, "department", "Department");
+    }
+
+    if (array_key_exists("theme_preference", $input)) {
+        $theme = strtolower(trim((string)$input["theme_preference"]));
+        if (!in_array($theme, ["light", "dark"], true)) {
+            account_fail(400, "Appearance must be light or dark.");
+        }
+        $patch["theme_preference"] = $theme;
     }
 
     if (array_key_exists("contact_number", $input)) {

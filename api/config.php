@@ -757,11 +757,35 @@ function user_wants_alerts(int $userId, ?bool $remember = null): bool
 }
 
 /**
- * Best-effort in-app alert. Failures are logged and ignored.
+ * "System Announcements" preference (users.notify_announcements), separate from contract alerts.
+ * A lookup failure keeps announcements on, same as user_wants_alerts().
  */
-function create_user_alert(?int $userId, string $title, string $message): void
+function user_wants_announcements(int $userId): bool
 {
-    if ($userId === null || $userId <= 0 || !user_wants_alerts($userId)) {
+    static $cache = [];
+    if (array_key_exists($userId, $cache)) {
+        return $cache[$userId];
+    }
+    $result = supabase_request("GET", "users?id=eq.{$userId}&select=notify_announcements&limit=1");
+    if (!$result["ok"] || !is_array($result["data"][0] ?? null)) {
+        $cache[$userId] = true;
+        return true;
+    }
+    $cache[$userId] = ($result["data"][0]["notify_announcements"] ?? true) !== false;
+    return $cache[$userId];
+}
+
+/**
+ * Best-effort in-app alert. Failures are logged and ignored.
+ * $kind "contract" follows Contract Updates; "announcement" follows System Announcements.
+ */
+function create_user_alert(?int $userId, string $title, string $message, string $kind = "contract"): void
+{
+    if ($userId === null || $userId <= 0) {
+        return;
+    }
+    $wanted = $kind === "announcement" ? user_wants_announcements($userId) : user_wants_alerts($userId);
+    if (!$wanted) {
         return;
     }
     $payload = [[

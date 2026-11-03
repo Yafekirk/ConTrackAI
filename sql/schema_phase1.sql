@@ -60,7 +60,11 @@ ALTER TABLE public.users
   ADD COLUMN IF NOT EXISTS terms_accepted_at timestamptz,
   ADD COLUMN IF NOT EXISTS terms_version text,
   ADD COLUMN IF NOT EXISTS company_name text,
-  ADD COLUMN IF NOT EXISTS notify_alerts boolean NOT NULL DEFAULT true;
+  ADD COLUMN IF NOT EXISTS notify_alerts boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS notify_announcements boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS position_title text,
+  ADD COLUMN IF NOT EXISTS department text,
+  ADD COLUMN IF NOT EXISTS theme_preference text NOT NULL DEFAULT 'light';
 
 ALTER TABLE public.vendor_contracts
   ADD COLUMN IF NOT EXISTS manager_notes text,
@@ -309,6 +313,19 @@ ALTER TABLE public.users ADD CONSTRAINT users_supplier_type_chk CHECK (
   supplier_type IS NULL
   OR supplier_type IN ('Supply', 'Lease', 'Service', 'Other')
 );
+
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_profile_extras_chk;
+ALTER TABLE public.users ADD CONSTRAINT users_profile_extras_chk CHECK (
+  (position_title IS NULL OR (char_length(position_title) <= 80 AND position_title !~ '[[:cntrl:]]'))
+  AND (department IS NULL OR (char_length(department) <= 80 AND department !~ '[[:cntrl:]]'))
+  AND theme_preference IN ('light', 'dark')
+);
+
+COMMENT ON COLUMN public.users.notify_alerts IS 'Profile & Settings "Contract Updates": submission, review, and decision alerts.';
+COMMENT ON COLUMN public.users.notify_announcements IS 'Profile & Settings "System Announcements": performance scores and other non-contract notices.';
+COMMENT ON COLUMN public.users.position_title IS 'Self-service job title shown on Profile & Settings.';
+COMMENT ON COLUMN public.users.department IS 'Self-service department shown on Profile & Settings.';
+COMMENT ON COLUMN public.users.theme_preference IS 'Portal appearance chosen on Profile & Settings: light or dark.';
 
 ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_password_hash_present_chk;
 ALTER TABLE public.users ADD CONSTRAINT users_password_hash_present_chk CHECK (

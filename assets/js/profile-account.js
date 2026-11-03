@@ -1,21 +1,15 @@
 /**
- * Shared profile wiring for the Manager, CEO, and Vendor profile pages.
+ * Profile & Settings page, shared by the Admin, CEO, Manager, and Vendor portals.
  *
- * Only the fields that exist as columns on `users` are persisted: name and contact_number
- * (email is read-only, changed by an admin). Buttons for cards with no backing storage are
- * wired to say so instead of showing a fake success toast.
+ * Everything shown comes from the signed-in user's row (GET /api/account.php), so each
+ * account sees its own data. One "Save Changes" button sends the changed profile fields,
+ * notification toggles, and appearance in a single PATCH, then changes the password when
+ * the password fields are filled in. "Cancel" restores the last saved values.
  *
- * Expects these ids on the page (any may be absent):
- *   inp-name or inp-fname [+ inp-lname]  — name fields
- *   inp-email, inp-contact               — email (read-only) and contact number
- *   btn-save-profile                     — saves name + contact number
- *   pw-current, pw-new, pw-confirm       — password fields
- *   btn-update-password                  — changes the password
- *   btn-not-stored (any number)          — controls with no backing storage
- *   profile-status                       — optional inline status line
- *   set-email, set-role, set-seen        — read-only account lines on Settings
- *   set-alerts                           — in-app alert toggle (users.notify_alerts)
- *   set-signout                          — ends this browser session
+ * Expected ids: ps-profile-card, ps-edit-btn, ps-display-name, disp-email, disp-contact,
+ * lbl-name, inp-name, inp-contact, inp-position, inp-department, pw-current, pw-new,
+ * pw-confirm, set-alerts, set-announcements, ps-cancel, ps-save, profile-status,
+ * acct-photo-btn, acct-photo-input; theme buttons carry data-theme-choice.
  */
 import {
   setApiContext,
@@ -24,100 +18,159 @@ import {
   changePassword,
 } from "/assets/js/api-client.js";
 
+const PROFILE_FIELDS = {
+  name: "inp-name",
+  contact_number: "inp-contact",
+  position_title: "inp-position",
+  department: "inp-department",
+};
+const PASSWORD_IDS = ["pw-current", "pw-new", "pw-confirm"];
+
+let saved = null;
+let role = "vendor";
+let pendingTheme = "light";
+
+const $ = (id) => document.getElementById(id);
+
+function isVendor(r = role) {
+  return r === "vendor" || r === "client" || r === "vendor_client";
+}
+
 function setStatus(message, kind = "info") {
-  const el = document.getElementById("profile-status");
-  if (el) {
-    el.textContent = message;
-    el.dataset.kind = kind;
-    el.style.color = kind === "error" ? "#EF4444" : kind === "success" ? "#065F46" : "#475467";
-    return;
+  const el = $("profile-status");
+  if (!el) return;
+  el.textContent = message;
+  el.dataset.kind = kind;
+}
+
+function fieldValue(id) {
+  return $(id)?.value?.trim() || "";
+}
+
+function setText(id, text) {
+  const el = $(id);
+  if (el) el.textContent = text;
+}
+
+function snapshotFrom(me) {
+  const company = String(me.company_name || "").trim();
+  return {
+    name: (isVendor(me.role) && company) || String(me.name || "").trim() || company,
+    contact_number: String(me.contact_number || ""),
+    position_title: String(me.position_title || ""),
+    department: String(me.department || ""),
+    notify_alerts: me.notify_alerts !== false,
+    notify_announcements: me.notify_announcements !== false,
+    theme_preference: me.theme_preference === "dark" ? "dark" : "light",
+  };
+}
+
+function roleLabel(r) {
+  const v = String(r || "").toLowerCase();
+  if (v === "ceo") return "Chief Executive";
+  if (v === "manager") return "Contract Manager";
+  if (v === "admin" || v === "system_admin") return "System Administrator";
+  return "Vendor / Supplier";
+}
+
+function configureForRole(me) {
+  const vendor = isVendor(me.role);
+  setText("lbl-name", vendor ? "Company Name" : "Full Name");
+  const name = $("inp-name");
+  if (name) {
+    name.maxLength = vendor ? 120 : 80;
+    name.autocomplete = vendor ? "organization" : "name";
+    name.placeholder = vendor ? "Your company name" : "Your full name";
   }
-  alert(message);
+  const position = $("inp-position");
+  if (position) position.placeholder = vendor ? "e.g. Account Manager" : `e.g. ${roleLabel(me.role)}`;
+  const department = $("inp-department");
+  if (department) department.placeholder = vendor ? `e.g. ${me.supplier_type || "Supply"}` : "e.g. Procurement";
+  setText("set-alerts-copy", alertCopy(me.role));
 }
 
-function value(id) {
-  return document.getElementById(id)?.value?.trim() || "";
+function alertCopy(r) {
+  const v = String(r || "").toLowerCase();
+  if (v === "ceo") return "Contracts reviewed by a manager and waiting for your decision.";
+  if (v === "manager") return "New submissions, resubmissions, and CEO decisions.";
+  if (v === "admin" || v === "system_admin") return "New contracts submitted by vendors.";
+  return "Submission receipts, review results, and CEO decisions.";
 }
 
-async function prefill() {
-  let me = null;
+function paintIdentity() {
+  if (!saved) return;
+  setText("ps-display-name", saved.name || "—");
+  setText("disp-contact", saved.contact_number || "No contact number yet");
+  document.querySelectorAll("[data-shell-name], .sb-name").forEach((el) => {
+    el.textContent = saved.name || el.textContent;
+  });
+}
+
+function fillForm() {
+  if (!saved) return;
+  Object.entries(PROFILE_FIELDS).forEach(([key, id]) => {
+    const el = $(id);
+    if (el) el.value = saved[key];
+  });
+  if ($("set-alerts")) $("set-alerts").checked = saved.notify_alerts;
+  if ($("set-announcements")) $("set-announcements").checked = saved.notify_announcements;
+  PASSWORD_IDS.forEach((id) => {
+    const el = $(id);
+    if (el) el.value = "";
+  });
+  selectTheme(saved.theme_preference);
+  paintIdentity();
+}
+
+function setEditing(on) {
+  Object.values(PROFILE_FIELDS).forEach((id) => {
+    const el = $(id);
+    if (el) el.readOnly = !on;
+  });
+  $("ps-profile-card")?.classList.toggle("is-editing", on);
+  const btn = $("ps-edit-btn");
+  if (btn) {
+    btn.setAttribute("aria-pressed", String(on));
+    const label = btn.querySelector("span");
+    if (label) label.textContent = on ? "Editing" : "Edit";
+  }
+  if (on) $("inp-name")?.focus();
+}
+
+function selectTheme(theme) {
+  pendingTheme = theme === "dark" ? "dark" : "light";
+  document.querySelectorAll("[data-theme-choice]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.themeChoice === pendingTheme));
+  });
+  window.ContrackTheme?.apply(pendingTheme);
+}
+
+async function load() {
+  let me;
   try {
     me = await getMyProfile();
-  } catch (_) {
+  } catch (e) {
+    setStatus(e?.message || "Could not load your profile.", "error");
     return;
   }
   if (!me || typeof me !== "object") return;
 
-  const assign = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val != null) el.value = String(val);
-  };
-  assign("inp-email", me.email);
-  assign("inp-contact", me.contact_number);
+  role = String(me.role || "vendor").toLowerCase();
+  saved = snapshotFrom(me);
+  configureForRole(me);
+  setText("disp-email", me.email || "—");
+  fillForm();
+  window.ContrackTheme?.remember(saved.theme_preference);
 
-  const company = String(me.company_name || "").trim();
-  const full = company || String(me.name || "").trim();
-  if (document.getElementById("inp-name")) {
-    assign("inp-name", full);
-  } else if (document.getElementById("inp-lname")) {
-    // Split pages store one `name` column: first word is the given name, rest the surname.
-    const parts = full.split(/\s+/);
-    assign("inp-fname", parts.shift() || "");
-    assign("inp-lname", parts.join(" "));
-  } else {
-    assign("inp-fname", full);
-  }
-
-  const emailInput = document.getElementById("inp-email");
-  if (emailInput) {
-    emailInput.readOnly = true;
-    emailInput.title = "Email is your sign-in name; an administrator can change it.";
-  }
-
-  const text = (id, val) => {
-    const el = document.getElementById(id);
-    if (el && val) el.textContent = val;
-  };
-  text("disp-name", company || me.name);
-  text("disp-email", me.email);
-  text("disp-last-login", me.last_login_at ? new Date(me.last_login_at).toLocaleString() : "—");
-  text("disp-since", me.created_at ? new Date(me.created_at).toLocaleDateString() : "—");
-
-  const setEmail = document.getElementById("set-email");
-  if (setEmail && me.email) setEmail.textContent = me.email;
-  const setRole = document.getElementById("set-role");
-  if (setRole) setRole.textContent = roleLabel(me.role);
-  const setSeen = document.getElementById("set-seen");
-  if (setSeen) {
-    setSeen.textContent = me.last_login_at
-      ? `Last sign-in ${new Date(me.last_login_at).toLocaleString()}`
-      : "Last sign-in —";
-  }
-  const setCopy = document.getElementById("set-alert-copy");
-  if (setCopy) setCopy.textContent = alertCopy(me.role);
-  const setAlerts = document.getElementById("set-alerts");
-  if (setAlerts) setAlerts.checked = me.notify_alerts !== false;
-
-  const supplier = document.getElementById("disp-supplier");
-  if (supplier) {
-    if (me.supplier_type) {
-      supplier.hidden = false;
-      supplier.textContent = ` · ${me.supplier_type}`;
-    } else {
-      supplier.hidden = true;
-    }
-  }
-
-  // Keep the cached copy used for sidebar/header labels in step with the server.
   try {
-    const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
+    const cached = JSON.parse(localStorage.getItem("contrack_user") || "{}");
     localStorage.setItem(
       "contrack_user",
       JSON.stringify({
-        ...saved,
+        ...cached,
         id: me.id,
-        name: company || me.name,
-        company_name: company,
+        name: saved.name,
+        company_name: String(me.company_name || "").trim(),
         email: me.email,
         role: me.role,
       }),
@@ -127,80 +180,137 @@ async function prefill() {
   }
 }
 
-function wireSaveProfile() {
-  const btn = document.getElementById("btn-save-profile");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const payload = {};
-    let role = "";
-    try {
-      role = JSON.parse(localStorage.getItem("contrack_user") || "{}").role || "";
-    } catch (_) {
-      role = "";
-    }
-    if (document.getElementById("inp-name")) {
-      const entered = value("inp-name");
-      if (role === "vendor" || role === "client") payload.company_name = entered;
-      else payload.name = entered;
-    } else if (document.getElementById("inp-fname")) {
-      payload.name = [value("inp-fname"), value("inp-lname")].filter(Boolean).join(" ");
-    }
-    if (document.getElementById("inp-contact")) payload.contact_number = value("inp-contact");
-    if (Object.keys(payload).length === 0) return;
+function collectProfilePatch() {
+  const patch = {};
+  const name = fieldValue(PROFILE_FIELDS.name);
+  if (name !== saved.name) patch[isVendor() ? "company_name" : "name"] = name;
+  ["contact_number", "position_title", "department"].forEach((key) => {
+    const val = fieldValue(PROFILE_FIELDS[key]);
+    if (val !== saved[key]) patch[key] = val;
+  });
+  const alerts = $("set-alerts")?.checked ?? saved.notify_alerts;
+  if (alerts !== saved.notify_alerts) patch.notify_alerts = alerts;
+  const announcements = $("set-announcements")?.checked ?? saved.notify_announcements;
+  if (announcements !== saved.notify_announcements) patch.notify_announcements = announcements;
+  if (pendingTheme !== saved.theme_preference) patch.theme_preference = pendingTheme;
+  return patch;
+}
 
-    btn.disabled = true;
-    setStatus("Saving…");
-    try {
-      await updateMyProfile(payload);
-      setStatus(role === "vendor" || role === "client" ? "Company name and contact number saved." : "Name and contact number saved.", "success");
-      await prefill();
-    } catch (e) {
-      setStatus(e.message || "Could not save your profile.", "error");
-    } finally {
-      btn.disabled = false;
+function validateProfile(patch) {
+  const name = patch.company_name ?? patch.name;
+  if (name !== undefined && (name.length < 2 || name.length > 120)) {
+    return `${isVendor() ? "Company name" : "Full name"} must be 2–120 characters.`;
+  }
+  if (patch.contact_number && !/^(09\d{9}|\+639\d{9}|639\d{9})$/.test(patch.contact_number.replace(/\s+/g, ""))) {
+    return "Contact number must be a PH mobile number such as 09171234567.";
+  }
+  return null;
+}
+
+/** Returns null (no password change), a payload, or an error string. */
+function collectPassword() {
+  const current = fieldValue("pw-current");
+  const next = fieldValue("pw-new");
+  const confirm = fieldValue("pw-confirm");
+  if (!current && !next && !confirm) return null;
+  if (!current || !next) return "Enter your current password and a new password.";
+  if (next.length < 8 || next.length > 24) return "New password must be 8–24 characters.";
+  if (!/[0-9]/.test(next) || !/[A-Z]/.test(next) || !/[^A-Za-z0-9]/.test(next)) {
+    return "New password needs at least 1 number, 1 uppercase letter, and 1 special character.";
+  }
+  if (next !== confirm) return "The new passwords do not match.";
+  return { current_password: current, new_password: next };
+}
+
+async function save() {
+  if (!saved) return;
+  const patch = collectProfilePatch();
+  const password = collectPassword();
+  if (typeof password === "string") {
+    setStatus(password, "error");
+    return;
+  }
+  const profileError = validateProfile(patch);
+  if (profileError) {
+    setStatus(profileError, "error");
+    return;
+  }
+  if (Object.keys(patch).length === 0 && !password) {
+    setStatus("No changes to save.");
+    setEditing(false);
+    return;
+  }
+
+  const saveBtn = $("ps-save");
+  const cancelBtn = $("ps-cancel");
+  saveBtn.disabled = true;
+  cancelBtn.disabled = true;
+  setStatus("Saving…");
+
+  let profileSaved = false;
+  try {
+    if (Object.keys(patch).length > 0) {
+      await updateMyProfile(patch);
+      profileSaved = true;
+      saved = {
+        ...saved,
+        name: fieldValue(PROFILE_FIELDS.name),
+        contact_number: patch.contact_number ?? saved.contact_number,
+        position_title: patch.position_title ?? saved.position_title,
+        department: patch.department ?? saved.department,
+        notify_alerts: patch.notify_alerts ?? saved.notify_alerts,
+        notify_announcements: patch.notify_announcements ?? saved.notify_announcements,
+        theme_preference: pendingTheme,
+      };
+      window.ContrackTheme?.remember(pendingTheme);
+      paintIdentity();
     }
+    if (password) await changePassword(password);
+    setEditing(false);
+    PASSWORD_IDS.forEach((id) => {
+      if ($(id)) $(id).value = "";
+    });
+    setStatus(password ? "Changes saved and password updated." : "Changes saved.", "success");
+    await load();
+  } catch (e) {
+    const reason = e?.message || "Could not save your changes.";
+    setStatus(profileSaved ? `Profile saved, but the password was not changed: ${reason}` : reason, "error");
+  } finally {
+    saveBtn.disabled = false;
+    cancelBtn.disabled = false;
+  }
+}
+
+function cancel() {
+  fillForm();
+  setEditing(false);
+  setStatus("Changes discarded.");
+}
+
+function wireEyes() {
+  document.querySelectorAll("[data-eye-for]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const input = $(btn.dataset.eyeFor);
+      if (!input) return;
+      const show = input.type === "password";
+      input.type = show ? "text" : "password";
+      btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      btn.setAttribute("aria-pressed", String(show));
+    });
   });
 }
 
-function wirePassword() {
-  const btn = document.getElementById("btn-update-password");
-  if (!btn) return;
-  btn.addEventListener("click", async () => {
-    const current = value("pw-current");
-    const next = value("pw-new");
-    const confirm = value("pw-confirm");
-
-    if (!current || !next) {
-      setStatus("Enter your current password and a new password.", "error");
-      return;
-    }
-    if (next.length < 8 || next.length > 24) {
-      setStatus("Password must be 8–24 characters.", "error");
-      return;
-    }
-    if (!/[0-9]/.test(next) || !/[A-Z]/.test(next) || !/[^A-Za-z0-9]/.test(next)) {
-      setStatus("Password must include at least 1 number, 1 uppercase letter, and 1 special character.", "error");
-      return;
-    }
-    if (next !== confirm) {
-      setStatus("The new passwords do not match.", "error");
-      return;
-    }
-
-    btn.disabled = true;
-    setStatus("Updating password…");
-    try {
-      await changePassword({ current_password: current, new_password: next });
-      setStatus("Password updated.", "success");
-      ["pw-current", "pw-new", "pw-confirm"].forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) el.value = "";
-      });
-    } catch (e) {
-      setStatus(e.message || "Could not update your password.", "error");
-    } finally {
-      btn.disabled = false;
-    }
+function wireFieldFilters() {
+  const nameInput = $("inp-name");
+  nameInput?.addEventListener("input", () => {
+    if (isVendor()) return;
+    const cleaned = nameInput.value.replace(/[0-9]/g, "");
+    if (cleaned !== nameInput.value) nameInput.value = cleaned;
+  });
+  const contactInput = $("inp-contact");
+  contactInput?.addEventListener("input", () => {
+    const cleaned = contactInput.value.replace(/[^0-9+]/g, "");
+    if (cleaned !== contactInput.value) contactInput.value = cleaned;
   });
 }
 
@@ -223,8 +333,8 @@ function paintStoredPhoto(src) {
 }
 
 function wirePhoto() {
-  const button = document.getElementById("acct-photo-btn");
-  const input = document.getElementById("acct-photo-input");
+  const button = $("acct-photo-btn");
+  const input = $("acct-photo-input");
   if (!button || !input) return;
 
   button.addEventListener("click", () => input.click());
@@ -262,7 +372,7 @@ function wirePhoto() {
         const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
         localStorage.setItem(`contrack_avatar_${id}`, dataUrl);
         paintStoredPhoto(dataUrl);
-        setStatus("Profile picture updated.", "success");
+        setStatus("Profile picture updated on this browser.", "success");
       };
       image.onerror = () => setStatus("Could not read that image.", "error");
       image.src = String(reader.result || "");
@@ -271,101 +381,27 @@ function wirePhoto() {
   });
 }
 
-function wireFieldFilters() {
-  const nameInput = document.getElementById("inp-name");
-  const contactInput = document.getElementById("inp-contact");
-  let role = "";
-  try {
-    role = JSON.parse(localStorage.getItem("contrack_user") || "{}").role || "";
-  } catch (_) {
-    role = "";
-  }
-  // Vendor company names may include numbers. Staff names stay letters only.
-  if (role !== "vendor" && role !== "client") {
-    nameInput?.addEventListener("input", () => {
-      const cleaned = nameInput.value.replace(/[0-9]/g, "");
-      if (cleaned !== nameInput.value) nameInput.value = cleaned;
-    });
-  }
-  contactInput?.addEventListener("input", () => {
-    const cleaned = contactInput.value.replace(/[A-Za-z]/g, "");
-    if (cleaned !== contactInput.value) contactInput.value = cleaned;
-  });
-}
-
-function roleLabel(role) {
-  const r = String(role || "").toLowerCase();
-  if (r === "ceo") return "CEO";
-  if (r === "manager") return "Manager";
-  if (r === "admin" || r === "system_admin") return "Administrator";
-  return "Vendor";
-}
-
-function alertCopy(role) {
-  const r = String(role || "").toLowerCase();
-  if (r === "ceo") return "Contracts waiting for your decision.";
-  if (r === "manager") return "New submissions and contracts sent back for review.";
-  if (r === "admin" || r === "system_admin") return "Account and system notices.";
-  return "Decisions, change requests, and renewal notices.";
-}
-
-function wireSettings() {
-  const alerts = document.getElementById("set-alerts");
-  if (alerts) {
-    alerts.addEventListener("change", async () => {
-      const on = alerts.checked;
-      alerts.disabled = true;
-      try {
-        await updateMyProfile({ notify_alerts: on });
-        setStatus(on ? "Alerts are on." : "Alerts are off.", "success");
-      } catch (err) {
-        alerts.checked = !on;
-        setStatus(err?.message || "Could not save alert setting.", "error");
-      } finally {
-        alerts.disabled = false;
-      }
-    });
-  }
-
-  const signout = document.getElementById("set-signout");
-  if (signout) {
-    signout.addEventListener("click", async () => {
-      try {
-        await fetch("/api/session.php", { method: "DELETE" });
-      } catch (_) {
-        /* best effort */
-      }
-      localStorage.removeItem("contrack_user");
-      window.location.href = "/index.html";
-    });
-  }
-}
-
-/** Controls whose fields have no column behind them must not claim to have saved. */
-function wireNotStored() {
-  document.querySelectorAll("[data-not-stored]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      setStatus(
-        btn.getAttribute("data-not-stored") ||
-          "This section is not stored yet. Name, contact number, and password are saved.",
-        "info",
-      );
-    });
-  });
-}
-
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
-    setApiContext({ role: saved.role || "vendor", userId: saved.id || null });
+    const cached = JSON.parse(localStorage.getItem("contrack_user") || "{}");
+    role = String(cached.role || "vendor").toLowerCase();
+    setApiContext({ role: cached.role || "vendor", userId: cached.id || null });
   } catch (_) {
     /* the PHP session is authoritative; headers are only a dev convenience */
   }
-  wireSaveProfile();
-  wirePassword();
-  wirePhoto();
+
+  setEditing(false);
+  selectTheme(window.ContrackTheme?.current() || "light");
+  $("ps-edit-btn")?.addEventListener("click", () => {
+    setEditing($("ps-edit-btn").getAttribute("aria-pressed") !== "true");
+  });
+  document.querySelectorAll("[data-theme-choice]").forEach((btn) => {
+    btn.addEventListener("click", () => selectTheme(btn.dataset.themeChoice));
+  });
+  $("ps-save")?.addEventListener("click", save);
+  $("ps-cancel")?.addEventListener("click", cancel);
+  wireEyes();
   wireFieldFilters();
-  wireSettings();
-  wireNotStored();
-  await prefill();
+  wirePhoto();
+  await load();
 });

@@ -315,7 +315,8 @@ if ($method === "POST" && $view === "create") {
     create_user_alert(
         $vendorId,
         "Vendor score recorded",
-        "Your performance rating is " . number_format(vendor_star_rating($overall), 1) . " out of 5 (" . vendor_score_rating_label($rating) . ")."
+        "Your performance rating is " . number_format(vendor_star_rating($overall), 1) . " out of 5 (" . vendor_score_rating_label($rating) . ").",
+        "announcement"
     );
 
     vendor_scores_respond_eval($eval);

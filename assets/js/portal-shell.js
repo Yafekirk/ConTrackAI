@@ -46,13 +46,6 @@ const PROFILE_ROUTES = {
   vendor:  "/pages/VendorClient/VendorProfile.html",
 };
 
-const SETTINGS_ROUTES = {
-  admin:   "/pages/Admin/AdminSettings.html",
-  ceo:     "/pages/CEO/CEO_Settings.html",
-  manager: "/pages/Manager/ManagerSettings.html",
-  vendor:  "/pages/VendorClient/VendorSettings.html",
-};
-
 const LOGO_SRC = "/assets/images/Logo-mark.png";
 
 const PORTAL_SUBTITLE = {
@@ -106,7 +99,6 @@ function svg(content, width = 16, height = 16) {
   return `<svg width="${width}" height="${height}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`;
 }
 
-const ICON_USER  = svg('<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>');
 const ICON_GEAR  = svg('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>');
 const ICON_OUT   = svg('<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>');
 const ICON_CHEV  = '<polyline points="6 9 12 15 18 9"/>';
@@ -118,6 +110,7 @@ async function logout() {
     /* best effort */
   }
   localStorage.removeItem("contrack_user");
+  localStorage.removeItem("contrack_theme");
   window.location.href = "/index.html";
 }
 
@@ -130,7 +123,6 @@ function buildUserBox(user, role) {
   wrap.setAttribute("aria-expanded", "false");
 
   const profileHref = PROFILE_ROUTES[role] || "#";
-  const settingsHref = SETTINGS_ROUTES[role] || "#";
   const displayName = user?.name?.trim() || "User";
   const displayEmail = user?.email?.trim() || "";
   const displayRole = ROLE_LABEL[role] || "User";
@@ -148,8 +140,7 @@ function buildUserBox(user, role) {
         <div class="top-user-dropdown-name" data-shell-name>${displayName}</div>
         <div class="top-user-dropdown-email" data-shell-email>${displayEmail || "&nbsp;"}</div>
       </div>
-      <a href="${profileHref}" data-shell-action="profile">${ICON_USER}<span>My Profile</span></a>
-      <a href="${settingsHref}" data-shell-action="settings">${ICON_GEAR}<span>Settings</span></a>
+      <a href="${profileHref}" data-shell-action="profile">${ICON_GEAR}<span>Profile &amp; Settings</span></a>
       <div class="dd-divider"></div>
       <button type="button" class="dd-signout" data-shell-action="signout">${ICON_OUT}<span>Sign out</span></button>
     </div>
@@ -447,6 +438,7 @@ async function bootstrap() {
   if (sessionUser) {
     user = sessionUser;
     localStorage.setItem("contrack_user", JSON.stringify(sessionUser));
+    if (sessionUser.theme_preference) window.ContrackTheme?.remember(sessionUser.theme_preference);
   }
 
   if (!user) {

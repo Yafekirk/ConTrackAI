@@ -16,8 +16,9 @@ if ($method === "GET") {
     $idEnc = urlencode((string)$user["id"]);
     $fresh = supabase_request(
         "GET",
-        "users?id=eq.{$idEnc}&select=id,name,company_name,email,role,is_disabled&limit=1"
+        "users?id=eq.{$idEnc}&select=id,name,company_name,email,role,is_disabled,theme_preference&limit=1"
     );
+    $theme = null;
     if ($fresh["ok"] && is_array($fresh["data"])) {
         $row = $fresh["data"][0] ?? null;
         if (isset($_SESSION["contrack_user"]) && (!is_array($row) || !empty($row["is_disabled"]))) {
@@ -30,6 +31,7 @@ if ($method === "GET") {
         if (is_array($row)) {
             set_session_user($row);
             $user = get_session_user();
+            $theme = ($row["theme_preference"] ?? "") === "dark" ? "dark" : "light";
         }
     }
     contrack_release_session();
@@ -39,6 +41,9 @@ if ($method === "GET") {
         supabase_request("PATCH", "users?id=eq.{$idEnc}", ["last_seen_at" => gmdate("c")]);
     }
 
+    if (is_array($user) && $theme !== null) {
+        $user["theme_preference"] = $theme;
+    }
     echo json_encode(["user" => $user]);
     exit;
 }
