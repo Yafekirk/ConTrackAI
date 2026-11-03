@@ -1727,6 +1727,10 @@ body.manager-eval-page .eval-history-card {
 body.manager-eval-page .eval-sliders {
   gap: 14px;
 }
+body.manager-eval-page .eval-split-col--score .profile-section-title,
+body.manager-eval-page .eval-split-col--score .fgl {
+  color: var(--gray-900);
+}
 body.manager-eval-page .score-crit-input {
   width: 100%;
   max-width: 160px;
