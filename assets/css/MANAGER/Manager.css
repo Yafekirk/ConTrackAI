@@ -1918,13 +1918,16 @@ body.manager-eval-page .form-actions {
 }
 .eval-result-rec {
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
 }
 .eval-result-label {
   font-size: 9px;
   letter-spacing: 1.8px;
   font-weight: 700;
   color: var(--gray-400);
-  margin-bottom: 2px;
 }
 .eval-result-rec-text {
   font-size: 13px;
