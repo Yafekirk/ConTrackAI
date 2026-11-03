@@ -9,6 +9,66 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
+let trendChart = null;
+
+function closeEvaluation() {
+  document.getElementById("modal-eval")?.classList.remove("open");
+}
+
+function renderTrend(history, selected) {
+  const canvas = document.getElementById("trend-chart");
+  if (!canvas || !window.Chart) return;
+  const points = history.slice(0, 12).reverse();
+  const selectedPoint = points.length - 1 - selected;
+  trendChart?.destroy();
+  trendChart = new window.Chart(canvas, {
+    type: "line",
+    data: {
+      labels: points.map((h) => (h.evaluated_at ? new Date(h.evaluated_at).toLocaleDateString() : "—")),
+      datasets: [{
+        data: points.map((h) => starRatingFromScore(h.overall_score) ?? 1),
+        borderColor: "#7A0C0C",
+        backgroundColor: "#7A0C0C",
+        tension: 0.4,
+        fill: false,
+        pointRadius: points.map((_, i) => (i === selectedPoint ? 6 : 3)),
+      }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { min: 1, max: 5, ticks: { color: "#9E9E9E", stepSize: 1 } },
+        x: { ticks: { color: "#9E9E9E" } },
+      },
+    },
+  });
+}
+
+function openEvaluation(history, index) {
+  const row = history[index];
+  if (!row) return;
+  const set = (id, value) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  };
+  set("eval-modal-date", row.evaluated_at ? new Date(row.evaluated_at).toLocaleString() : "—");
+  set("eval-modal-rating", row.rating_label || "—");
+  set("eval-modal-evaluator", row.evaluator_name || "—");
+  set("eval-modal-remarks", row.remarks || "No remarks.");
+  renderStarRating(document.getElementById("eval-modal-score"), row.overall_score, { size: 14, plain: true });
+  document.getElementById("modal-eval")?.classList.add("open");
+  renderTrend(history, index);
+}
+
+document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-close-eval]") || event.target.id === "modal-eval") closeEvaluation();
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeEvaluation();
+});
+
 document.addEventListener("DOMContentLoaded", async () => {
   const user = applyVendorIdentity();
   if (!user?.id) return;
@@ -46,13 +106,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         : "No manual evaluation has been recorded for your account yet.";
     }
 
-    const recWrap = document.getElementById("perf-notes");
-    if (recWrap) {
-      recWrap.innerHTML = has
-        ? `<div style="font-size:13px;line-height:1.6;">Rating: <strong>${esc(perf.rating_label || "")}</strong><br>Remarks: ${esc(perf.remarks || "No remarks.")}</div>`
-        : `<div class="empty-state-desc">Evaluations recorded by managers, the CEO, or an admin appear here.</div>`;
-    }
-
     const history = Array.isArray(perf.history) ? perf.history : [];
     const histHost = document.getElementById("perf-history-body");
     const histFoot = document.querySelector(".table-card .t-showing");
@@ -65,14 +118,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       } else {
         histHost.innerHTML = history
           .slice(0, 12)
-          .map((r) => `<div class="t-row" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr 2fr;">
+          .map((r, i) => `<div class="t-row" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr 90px;">
             <div>${esc(r.evaluated_at ? new Date(r.evaluated_at).toLocaleString() : "—")}</div>
             <div>${starRatingHtml(r.overall_score, { size: 14, plain: true })}</div>
             <div>${esc(r.rating_label || "")}</div>
             <div>${esc(r.evaluator_name || "—")}</div>
-            <div class="t-cell-meta">${esc(r.remarks || "")}</div>
+            <div><button type="button" class="btn btn-icon" data-view-eval="${i}" title="View remarks and trend" aria-label="View remarks and trend">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button></div>
           </div>`)
           .join("");
+        histHost.addEventListener("click", (event) => {
+          const btn = event.target.closest("[data-view-eval]");
+          if (btn) openEvaluation(history, Number(btn.getAttribute("data-view-eval")));
+        });
       }
       if (histFoot) histFoot.textContent = `Showing ${Math.min(12, history.length)} records`;
     }
@@ -81,40 +140,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderStarRating(document.getElementById("perf-low"), scores.length ? Math.min(...scores) : null, { size: 14, plain: true });
     renderStarRating(document.getElementById("perf-current"), has ? overall : null, { size: 14, plain: true });
     renderStarRating(document.getElementById("perf-high"), scores.length ? Math.max(...scores) : null, { size: 14, plain: true });
-
-    const trendCtx = document.getElementById("trend-chart");
-    if (trendCtx && window.Chart) {
-      const labels = history
-        .slice()
-        .reverse()
-        .slice(-6)
-        .map((h) => (h.evaluated_at ? new Date(h.evaluated_at).toLocaleDateString() : "—"));
-      const data = history.slice().reverse().slice(-6).map((h) => starRatingFromScore(h.overall_score) ?? 1);
-      if (!labels.length) {
-        trendCtx.parentElement?.insertAdjacentHTML(
-          "beforeend",
-          `<div style="padding:40px 10px;text-align:center;font-size:12px;color:var(--gray-400);">No evaluation history yet.</div>`,
-        );
-        trendCtx.style.display = "none";
-      } else {
-        new window.Chart(trendCtx, {
-          type: "line",
-          data: {
-            labels,
-            datasets: [{ data, borderColor: "#7A0C0C", tension: 0.4, fill: false }],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-              y: { min: 1, max: 5, ticks: { color: "#9E9E9E", stepSize: 1 } },
-              x: { ticks: { color: "#9E9E9E" } },
-            },
-          },
-        });
-      }
-    }
   } catch (error) {
     console.error(error);
   }

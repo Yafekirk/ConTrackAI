@@ -34,6 +34,49 @@
   </div>
 </div>
 
+<!-- EVALUATION DETAIL MODAL -->
+<div class="modal-overlay" id="modal-eval">
+  <div class="modal" style="width:640px;">
+    <div class="modal-header">
+      <div class="modal-title">Evaluation Details</div>
+      <button class="modal-close" type="button" data-close-eval aria-label="Close">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="contract-meta-row">
+        <div class="contract-meta-box"><div class="cmb-label">DATE</div><div class="cmb-value" id="eval-modal-date">—</div></div>
+        <div class="contract-meta-box"><div class="cmb-label">SCORE</div><div class="cmb-value" id="eval-modal-score">—</div></div>
+        <div class="contract-meta-box"><div class="cmb-label">RATING</div><div class="cmb-value" id="eval-modal-rating">—</div></div>
+        <div class="contract-meta-box"><div class="cmb-label">EVALUATOR</div><div class="cmb-value" id="eval-modal-evaluator">—</div></div>
+      </div>
+      <div class="detail-section-title">REMARKS</div>
+      <div class="detail-clause" id="eval-modal-remarks">No remarks.</div>
+      <div class="detail-section-title">EVALUATION TREND</div>
+      <div style="height:200px;position:relative;">
+        <canvas id="trend-chart"></canvas>
+      </div>
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200);display:flex;justify-content:space-between;">
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">LOWEST</div>
+          <div style="font-size:16px;font-weight:700;color:var(--gray-700);" id="perf-low">—</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">CURRENT</div>
+          <div style="font-size:16px;font-weight:700;color:var(--maroon);" id="perf-current">—</div>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">HIGHEST</div>
+          <div style="font-size:16px;font-weight:700;color:var(--green);" id="perf-high">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" type="button" data-close-eval>Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- SHELL -->
 <div class="shell">
   <div class="topbar">
@@ -119,44 +162,12 @@
         </div>
       </div>
 
-      <!-- Charts Grid -->
-      <div class="chart-grid">
-        <!-- Trend Chart -->
-        <div class="chart-card">
-          <div class="chart-title">EVALUATION TREND</div>
-          <div style="height:200px;position:relative;">
-            <canvas id="trend-chart"></canvas>
-          </div>
-          <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--gray-200);display:flex;justify-content:space-between;">
-            <div style="text-align:center;">
-              <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">LOWEST</div>
-              <div style="font-size:16px;font-weight:700;color:var(--gray-700);" id="perf-low">—</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">CURRENT</div>
-              <div style="font-size:16px;font-weight:700;color:var(--maroon);" id="perf-current">—</div>
-            </div>
-            <div style="text-align:center;">
-              <div style="font-size:11px;color:var(--gray-400);margin-bottom:3px;">HIGHEST</div>
-              <div style="font-size:16px;font-weight:700;color:var(--green);" id="perf-high">—</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="chart-card">
-          <div class="chart-title">REMARKS</div>
-          <div id="perf-notes" style="padding-top:8px;">
-            <div class="empty-state-desc">Notes from your latest evaluation appear here.</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Contract History Table -->
       <div class="table-card" style="margin-bottom:16px;">
         <div class="table-header">
           <span class="table-header-title">EVALUATION HISTORY</span>
         </div>
-        <div class="t-cols" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr 2fr;">
+        <div class="t-cols" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr 90px;">
           <div class="t-col">DATE</div>
           <div class="t-col">SCORE</div>
           <div class="t-col">RATING</div>
@@ -169,8 +180,6 @@
           <div class="t-pages"><button class="t-page-btn active">1</button></div>
         </div>
       </div>
-
-      <!-- Improvement notes live in the Remarks card above. -->
 
     </div><!-- /content -->
   </div>
