@@ -466,6 +466,12 @@ async function bootstrap() {
   startLiveSync();
 }
 
+// Chart.js is loaded with `defer` before this module, so defaults set here reach every chart.
+if (window.Chart?.defaults && window.ContrackTheme?.current() === "dark") {
+  window.Chart.defaults.color = "#a99c9e";
+  window.Chart.defaults.borderColor = "rgba(244, 195, 150, 0.08)";
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", bootstrap);
 } else {
