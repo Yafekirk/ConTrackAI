@@ -1615,8 +1615,48 @@ html[data-theme="dark"] .drop-zone {
 html[data-theme="dark"] .drop-zone:hover,
 html[data-theme="dark"] .drop-zone.drag-over { background: rgba(122, 12, 12, 0.18); border-color: var(--d-tan); }
 html[data-theme="dark"] .drop-icon { border-color: rgba(244, 195, 150, 0.35); background: var(--d-tan-soft); }
-html[data-theme="dark"] .doc-ticket-sheet { background: #2f2124; }
-html[data-theme="dark"] .doc-ticket-status { background: rgba(245, 181, 74, 0.14); }
+html[data-theme="dark"] .drop-zone.is-extracting { border-color: var(--d-tan); }
+html[data-theme="dark"] .ai-badge {
+  background: linear-gradient(135deg, rgba(122, 12, 12, 0.45) 0%, rgba(244, 195, 150, 0.14) 100%);
+  color: var(--d-tan);
+  border: 1px solid rgba(244, 195, 150, 0.3);
+}
+html[data-theme="dark"] .ai-badge svg { stroke: var(--d-tan); }
+html[data-theme="dark"] .ai-extracted-badge { background: rgba(74, 222, 128, 0.14); color: #4ADE80; }
+
+/* AI extraction overlay: opaque so the drop-zone copy underneath never shows through */
+html[data-theme="dark"] .nlp-drop-loader {
+  background:
+    radial-gradient(420px 220px at 50% 40%, rgba(122, 12, 12, 0.35), transparent 70%),
+    #1a1113;
+}
+html[data-theme="dark"] .nlp-drop-scan { background: linear-gradient(180deg, transparent, rgba(244, 195, 150, 0.16), transparent); }
+html[data-theme="dark"] .nlp-drop-orbit { border-color: rgba(244, 195, 150, 0.12); border-top-color: #c0392b; border-right-color: transparent; }
+html[data-theme="dark"] .nlp-drop-orbit--gold { border-color: rgba(244, 195, 150, 0.12); border-bottom-color: var(--d-tan); border-left-color: transparent; }
+html[data-theme="dark"] .nlp-drop-status { color: var(--d-muted); }
+html[data-theme="dark"] .nlp-drop-bar { background: rgba(244, 195, 150, 0.12); }
+html[data-theme="dark"] .nlp-progress-bar { background: linear-gradient(90deg, #c0392b, var(--d-tan)); }
+
+/* Uploaded document ticket */
+html[data-theme="dark"] .doc-ticket {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(244, 195, 150, 0.12), transparent 50%),
+    linear-gradient(135deg, var(--d-raised) 0%, #2b1518 100%);
+  border-color: rgba(244, 195, 150, 0.14);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+html[data-theme="dark"] .doc-ticket-sheet {
+  background: #f3ecec;
+  border-color: rgba(244, 195, 150, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+html[data-theme="dark"] .doc-ticket-lines i { background: #d8cccd; }
+html[data-theme="dark"] .doc-ticket-status { background: rgba(245, 181, 74, 0.14); color: #F5B54A; }
+html[data-theme="dark"] .doc-ticket-name { color: var(--d-text); }
+html[data-theme="dark"] .doc-ticket-meta { color: var(--d-muted); }
+html[data-theme="dark"] .doc-ticket-actions { border-top-color: rgba(244, 195, 150, 0.16); }
+html[data-theme="dark"] .doc-btn-new { border-style: dashed; }
+html[data-theme="dark"] .doc-btn-show { box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45); }
 
 /* Callouts, info boxes, review panels */
 html[data-theme="dark"] .info-box-body { color: var(--gray-700); }
