@@ -5,13 +5,11 @@
  */
 
 const STAR_PATH = "M12 2.2 14.7 8.3 21.3 8.9 16.4 13.3 17.9 19.8 12 16.4 6.1 19.8 7.6 13.3 2.7 8.9 9.3 8.3Z";
-const STAR_SHINE = "M12 3.4 14.1 8 9.9 8Z";
 
 function ensureStarStyles() {
   if (!document.getElementById("ct-star-defs")) {
     const holder = document.createElement("div");
     holder.innerHTML = `<svg id="ct-star-defs" aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden"><defs>
-        <linearGradient id="ct-star-face" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff6e4"/><stop offset="22%" stop-color="#F4C396"/><stop offset="58%" stop-color="#991B1B"/><stop offset="100%" stop-color="#5a1218"/></linearGradient>
         <linearGradient id="ct-star-empty" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fff8f8"/><stop offset="100%" stop-color="#e4bcc1"/></linearGradient>
         <linearGradient id="ct-star-side" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#7A0C0C"/><stop offset="100%" stop-color="#5a1218"/></linearGradient>
       </defs></svg>`;
@@ -55,8 +53,7 @@ function gemStarHtml(size) {
     <span class="star-gem-lit">
       <svg class="star-gem-svg" viewBox="0 0 24 24" aria-hidden="true">
         <path transform="translate(0 1.35)" fill="url(#ct-star-side)" d="${STAR_PATH}"/>
-        <path fill="url(#ct-star-face)" d="${STAR_PATH}"/>
-        <path fill="#fff" opacity="0.7" d="${STAR_SHINE}"/>
+        <path fill="#B91C1C" stroke="#8E1414" stroke-width="0.55" stroke-linejoin="round" d="${STAR_PATH}"/>
       </svg>
     </span>
   </span>`;
