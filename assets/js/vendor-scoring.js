@@ -76,7 +76,7 @@ function previewTotals() {
   const overall = Math.max(0, Math.min(100, Math.round((weightedSum / weightSum) * 100) / 100));
   const num = document.getElementById("eval-score-num");
   const rec = document.getElementById("eval-rec-text");
-  renderStarRating(num, missing.length ? null : overall, { size: 28, pill: true });
+  renderStarRating(num, missing.length ? null : overall, { size: 20, pill: true });
   if (rec) rec.textContent = missing.length ? "Rate every criterion." : ratingLabel("", overall);
   return { overall, missing };
 }
