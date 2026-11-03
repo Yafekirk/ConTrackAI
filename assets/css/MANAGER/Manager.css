@@ -1678,13 +1678,19 @@ body.manager-eval-page .eval-contract-picker-wrap {
 }
 body.manager-eval-page .eval-contract-search {
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--white);
+  box-shadow: 0 -10px 0 var(--white);
 }
+/* The column is the only scroller on this side, so the list grows instead of scrolling itself. */
 body.manager-eval-page .eval-contract-list {
   flex: 0 0 auto;
-  height: min(280px, 38vh);
-  max-height: 280px;
-  min-height: 160px;
-  overflow-y: auto;
+  height: auto;
+  max-height: none;
+  min-height: 0;
+  overflow: visible;
 }
 
 /* Selected-vendor summary sits cleanly under the list */
