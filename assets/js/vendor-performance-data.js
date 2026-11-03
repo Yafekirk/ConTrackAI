@@ -123,9 +123,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             <div>${starRatingHtml(r.overall_score, { size: 14, plain: true })}</div>
             <div>${esc(r.rating_label || "")}</div>
             <div>${esc(r.evaluator_name || "—")}</div>
-            <div><button type="button" class="btn btn-icon" data-view-eval="${i}" title="View remarks and trend" aria-label="View remarks and trend">
-              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button></div>
+            <div><button type="button" class="btn btn-ghost btn-sm" data-view-eval="${i}" title="View remarks and trend">View</button></div>
           </div>`)
           .join("");
         histHost.addEventListener("click", (event) => {
