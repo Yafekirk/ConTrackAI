@@ -1730,6 +1730,7 @@ body.manager-eval-page .eval-sliders {
 body.manager-eval-page .eval-split-col--score .profile-section-title,
 body.manager-eval-page .eval-split-col--score .fgl {
   color: var(--gray-900);
+  text-transform: uppercase;
 }
 body.manager-eval-page .score-crit-input {
   width: 100%;
