@@ -1194,6 +1194,13 @@ html, body {
 }
 .modal-close:hover { color: var(--gray-700); background: var(--gray-200); }
 .modal-close svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; }
+.modal-header--maroon {
+  background: linear-gradient(135deg, var(--maroon-deep) 0%, var(--maroon) 55%, var(--maroon-light) 100%);
+  border-bottom: 3px solid var(--tan);
+}
+.modal-header--maroon .modal-title { color: #fff; letter-spacing: 0.3px; }
+.modal-header--maroon .modal-close { color: rgba(255,255,255,0.8); }
+.modal-header--maroon .modal-close:hover { color: #fff; background: rgba(255,255,255,0.15); }
 .modal-body { padding: 26px; }
 .modal-footer {
   padding: 16px 26px;
