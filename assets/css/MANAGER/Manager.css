@@ -1727,10 +1727,12 @@ body.manager-eval-page .eval-history-card {
 body.manager-eval-page .eval-sliders {
   gap: 14px;
 }
-body.manager-eval-page .eval-split-col--score .profile-section-title,
-body.manager-eval-page .eval-split-col--score .fgl {
+body.manager-eval-page .eval-split-col .profile-section-title,
+body.manager-eval-page .eval-split-col .fgl {
   color: var(--gray-900);
   text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 1.8px;
 }
 body.manager-eval-page .score-crit-input {
   width: 100%;
