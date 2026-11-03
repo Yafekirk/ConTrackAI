@@ -133,9 +133,14 @@ function renderVendorList() {
   const q = (document.getElementById("eval-vendor-search")?.value || "").trim().toLowerCase();
   const listEl = document.getElementById("eval-vendor-list");
   if (!listEl) return;
+  listEl.hidden = !q;
+  if (!q) {
+    listEl.innerHTML = "";
+    return;
+  }
   const matches = vendors.filter((v) => {
     const blob = `${v.name || ""} ${v.email || ""} ${v.supplier_type || ""}`.toLowerCase();
-    return !q || blob.includes(q);
+    return blob.includes(q);
   });
   if (!matches.length) {
     listEl.innerHTML = `<div class="eval-contract-empty">${vendors.length ? "No vendors matched that search." : "No vendor accounts found."}</div>`;
@@ -331,6 +336,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   } catch (e) {
     setStatus(e.message || "Could not load vendor scoring.", "error");
     const listEl = document.getElementById("eval-vendor-list");
-    if (listEl) listEl.innerHTML = `<div class="eval-contract-empty">${esc(e.message || "Failed to load.")}</div>`;
+    if (listEl) {
+      listEl.hidden = false;
+      listEl.innerHTML = `<div class="eval-contract-empty">${esc(e.message || "Failed to load.")}</div>`;
+    }
   }
 });
