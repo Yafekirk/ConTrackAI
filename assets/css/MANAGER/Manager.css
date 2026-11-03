@@ -1682,7 +1682,6 @@ body.manager-eval-page .eval-contract-search {
   top: 0;
   z-index: 2;
   background: var(--white);
-  box-shadow: 0 -10px 0 var(--white);
 }
 /* The column is the only scroller on this side, so the list grows instead of scrolling itself. */
 body.manager-eval-page .eval-contract-list {
