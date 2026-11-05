@@ -2,6 +2,25 @@
 declare(strict_types=1);
 
 /**
+ * Site address used in emailed links: CONTRACK_PUBLIC_URL, else the address Render provides.
+ * The Host header is client-controlled, so it is only trusted for localhost.
+ */
+function contrack_public_base_url(): ?string
+{
+    foreach (["CONTRACK_PUBLIC_URL", "RENDER_EXTERNAL_URL"] as $key) {
+        $configured = trim((string)env_value($key, ""));
+        if ($configured !== "") {
+            return rtrim($configured, "/");
+        }
+    }
+    $host = strtolower((string)($_SERVER["HTTP_HOST"] ?? ""));
+    if (preg_match('/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/', $host) === 1) {
+        return (env_flag("CONTRACK_HTTPS", false) ? "https" : "http") . "://" . $host;
+    }
+    return null;
+}
+
+/**
  * Sends mail through the Gmail API when Google OAuth values are set (works on Render's free plan
  * and is accepted by Gmail). Otherwise Brevo, then Gmail SMTP. Render's free plan blocks SMTP.
  * Returns null on success, or a short error the caller can show.
@@ -153,21 +172,27 @@ function contrack_send_mail_gmail_api(
         $fromName = "ConTrack AI";
     }
 
-    $tokenBody = http_build_query([
-        "client_id" => $clientId,
-        "client_secret" => $clientSecret,
-        "refresh_token" => $refreshToken,
-        "grant_type" => "refresh_token",
-    ]);
-    $token = contrack_https_json("POST", "https://oauth2.googleapis.com/token", $tokenBody, [
-        "content-type: application/x-www-form-urlencoded",
-    ]);
-    if ($token["status"] !== 200) {
-        return "Google rejected the mail sign-in. Check the client id, secret, and refresh token.";
-    }
-    $access = (string)($token["json"]["access_token"] ?? "");
+    // One access token serves every email sent during the same request.
+    static $access = "";
     if ($access === "") {
-        return "Google did not return a mail sign-in.";
+        $tokenBody = http_build_query([
+            "client_id" => $clientId,
+            "client_secret" => $clientSecret,
+            "refresh_token" => $refreshToken,
+            "grant_type" => "refresh_token",
+        ]);
+        $token = contrack_https_json("POST", "https://oauth2.googleapis.com/token", $tokenBody, [
+            "content-type: application/x-www-form-urlencoded",
+        ]);
+        if ($token["status"] !== 200) {
+            $code = preg_replace('/[^a-z_]/', '', (string)($token["json"]["error"] ?? "unknown"));
+            error_log("Gmail token exchange failed ({$token["status"]}): " . json_encode($token["json"]));
+            return "Google rejected the mail sign-in ({$code}). Check the client id, secret, and refresh token.";
+        }
+        $access = (string)($token["json"]["access_token"] ?? "");
+        if ($access === "") {
+            return "Google did not return a mail sign-in.";
+        }
     }
 
     $encodedName = "=?UTF-8?B?" . base64_encode($fromName) . "?=";

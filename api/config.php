@@ -28,6 +28,16 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         session_set_save_handler(new ContrackSessionStore($sessionLifetime), true);
     }
     session_start();
+    // Strict mode answers an unknown or stale cookie with a fresh empty session id. When that
+    // response lands after a parallel sign-in it overwrites the new login cookie and signs the
+    // user out, so an id that never held data is not sent back to the browser.
+    $incomingSessionId = (string)($_COOKIE[session_name()] ?? "");
+    header_register_callback(static function () use ($incomingSessionId): void {
+        $currentId = session_id();
+        if ($currentId !== "" && $currentId !== $incomingSessionId && empty($_SESSION)) {
+            header_remove("Set-Cookie");
+        }
+    });
 }
 
 if (!defined("CONTRACK_SKIP_JSON_HEADER") || CONTRACK_SKIP_JSON_HEADER !== true) {
@@ -776,10 +786,31 @@ function user_wants_announcements(int $userId): bool
 }
 
 /**
+ * Best-effort email copy of an alert. Failures are logged (and recorded in audit_logs) and ignored.
+ */
+function contrack_email_alert(string $to, string $title, string $message): void
+{
+    if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+        return;
+    }
+    require_once __DIR__ . "/lib_mail.php";
+    $base = contrack_public_base_url();
+    $body = trim($message) . "\r\n\r\n"
+        . ($base !== null ? "Sign in to ConTrack AI to view it: {$base}/" : "Sign in to ConTrack AI to view it.")
+        . "\r\n\r\nYou receive this email because Contract Updates notifications are turned on in Profile & Settings.";
+    $error = contrack_send_mail($to, "ConTrack AI: " . trim($title), $body);
+    if ($error !== null) {
+        error_log("notification email to {$to} failed: {$error}");
+        audit_log_event("notification_email_failed", ["to" => $to, "title" => $title, "error" => $error], null);
+    }
+}
+
+/**
  * Best-effort in-app alert. Failures are logged and ignored.
  * $kind "contract" follows Contract Updates; "announcement" follows System Announcements.
+ * With $email the same alert is also emailed to the user.
  */
-function create_user_alert(?int $userId, string $title, string $message, string $kind = "contract"): void
+function create_user_alert(?int $userId, string $title, string $message, string $kind = "contract", bool $email = false): void
 {
     if ($userId === null || $userId <= 0) {
         return;
@@ -787,6 +818,11 @@ function create_user_alert(?int $userId, string $title, string $message, string 
     $wanted = $kind === "announcement" ? user_wants_announcements($userId) : user_wants_alerts($userId);
     if (!$wanted) {
         return;
+    }
+    if ($email) {
+        $lookup = supabase_request("GET", "users?id=eq.{$userId}&is_disabled=eq.false&select=email&limit=1");
+        $address = ($lookup["ok"] && is_array($lookup["data"][0] ?? null)) ? (string)($lookup["data"][0]["email"] ?? "") : "";
+        contrack_email_alert($address, $title, $message);
     }
     $payload = [[
         "user_id" => $userId,
@@ -803,8 +839,9 @@ function create_user_alert(?int $userId, string $title, string $message, string 
 
 /**
  * Notify every active user with the given role (manager / ceo / admin / vendor).
+ * With $email each recipient also gets the alert by email.
  */
-function notify_role_users(string $role, string $title, string $message): void
+function notify_role_users(string $role, string $title, string $message, bool $email = false): void
 {
     $role = normalize_role($role);
     $roles = [$role];
@@ -816,7 +853,7 @@ function notify_role_users(string $role, string $title, string $message): void
         $roles[] = "vendor_client";
     }
     $ors = implode(",", array_map(static fn(string $r): string => "role.eq.{$r}", $roles));
-    $path = "users?select=id,notify_alerts&is_disabled=eq.false&or=({$ors})";
+    $path = "users?select=id,email,notify_alerts&is_disabled=eq.false&or=({$ors})";
     $result = supabase_request("GET", $path);
     if (!$result["ok"] || !is_array($result["data"])) {
         error_log("notify_role_users failed for {$role}: " . (string)($result["raw"] ?? $result["error"] ?? ""));
@@ -834,6 +871,9 @@ function notify_role_users(string $role, string $title, string $message): void
             user_wants_alerts($id, $wants);
         }
         if ($id > 0 && $wants) {
+            if ($email) {
+                contrack_email_alert((string)($row["email"] ?? ""), $title, $message);
+            }
             $rows[] = [
                 "user_id" => $id,
                 "title" => substr(trim($title), 0, 200),

@@ -681,7 +681,9 @@ if ($view === "manager_review") {
                 create_user_alert(
                     $vendorOwner,
                     "Changes requested",
-                    "{$codeLabel}{$title} needs modification. Update it and resubmit for review."
+                    "{$codeLabel}{$title} needs modification. Update it and resubmit for review.",
+                    "contract",
+                    true
                 );
             }
         } else {
@@ -689,13 +691,16 @@ if ($view === "manager_review") {
             notify_role_users(
                 "ceo",
                 "Ready for CEO decision",
-                "{$codeLabel}{$title} from {$vendorLabel} was reviewed by a manager ({$actionLabel}). Open Approvals to decide."
+                "{$codeLabel}{$title} from {$vendorLabel} was reviewed by a manager ({$actionLabel}). Open Approvals to decide.",
+                true
             );
             if ($vendorOwner > 0) {
                 create_user_alert(
                     $vendorOwner,
                     "Manager reviewed your contract",
-                    "{$codeLabel}{$title} is awaiting CEO decision."
+                    "{$codeLabel}{$title} is awaiting CEO decision.",
+                    "contract",
+                    true
                 );
             }
         }
@@ -763,7 +768,8 @@ if ($view === "vendor_resubmit") {
     notify_role_users(
         "manager",
         "Contract resubmitted",
-        "{$codeLabel}{$title} is back in the review queue."
+        "{$codeLabel}{$title} is back in the review queue.",
+        true
     );
     audit_log_event("contract_resubmitted", ["contract_id" => (string)$input["id"], "contract_code" => $code], $userId);
     echo json_encode(["ok" => true, "id" => $input["id"], "status" => "pending"]);
@@ -1140,7 +1146,8 @@ if ($view === "create") {
         notify_role_users(
             "manager",
             "New contract submitted",
-            "{$contractTitle} from {$vendorName} is waiting in the manager review queue."
+            "{$contractTitle} from {$vendorName} is waiting in the manager review queue.",
+            true
         );
         notify_role_users(
             "admin",
@@ -1150,7 +1157,9 @@ if ($view === "create") {
         create_user_alert(
             $userId,
             "Contract submitted",
-            "{$contractTitle} was received and is now awaiting manager review."
+            "{$contractTitle} was received and is now awaiting manager review.",
+            "contract",
+            true
         );
         nlp_usage_from_extract("submit", $nlp, $nlpStarted, array_merge($nlpUsageCtx, [
             "contract_id" => (string)($row["id"] ?? ""),
@@ -1254,7 +1263,9 @@ if ($view === "decision") {
             create_user_alert(
                 $vendorOwner,
                 "CEO decision: " . strtoupper($status),
-                "{$title} was marked {$status} by the CEO."
+                "{$title} was marked {$status} by the CEO.",
+                "contract",
+                true
             );
         }
         $managerId = isset($decided["manager_reviewed_by"]) ? (int)$decided["manager_reviewed_by"] : 0;
@@ -1262,7 +1273,9 @@ if ($view === "decision") {
             create_user_alert(
                 $managerId,
                 "CEO decided on a contract you reviewed",
-                "{$title} was marked {$status}."
+                "{$title} was marked {$status}.",
+                "contract",
+                true
             );
         }
         echo json_encode($result["data"] ?? ["ok" => true]);

@@ -6,25 +6,6 @@ require_once __DIR__ . "/lib_mail.php";
 const CONTRACK_VENDOR_APPROVAL_FIELDS = "id,name,company_name,email,contact_number,supplier_type,created_at,approval_status";
 
 /**
- * Site address used in emailed links: CONTRACK_PUBLIC_URL, else the address Render provides.
- * The Host header is client-controlled, so it is only trusted for localhost.
- */
-function contrack_public_base_url(): ?string
-{
-    foreach (["CONTRACK_PUBLIC_URL", "RENDER_EXTERNAL_URL"] as $key) {
-        $configured = trim((string)env_value($key, ""));
-        if ($configured !== "") {
-            return rtrim($configured, "/");
-        }
-    }
-    $host = strtolower((string)($_SERVER["HTTP_HOST"] ?? ""));
-    if (preg_match('/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/', $host) === 1) {
-        return (env_flag("CONTRACK_HTTPS", false) ? "https" : "http") . "://" . $host;
-    }
-    return null;
-}
-
-/**
  * Addresses that receive vendor approval requests: every active CEO account, plus any extra
  * addresses listed in CONTRACK_CEO_APPROVAL_EMAIL (comma separated).
  * @return list<string>
