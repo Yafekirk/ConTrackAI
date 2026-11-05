@@ -73,14 +73,28 @@ function contrack_send_vendor_approval_request(array $vendor, string $token): in
     $subject = "Vendor approval needed: {$company}";
 
     $sent = 0;
-    foreach (contrack_ceo_approval_recipients() as $to) {
+    $recipients = contrack_ceo_approval_recipients();
+    $errors = [];
+    foreach ($recipients as $to) {
         $error = contrack_send_mail($to, $subject, $body);
         if ($error === null) {
             $sent++;
         } else {
+            $errors[$to] = $error;
             error_log("vendor approval email to {$to} failed: {$error}");
         }
     }
+    audit_log_event(
+        $sent > 0 ? "vendor_approval_email_sent" : "vendor_approval_email_failed",
+        [
+            "vendor_email" => (string)($vendor["email"] ?? ""),
+            "recipients" => $recipients,
+            "sent" => $sent,
+            "has_links" => $base !== null,
+            "errors" => $errors,
+        ],
+        isset($vendor["id"]) ? (int)$vendor["id"] : null
+    );
     return $sent;
 }
 
