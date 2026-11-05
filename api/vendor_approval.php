@@ -12,7 +12,8 @@ require_once __DIR__ . "/lib_vendor_approval.php";
 
 header("Content-Type: text/html; charset=utf-8");
 header("Cache-Control: no-store");
-header("Referrer-Policy: no-referrer");
+// "no-referrer" would make the confirm POST send Origin: null, which contrack_enforce_same_origin() rejects.
+header("Referrer-Policy: same-origin");
 header("X-Robots-Tag: noindex");
 
 $h = static fn($v): string => htmlspecialchars((string)$v, ENT_QUOTES, "UTF-8");
