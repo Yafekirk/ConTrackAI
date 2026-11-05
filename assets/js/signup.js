@@ -156,6 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
         accepted_terms: true,
       });
       localStorage.removeItem("contrack_user");
+      sessionStorage.setItem("contrack_signup_pending", "1");
       window.location.href = LOGIN_ROUTE;
     } catch (error) {
       errorEl.textContent = error.message;

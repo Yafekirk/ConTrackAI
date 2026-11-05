@@ -8,6 +8,7 @@ import {
 import { ensureTermsAccepted, initTermsLinks } from "/assets/js/terms-modal.js";
 
 const NOTICE_KEY = "contrack_notice";
+const SIGNUP_PENDING_KEY = "contrack_signup_pending";
 const TERMS_DECLINED_NOTICE =
   "You must agree to the Terms & Conditions and Privacy Policy before signing in.";
 
@@ -73,6 +74,33 @@ async function endSession() {
   localStorage.removeItem("contrack_user");
 }
 
+/** Popup in the same style as the login guard dialogs, closed with an OK button. */
+function showApprovalDialog(title, message) {
+  let overlay = document.getElementById("approvalDialog");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "approvalDialog";
+    overlay.className = "login-guard-overlay";
+    overlay.innerHTML = `
+      <div class="login-guard-dialog" role="dialog" aria-modal="true" aria-labelledby="approvalDialogTitle">
+        <h3 id="approvalDialogTitle"></h3>
+        <p id="approvalDialogMessage"></p>
+        <div class="login-guard-actions">
+          <button type="button" id="approvalDialogOk" class="login-guard-btn login-guard-btn-primary">OK</button>
+        </div>
+      </div>
+    `;
+    document.body.append(overlay);
+    overlay.querySelector("#approvalDialogOk").addEventListener("click", () => {
+      overlay.hidden = true;
+    });
+  }
+  overlay.querySelector("#approvalDialogTitle").textContent = title;
+  overlay.querySelector("#approvalDialogMessage").textContent = message;
+  overlay.hidden = false;
+  overlay.querySelector("#approvalDialogOk").focus();
+}
+
 function showNotice(message) {
   const el = document.getElementById("loginNotice");
   if (!el) return;
@@ -94,6 +122,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (carried) {
     sessionStorage.removeItem(NOTICE_KEY);
     showNotice(carried);
+  }
+
+  if (sessionStorage.getItem(SIGNUP_PENDING_KEY)) {
+    sessionStorage.removeItem(SIGNUP_PENDING_KEY);
+    showApprovalDialog(
+      "Waiting for approval",
+      "Your account was created and is waiting for CEO approval. You will receive an email once it is approved, and then you can sign in.",
+    );
   }
 
   getSessionUser().then(async (sessionUser) => {
@@ -154,6 +190,17 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       signingIn = false;
       const status = Number(error.status) || 0;
+      if (status === 403 && error.payload?.approval_status) {
+        passwordInput.value = "";
+        const rejected = error.payload.approval_status === "rejected";
+        showApprovalDialog(
+          rejected ? "Account not approved" : "Account not yet approved",
+          rejected
+            ? "Your account request was not approved by the CEO, so you cannot sign in. Please contact the company for details."
+            : "You cannot sign in yet because your account is still waiting for CEO approval. You will receive an email once it is approved.",
+        );
+        return;
+      }
       if (status === 401 || status === 429) {
         handleAuthFailure(error.payload || {});
         return;
