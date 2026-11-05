@@ -1,7 +1,6 @@
 import { initTermsLinks } from "/assets/js/terms-modal.js";
 
 const LOGIN_ROUTE = "/index.html";
-const NOTICE_KEY = "contrack_notice";
 
 const PH_MOBILE_RE = /^(09[0-9]{9}|\+639[0-9]{9}|639[0-9]{9})$/;
 const SUPPLIER_TYPES = ["Supply", "Lease", "Service", "Other"];
@@ -146,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const result = await signup({
+      await signup({
         name,
         company_name: name,
         email,
@@ -157,11 +156,6 @@ document.addEventListener("DOMContentLoaded", () => {
         accepted_terms: true,
       });
       localStorage.removeItem("contrack_user");
-      sessionStorage.setItem(
-        NOTICE_KEY,
-        result.message ||
-          "Your account was created and is waiting for CEO approval. You can sign in once the CEO approves it.",
-      );
       window.location.href = LOGIN_ROUTE;
     } catch (error) {
       errorEl.textContent = error.message;

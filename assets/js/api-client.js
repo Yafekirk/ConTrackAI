@@ -54,17 +54,6 @@ export async function getPendingApprovals() {
   return apiRequest("/contracts.php?view=pending_approvals");
 }
 
-export async function getPendingVendorAccounts() {
-  return apiRequest("/vendor_accounts.php");
-}
-
-export async function decideVendorAccount(id, decision) {
-  return apiRequest("/vendor_accounts.php", {
-    method: "POST",
-    body: JSON.stringify({ id, decision }),
-  });
-}
-
 export async function getManagerPending() {
   return apiRequest("/contracts.php?view=manager_pending");
 }

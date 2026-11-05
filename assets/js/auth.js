@@ -154,11 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       signingIn = false;
       const status = Number(error.status) || 0;
-      if (status === 403 && error.payload?.approval_status) {
-        passwordInput.value = "";
-        showNotice(error.payload.error || "Your account is waiting for CEO approval.");
-        return;
-      }
       if (status === 401 || status === 429) {
         handleAuthFailure(error.payload || {});
         return;

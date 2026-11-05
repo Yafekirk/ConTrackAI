@@ -48,8 +48,7 @@ if ($vendor === null || ($vendor["approval_status"] ?? "") !== "pending") {
     $render(
         "Link no longer valid",
         '<h1>This link is no longer valid</h1>'
-        . '<p>The vendor account was already approved or rejected, or the link is incorrect. '
-        . 'You can review vendor requests in the CEO portal under <strong>Approvals</strong>.</p>'
+        . '<p>The vendor account was already approved or rejected, or the link is incorrect.</p>'
     );
 }
 

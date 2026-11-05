@@ -6,14 +6,16 @@ require_once __DIR__ . "/lib_mail.php";
 const CONTRACK_VENDOR_APPROVAL_FIELDS = "id,name,company_name,email,contact_number,supplier_type,created_at,approval_status";
 
 /**
- * Site address used in emailed links. Set CONTRACK_PUBLIC_URL (for example https://contrack.example.com)
- * on any deployed server: the Host header is client-controlled, so it is only trusted for localhost.
+ * Site address used in emailed links: CONTRACK_PUBLIC_URL, else the address Render provides.
+ * The Host header is client-controlled, so it is only trusted for localhost.
  */
 function contrack_public_base_url(): ?string
 {
-    $configured = trim((string)env_value("CONTRACK_PUBLIC_URL", ""));
-    if ($configured !== "") {
-        return rtrim($configured, "/");
+    foreach (["CONTRACK_PUBLIC_URL", "RENDER_EXTERNAL_URL"] as $key) {
+        $configured = trim((string)env_value($key, ""));
+        if ($configured !== "") {
+            return rtrim($configured, "/");
+        }
     }
     $host = strtolower((string)($_SERVER["HTTP_HOST"] ?? ""));
     if (preg_match('/^(localhost|127\.0\.0\.1)(:\d{1,5})?$/', $host) === 1) {
@@ -63,10 +65,9 @@ function contrack_send_vendor_approval_request(array $vendor, string $token): in
         $tokenEnc = rawurlencode($token);
         $lines[] = "Approve: {$base}/api/vendor_approval.php?token={$tokenEnc}&decision=approve";
         $lines[] = "Reject:  {$base}/api/vendor_approval.php?token={$tokenEnc}&decision=reject";
-        $lines[] = "";
-        $lines[] = "You can also decide from the CEO portal under Approvals > Vendor Account Requests.";
     } else {
-        $lines[] = "Sign in to the CEO portal and open Approvals > Vendor Account Requests to decide.";
+        error_log("vendor approval email sent without links: set CONTRACK_PUBLIC_URL");
+        $lines[] = "Approval links are unavailable because CONTRACK_PUBLIC_URL is not set on the server.";
     }
     $body = implode("\r\n", $lines);
     $subject = "Vendor approval needed: {$company}";
