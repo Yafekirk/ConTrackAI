@@ -23,17 +23,26 @@ function contrack_public_base_url(): ?string
 /**
  * Sends mail through the Gmail API when Google OAuth values are set (works on Render's free plan
  * and is accepted by Gmail). Otherwise Brevo, then Gmail SMTP. Render's free plan blocks SMTP.
+ * MAIL_PROVIDER=brevo forces Brevo, so mail can come from a verified company domain
+ * (BREVO_SENDER_EMAIL) instead of a personal Gmail address, which Gmail is quicker to mark as spam.
  * Returns null on success, or a short error the caller can show.
  */
 function contrack_send_mail(string $to, string $subject, string $body): ?string
 {
+    $provider = strtolower(trim((string)env_value("MAIL_PROVIDER", "")));
+    $brevoKey = trim((string)env_value("BREVO_API_KEY", ""));
+    if ($provider === "brevo") {
+        if ($brevoKey === "") {
+            return "MAIL_PROVIDER is brevo but BREVO_API_KEY is not set.";
+        }
+        return contrack_send_mail_brevo($to, $subject, $body, $brevoKey);
+    }
     $refresh = trim((string)env_value("GOOGLE_REFRESH_TOKEN", ""));
     $clientId = trim((string)env_value("GOOGLE_CLIENT_ID", ""));
     $clientSecret = trim((string)env_value("GOOGLE_CLIENT_SECRET", ""));
     if ($refresh !== "" && $clientId !== "" && $clientSecret !== "") {
         return contrack_send_mail_gmail_api($to, $subject, $body, $clientId, $clientSecret, $refresh);
     }
-    $brevoKey = trim((string)env_value("BREVO_API_KEY", ""));
     if ($brevoKey !== "") {
         return contrack_send_mail_brevo($to, $subject, $body, $brevoKey);
     }
@@ -254,7 +263,7 @@ function contrack_send_mail_brevo(string $to, string $subject, string $body, str
         $fromEmail = trim((string)env_value("MAIL_SMTP_USER", ""));
     }
     if ($fromEmail === "" || filter_var($fromEmail, FILTER_VALIDATE_EMAIL) === false) {
-        return "Set MAIL_SMTP_USER to the Gmail address you verified in Brevo.";
+        return "Set BREVO_SENDER_EMAIL to the sender address you verified in Brevo.";
     }
     if (!function_exists("curl_init")) {
         return "PHP cURL is required to send mail.";
@@ -303,7 +312,7 @@ function contrack_send_mail_brevo(string $to, string $subject, string $body, str
         return "Brevo rejected the API key. Check BREVO_API_KEY on the server.";
     }
     if (stripos($message, "sender") !== false) {
-        return "Brevo rejected the sender. Use the same Gmail address you verified in Brevo.";
+        return "Brevo rejected the sender. Set BREVO_SENDER_EMAIL to an address on the domain you verified in Brevo.";
     }
     return "Brevo did not accept the message.";
 }
