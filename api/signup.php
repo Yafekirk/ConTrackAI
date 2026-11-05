@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_validation.php";
+require_once __DIR__ . "/lib_vendor_approval.php";
 
 /** Keep in sync with api/terms.php CONTRACK_TERMS_VERSION. */
 const CONTRACK_TERMS_VERSION = "2026-01";
@@ -56,6 +57,7 @@ if ($errors !== []) {
 }
 
 $now = gmdate("c");
+$approvalToken = bin2hex(random_bytes(32));
 $payload = [[
     "name" => $companyName,
     "company_name" => $companyName,
@@ -64,6 +66,8 @@ $payload = [[
     "role" => "vendor",
     "contact_number" => $contactNumber,
     "supplier_type" => $supplierType,
+    "approval_status" => "pending",
+    "approval_token_hash" => hash("sha256", $approvalToken),
     "terms_accepted_at" => $now,
     "terms_version" => CONTRACK_TERMS_VERSION,
 ]];
@@ -89,6 +93,8 @@ if (!$created["ok"] || !is_array($created["data"]) || count($created["data"]) ==
             "role" => "vendor",
             "contact_number" => $contactNumber,
             "supplier_type" => $supplierType,
+            "approval_status" => "pending",
+            "approval_token_hash" => hash("sha256", $approvalToken),
         ]];
         $created = supabase_request("POST", "users", $payload);
     }
@@ -136,14 +142,32 @@ if (!$created["ok"] || !is_array($created["data"]) || count($created["data"]) ==
 }
 
 $user = $created["data"][0];
-unset($user["password"]);
-contrack_start_authenticated_session($user);
+unset($user["password"], $user["approval_token_hash"]);
+$userId = (int)($user["id"] ?? 0);
 
-audit_log_event("account_created", ["email" => $email, "role" => "vendor"], (int)($user["id"] ?? 0));
+audit_log_event("account_created", ["email" => $email, "role" => "vendor", "approval_status" => "pending"], $userId);
 audit_log_event(
     "terms_accepted",
     ["email" => $email, "version" => CONTRACK_TERMS_VERSION, "source" => "signup"],
-    (int)($user["id"] ?? 0)
+    $userId
 );
 
-echo json_encode(["user" => $user]);
+// The vendor is not signed in: the account stays locked until the CEO approves it.
+$emailed = contrack_send_vendor_approval_request($user, $approvalToken);
+if ($emailed === 0) {
+    error_log("signup: no CEO approval email was delivered for {$email}");
+}
+notify_role_users(
+    "ceo",
+    "New vendor awaiting approval",
+    "{$companyName} ({$email}) signed up and needs your approval before they can sign in."
+);
+
+echo json_encode([
+    "pending" => true,
+    "message" => "Your account was created and is waiting for CEO approval. You will receive an email once it is approved.",
+    "user" => [
+        "company_name" => (string)($user["company_name"] ?? $companyName),
+        "email" => (string)($user["email"] ?? $email),
+    ],
+]);

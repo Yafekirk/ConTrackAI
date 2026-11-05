@@ -39,7 +39,7 @@ login_guard_reject_if_server_locked($email);
 
 $result = supabase_request(
     "GET",
-    "users?email=eq." . urlencode($email) . "&select=id,name,company_name,email,role,password,is_disabled,last_login_at,last_seen_at&limit=1"
+    "users?email=eq." . urlencode($email) . "&select=id,name,company_name,email,role,password,is_disabled,approval_status,last_login_at,last_seen_at&limit=1"
 );
 
 if (!$result["ok"]) {
@@ -89,6 +89,19 @@ if (!$valid) {
     login_guard_reject_auth_failure();
 }
 
+$approvalStatus = (string)($user["approval_status"] ?? "approved");
+if ($approvalStatus !== "approved") {
+    audit_log_event("login_blocked", ["reason" => "approval_{$approvalStatus}", "email" => $email], (int)($user["id"] ?? 0));
+    http_response_code(403);
+    echo json_encode([
+        "approval_status" => $approvalStatus,
+        "error" => $approvalStatus === "pending"
+            ? "Your account is still waiting for CEO approval. You will receive an email once it is approved."
+            : "Your account request was not approved. Please contact the company for details.",
+    ]);
+    exit;
+}
+
 // Auto-upgrade legacy plain text passwords (or outdated hashes) on successful login.
 if ($needsUpgrade) {
     $hashed = password_hash($password, PASSWORD_DEFAULT);
@@ -107,7 +120,7 @@ supabase_request(
     ]
 );
 
-unset($user["password"]);
+unset($user["password"], $user["approval_status"]);
 login_guard_clear();
 contrack_start_authenticated_session($user);
 

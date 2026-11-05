@@ -110,6 +110,20 @@
         <span class="stat-badge sb-orange" style="align-self:center;">— Pending</span>
       </div>
 
+      <!-- VENDOR ACCOUNT REQUESTS — new signups waiting for CEO approval -->
+      <div id="vendor-requests-section" style="margin-bottom:28px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--gray-900);">Vendor Account Requests</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-top:2px;">New vendors cannot sign in until you approve their account.</div>
+          </div>
+          <span class="stat-badge sb-orange" id="vendor-requests-count">0 Pending</span>
+        </div>
+        <div id="vendor-requests-list"></div>
+      </div>
+
+      <div style="font-size:15px;font-weight:700;color:var(--gray-900);margin-bottom:12px;">Contract Approvals</div>
+
       <!-- FILTER BUTTONS -->
       <div class="alert-filters">
         <button class="af-btn af-all on" onclick="filterApprovals(this,'all')">All</button>

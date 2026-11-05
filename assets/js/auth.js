@@ -115,8 +115,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = targetRoute;
   });
 
+  // A second sign-in replaces the session the first one just created and can leave the
+  // browser holding neither, so ignore submits while one is in flight.
+  let signingIn = false;
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    if (signingIn) return;
+    signingIn = true;
     showNotice("");
 
     try {
@@ -138,6 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await endSession();
         passwordInput.value = "";
         showNotice(TERMS_DECLINED_NOTICE);
+        signingIn = false;
         return;
       }
 
@@ -146,7 +152,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetRoute = ROLE_TO_ROUTE[role] || ROLE_TO_ROUTE.vendor;
       window.location.href = targetRoute;
     } catch (error) {
+      signingIn = false;
       const status = Number(error.status) || 0;
+      if (status === 403 && error.payload?.approval_status) {
+        passwordInput.value = "";
+        showNotice(error.payload.error || "Your account is waiting for CEO approval.");
+        return;
+      }
       if (status === 401 || status === 429) {
         handleAuthFailure(error.payload || {});
         return;

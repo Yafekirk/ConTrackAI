@@ -1,6 +1,8 @@
 import {
   setApiContext,
+  decideVendorAccount,
   getPendingApprovals,
+  getPendingVendorAccounts,
   getVendorSummary,
   openContractPdfInNewTab,
   postContractDecision,
@@ -9,6 +11,7 @@ import { contractRef } from "/assets/js/contract-intel.js";
 import { renderStarRating } from "/assets/js/star-rating.js";
 
 let rows = [];
+let vendorRequests = [];
 let current = null;
 /** vendor_id -> ai_score, used for the VENDOR SCORE row in the decision modal. */
 let vendorScores = {};
@@ -69,12 +72,13 @@ function renderList(filterRisk) {
     list = list.filter((r) => riskFromValue(r.contract_value).label === filterRisk);
   }
 
+  const totalPending = queue.length + vendorRequests.length;
   const sbBadge = document.getElementById("ceo-approvals-badge");
-  if (sbBadge) sbBadge.textContent = String(queue.length);
+  if (sbBadge) sbBadge.textContent = String(totalPending);
   const topNotif = document.getElementById("notif-badge");
   if (topNotif) {
-    topNotif.textContent = String(queue.length);
-    topNotif.style.display = queue.length ? "flex" : "none";
+    topNotif.textContent = String(totalPending);
+    topNotif.style.display = totalPending ? "flex" : "none";
   }
 
   if (badge) badge.textContent = `${list.length} Pending`;
@@ -163,6 +167,66 @@ function renderList(filterRisk) {
   };
 }
 
+function renderVendorRequests() {
+  const wrap = document.getElementById("vendor-requests-list");
+  const count = document.getElementById("vendor-requests-count");
+  if (!wrap) return;
+  if (count) count.textContent = `${vendorRequests.length} Pending`;
+
+  if (vendorRequests.length === 0) {
+    wrap.innerHTML = `<div style="background:#fff;border-radius:var(--radius);border:1px solid var(--gray-200);padding:24px;text-align:center;font-size:13px;color:var(--gray-500);">No vendor accounts are waiting for approval.</div>`;
+    wrap.onclick = null;
+    return;
+  }
+
+  wrap.innerHTML = vendorRequests
+    .map((v) => {
+      const id = escapeHtml(String(v.id));
+      const company = v.company_name || v.name || "";
+      const signedUp = v.created_at ? new Date(v.created_at).toLocaleString() : "";
+      return `
+    <div class="approval-card risk-medium">
+      <div class="approval-card-main">
+        <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+          <div>
+            <div style="font-weight:700;color:var(--gray-900);">${escapeHtml(company)}</div>
+            <div style="font-size:12px;color:var(--gray-500);margin-top:6px;">${escapeHtml(v.email)} · ${escapeHtml(v.contact_number || "—")} · ${escapeHtml(v.supplier_type || "—")}</div>
+          </div>
+          <div style="text-align:right;">
+            <span class="pill pill-med">NEW VENDOR</span>
+            <div style="margin-top:10px;font-size:11px;color:var(--gray-400);">Signed up ${escapeHtml(signedUp)}</div>
+          </div>
+        </div>
+      </div>
+      <div class="approval-card-actions">
+        <button type="button" class="approve-btn approval-btn-compact" data-vendor-decision="approve" data-vendor-id="${id}">Approve</button>
+        <button type="button" class="reject-btn approval-btn-compact" data-vendor-decision="reject" data-vendor-id="${id}">Reject</button>
+      </div>
+    </div>`;
+    })
+    .join("");
+
+  wrap.onclick = async (e) => {
+    const btn = e.target.closest("[data-vendor-decision]");
+    if (!btn) return;
+    const id = Number(btn.getAttribute("data-vendor-id"));
+    const decision = btn.getAttribute("data-vendor-decision");
+    const vendor = vendorRequests.find((v) => Number(v.id) === id);
+    const name = vendor?.company_name || vendor?.name || "this vendor";
+    const ok = decision === "approve"
+      ? confirm(`Approve ${name}? They will be able to sign in.`)
+      : confirm(`Reject ${name}? They will not be able to sign in.`);
+    if (!ok) return;
+    try {
+      await decideVendorAccount(id, decision);
+      await reload();
+    } catch (err) {
+      alert(err.message || "Could not save the decision.");
+      await reload();
+    }
+  };
+}
+
 async function quickDecision(rawId, action) {
   const row = rows.find((x) => String(x.id) === String(rawId));
   if (!row) return;
@@ -233,11 +297,15 @@ async function handleDecision(action) {
 
 async function reload() {
   // allSettled: a failing vendor-score call must not hide the approval queue.
-  const [queueRes, summaryRes] = await Promise.allSettled([
+  const [queueRes, summaryRes, vendorReqRes] = await Promise.allSettled([
     getPendingApprovals(),
     getVendorSummary(),
+    getPendingVendorAccounts(),
   ]);
   rows = queueRes.status === "fulfilled" && Array.isArray(queueRes.value) ? queueRes.value : [];
+  vendorRequests =
+    vendorReqRes.status === "fulfilled" && Array.isArray(vendorReqRes.value) ? vendorReqRes.value : [];
+  renderVendorRequests();
 
   vendorScores = {};
   if (summaryRes.status === "fulfilled" && Array.isArray(summaryRes.value)) {
