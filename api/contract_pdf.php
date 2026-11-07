@@ -4,6 +4,7 @@ declare(strict_types=1);
 define("CONTRACK_SKIP_JSON_HEADER", true);
 require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_contract_pdf.php";
+require_once __DIR__ . "/lib_contract_intel.php";
 
 $fail = static function (int $status, string $message): never {
     http_response_code($status);
@@ -45,11 +46,11 @@ if (!$allowed) {
     $fail(403, "Forbidden");
 }
 
-$path = contract_pdf_absolute_path($contractId);
-if (!is_file($path) || !is_readable($path)) {
-    $sub = trim((string)($row["submission_text"] ?? ""));
+$pdf = contract_pdf_load($contractId);
+if ($pdf === null) {
+    $sub = trim(strip_packed_submission_text((string)($row["submission_text"] ?? "")));
     if ($sub === "") {
-        $fail(404, "Original PDF is not on file for this contract.");
+        $fail(404, "The original PDF is not on file for this contract.");
     }
     header("Content-Type: text/html; charset=utf-8");
     header("Content-Disposition: inline");
@@ -66,13 +67,9 @@ if (!is_file($path) || !is_readable($path)) {
     exit;
 }
 
-$size = filesize($path);
-if ($size === false) {
-    $fail(500, "Unable to read file");
-}
 header("Content-Type: application/pdf");
-header("Content-Length: " . (string)$size);
+header("Content-Length: " . (string)strlen($pdf));
 header("Content-Disposition: inline; filename=\"contract-" . contract_pdf_safe_id($contractId) . ".pdf\"");
 header("Cache-Control: private, max-age=3600");
 header("X-Content-Type-Options: nosniff");
-readfile($path);
+echo $pdf;

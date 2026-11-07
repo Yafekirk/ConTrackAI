@@ -108,56 +108,12 @@ function renderTable(rows) {
 
 let detailRow = null;
 
-/** Renewal term length in months, read from the extracted renewal clause (defaults to 12). */
-function renewalMonths(terms) {
-  const m = String(terms || "").match(/(\d{1,2})\s*(month|year)/i);
-  if (!m) return 12;
-  const n = Number(m[1]);
-  return /year/i.test(m[2]) ? n * 12 : n;
-}
-
-function isoDate(d) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-/** Default renewal end date: one renewal term after the later of today and the current end date. */
-function suggestedRenewalEnd(r) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const end = r.end_date ? new Date(`${String(r.end_date).slice(0, 10)}T00:00:00`) : today;
-  const base = end > today ? end : today;
-  const next = new Date(base);
-  next.setMonth(next.getMonth() + renewalMonths(r.renewal_terms));
-  return isoDate(next);
-}
-
 function setupActions(r) {
   const status = String(r.status || "").toLowerCase();
-  const canRenew = status === "approved" || status === "renegotiation";
-  const canRenegotiate = status === "approved";
   const canTerminate = status === "approved" || status === "renegotiation";
-  const panel = document.getElementById("d-actions");
-  const show = (id, on) => {
+  for (const id of ["d-actions", "d-terminate"]) {
     const el = document.getElementById(id);
-    if (el) el.hidden = !on;
-  };
-  show("d-actions", canRenew || canTerminate);
-  show("d-renew", canRenew);
-  show("d-renew-row", canRenew);
-  show("d-renegotiate", canRenegotiate);
-  show("d-terminate", canTerminate);
-  if (!panel) return;
-  const hint = document.getElementById("d-actions-hint");
-  if (hint) {
-    hint.textContent =
-      status === "renegotiation"
-        ? "This contract is under renegotiation. Renew it with a new end date once terms are agreed, or terminate it."
-        : "Renew extends the end date. Renegotiate marks the contract FOR RENEWAL and asks the vendor for updated terms. Terminate ends it and archives it.";
-  }
-  const newEnd = document.getElementById("d-new-end");
-  if (newEnd) {
-    newEnd.value = suggestedRenewalEnd(r);
-    newEnd.min = isoDate(new Date(Date.now() + 86400000));
+    if (el) el.hidden = !canTerminate;
   }
   const notes = document.getElementById("d-ceo-notes");
   if (notes) notes.value = "";
@@ -165,7 +121,7 @@ function setupActions(r) {
   if (msg) msg.textContent = "";
 }
 
-async function runAction(kind) {
+async function terminateContract() {
   const r = detailRow;
   if (!r) return;
   const notes = document.getElementById("d-ceo-notes")?.value.trim() || "";
@@ -173,32 +129,19 @@ async function runAction(kind) {
   const say = (text) => {
     if (msg) msg.textContent = text;
   };
-  const payload = { id: r.id, ceo_notes: notes || null };
-  const ref = contractRef(r);
-  if (kind === "renew") {
-    const newEnd = document.getElementById("d-new-end")?.value || "";
-    if (!newEnd) return say("Choose the new end date first.");
-    if (!confirm(`Renew ${ref} until ${newEnd}?`)) return;
-    Object.assign(payload, { status: "renewed", new_end_date: newEnd });
-  } else if (kind === "renegotiate") {
-    if (!confirm(`Mark ${ref} for renegotiation? The vendor will be asked to submit updated terms.`)) return;
-    payload.status = "renegotiation";
-  } else {
-    if (!notes) return say("Add a reason in CEO notes before terminating.");
-    if (!confirm(`Terminate ${ref}? This ends the contract and archives it. It cannot be undone.`)) return;
-    payload.status = "terminated";
-  }
-  const buttons = ["d-renew", "d-renegotiate", "d-terminate"].map((id) => document.getElementById(id));
-  buttons.forEach((b) => b && (b.disabled = true));
+  if (!notes) return say("Add a reason before terminating this contract.");
+  if (!confirm(`Terminate ${contractRef(r)}? This ends the contract and archives it. It cannot be undone.`)) return;
+  const btn = document.getElementById("d-terminate");
+  if (btn) btn.disabled = true;
   say("");
   try {
-    await postContractDecision(payload);
+    await postContractDecision({ id: r.id, status: "terminated", ceo_notes: notes });
     globalThis.closeModal?.("modal-detail");
     await loadContracts();
   } catch (e) {
-    say(e.message || "Could not save the action.");
+    say(e.message || "Could not terminate the contract.");
   } finally {
-    buttons.forEach((b) => b && (b.disabled = false));
+    if (btn) btn.disabled = false;
   }
 }
 
@@ -311,15 +254,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
   setApiContext({ role: saved.role || "ceo", userId: saved.id || null });
   bindCsvExport("export-contracts-csv", () => allRows, "ceo-all-contracts.csv");
-  document.getElementById("d-renew")?.addEventListener("click", () => runAction("renew"));
-  document.getElementById("d-renegotiate")?.addEventListener("click", () => runAction("renegotiate"));
-  document.getElementById("d-terminate")?.addEventListener("click", () => runAction("terminate"));
-  document.getElementById("d-open-pdf")?.addEventListener("click", async () => {
-    if (!detailRow) return;
+  document.getElementById("d-terminate")?.addEventListener("click", terminateContract);
+  const pdfBtn = document.getElementById("d-open-pdf");
+  pdfBtn?.addEventListener("click", async () => {
+    if (!detailRow || pdfBtn.disabled) return;
+    pdfBtn.disabled = true;
     try {
       await openContractPdfInNewTab(detailRow.id);
     } catch (e) {
-      alert(e.message || "Could not open PDF.");
+      alert(e.message || "Could not open the PDF.");
+    } finally {
+      pdfBtn.disabled = false;
     }
   });
   document.querySelector(".filter-search")?.addEventListener("input", applyFilters);

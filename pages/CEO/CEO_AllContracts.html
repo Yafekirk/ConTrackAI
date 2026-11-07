@@ -47,12 +47,8 @@
       <div class="detail-clause" id="d-clauses">Contract clause data will appear here once connected to the AI extraction module.</div>
       <div id="d-actions" hidden>
         <div class="detail-section-title">CONTRACT ACTIONS</div>
-        <div id="d-actions-hint" style="font-size:12px;color:var(--gray-500);margin-bottom:10px;"></div>
-        <div id="d-renew-row" style="margin-bottom:10px;">
-          <label class="fgl" for="d-new-end">NEW END DATE (FOR RENEWAL)</label>
-          <input type="date" id="d-new-end" class="fgi">
-        </div>
-        <label class="fgl" for="d-ceo-notes">CEO NOTES</label>
+        <div id="d-actions-hint" style="font-size:12px;color:var(--gray-500);margin-bottom:10px;">Terminate ends the contract and archives it. The vendor and the reviewing manager are notified by email.</div>
+        <label class="fgl" for="d-ceo-notes">REASON FOR TERMINATION</label>
         <textarea id="d-ceo-notes" class="fgi" maxlength="4000" style="height:70px;resize:none;" placeholder="Required when terminating. Shared with the vendor and the reviewing manager."></textarea>
         <div id="d-action-msg" style="font-size:12px;margin-top:8px;color:var(--red);" role="status"></div>
       </div>
@@ -60,9 +56,7 @@
     <div class="modal-footer" style="flex-wrap:wrap;">
       <button type="button" class="btn btn-outline" id="d-open-pdf">View PDF</button>
       <button type="button" class="reject-btn" id="d-terminate" hidden>Terminate</button>
-      <button type="button" class="btn btn-ghost" id="d-renegotiate" hidden>Renegotiate</button>
-      <button type="button" class="btn btn-success" id="d-renew" hidden>Renew</button>
-      <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>
     </div>
   </div>
 </div>
@@ -118,7 +112,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">All Contracts</div>
-          <div class="page-sub">Complete contract repository across all vendors and departments. Open a contract to renew, renegotiate, or terminate it.</div>
+          <div class="page-sub">Complete contract repository across all vendors and departments. Open a contract to view its PDF or terminate it.</div>
         </div>
         <button class="btn btn-ghost btn-sm" id="export-contracts-csv" type="button">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

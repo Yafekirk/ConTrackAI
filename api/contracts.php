@@ -775,8 +775,8 @@ if ($view === "create") {
         $savedPdf = false;
         if ($pdfTmpPath !== null && is_uploaded_file($pdfTmpPath)) {
             $bin = @file_get_contents($pdfTmpPath);
-            if ($bin !== false && substr($bin, 0, 4) === "%PDF") {
-                $savedPdf = file_put_contents(contract_pdf_absolute_path($newId), $bin, LOCK_EX) !== false;
+            if ($bin !== false) {
+                $savedPdf = contract_pdf_store($newId, $bin);
             }
         } elseif ($pdfBase64 !== "") {
             $savedPdf = contract_pdf_save_base64($newId, $pdfBase64);
