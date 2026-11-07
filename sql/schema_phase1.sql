@@ -425,3 +425,14 @@ CREATE TABLE IF NOT EXISTS public.app_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_app_sessions_expires_at ON public.app_sessions (expires_at);
 ALTER TABLE public.app_sessions ENABLE ROW LEVEL SECURITY;
+
+-- Original vendor PDFs (api/lib_contract_pdf.php). Kept in the database because the container disk
+-- is wiped on every deploy; the API reads and writes them with the service role only.
+CREATE TABLE IF NOT EXISTS public.contract_pdf_files (
+  contract_id uuid PRIMARY KEY REFERENCES public.vendor_contracts(id) ON DELETE CASCADE,
+  pdf_base64 text NOT NULL,
+  size_bytes integer NOT NULL,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.contract_pdf_files ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.contract_pdf_files FROM anon, authenticated;
