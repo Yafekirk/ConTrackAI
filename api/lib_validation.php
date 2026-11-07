@@ -72,7 +72,7 @@ function contrack_email_domain_error(string $email): ?string
     if (checkdnsrr($domain . ".", "MX") || checkdnsrr($domain . ".", "A")) {
         return null;
     }
-    return "That email domain does not exist. Check the address for typos.";
+    return "The email address you entered is invalid. Please check it for typos and try again.";
 }
 
 function contrack_contact_error(string $raw, bool $required): ?string

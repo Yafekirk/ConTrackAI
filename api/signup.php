@@ -62,7 +62,10 @@ if (($input["action"] ?? "") === "send_code") {
     $mailError = contrack_send_mail($email, "Your ConTrack AI verification code", $body);
     if ($mailError !== null) {
         error_log("signup code email to {$email} failed: {$mailError}");
-        json_error("We could not send a code to that email address. Check it and try again.", 502);
+        if ($mailError === CONTRACK_MAIL_BAD_RECIPIENT) {
+            json_error("The email address you entered is invalid. Please check it and try again.");
+        }
+        json_error("We could not send the verification email right now. Please try again in a few minutes.", 502);
     }
 
     $_SESSION["signup_verify"] = [

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+/** Returned by contrack_send_mail() when the mail service refuses the recipient address itself. */
+const CONTRACK_MAIL_BAD_RECIPIENT = "That email address cannot receive mail.";
+
 /**
  * Site address used in emailed links: CONTRACK_PUBLIC_URL, else the address Render provides.
  * The Host header is client-controlled, so it is only trusted for localhost.
@@ -132,7 +135,7 @@ function contrack_send_mail(string $to, string $subject, string $body): ?string
     }
     $step = contrack_smtp_cmd($fp, "RCPT TO:<{$to}>", [250, 251]);
     if ($step !== null) {
-        return $fail($fp, "Gmail would not deliver to that address.");
+        return $fail($fp, CONTRACK_MAIL_BAD_RECIPIENT);
     }
     $step = contrack_smtp_cmd($fp, "DATA", [354]);
     if ($step !== null) {
@@ -208,6 +211,11 @@ function contrack_send_mail_gmail_api(
     );
     if ($sent["status"] === 200) {
         return null;
+    }
+    $reason = (string)($sent["json"]["error"]["message"] ?? "");
+    error_log("Gmail API send failed ({$sent["status"]}): {$reason}");
+    if ($sent["status"] === 400 && preg_match('/invalid to|to header|recipient/i', $reason) === 1) {
+        return CONTRACK_MAIL_BAD_RECIPIENT;
     }
     return "Gmail did not accept the message.";
 }
@@ -356,8 +364,13 @@ function contrack_send_mail_brevo(string $to, string $subject, string $body, str
 
     $decoded = json_decode((string)$raw, true);
     $message = is_array($decoded) ? (string)($decoded["message"] ?? "") : "";
+    error_log("Brevo send failed ({$status}): " . substr((string)$raw, 0, 300));
     if ($status === 401) {
         return "Brevo rejected the API key. Check BREVO_API_KEY on the server.";
+    }
+    if ($status === 400 && preg_match('/recipient|\b(to|email)\b.*\b(invalid|not valid)\b|\b(invalid|not valid)\b.*\b(to|email)\b/i', $message) === 1
+        && stripos($message, "sender") === false) {
+        return CONTRACK_MAIL_BAD_RECIPIENT;
     }
     if (stripos($message, "sender") !== false) {
         return "Brevo rejected the sender. Set BREVO_SENDER_EMAIL to an address on the domain you verified in Brevo.";
