@@ -126,10 +126,13 @@ function filteredRows() {
   return list;
 }
 
+let initialVendor = new URLSearchParams(window.location.search).get("vendor");
+
 function populateVendorFilter() {
   const sel = document.querySelectorAll(".filter-bar .filter-select")[2];
   if (!sel) return;
-  const picked = sel.value;
+  const picked = initialVendor || sel.value;
+  initialVendor = null;
   const vendors = new Map();
   contractRows.forEach((r) => {
     const id = String(r.vendor_id ?? "");

@@ -51,6 +51,7 @@ function statusPill(row) {
 }
 
 let allRows = [];
+let initialVendor = new URLSearchParams(window.location.search).get("vendor");
 
 function escapeHtml(s) {
   return String(s ?? "")
@@ -289,7 +290,8 @@ async function loadContracts() {
     if (statNums[3]) statNums[3].textContent = String(stats.expired_approved ?? 0);
 
     const vendorSel = document.querySelectorAll(".filter-select")[2];
-    const pickedVendor = vendorSel?.value || "all";
+    const pickedVendor = initialVendor || vendorSel?.value || "all";
+    initialVendor = null;
     if (vendorSel) {
       const seen = new Map();
       allRows.forEach((r) => {

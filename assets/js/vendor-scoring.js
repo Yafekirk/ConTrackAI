@@ -11,7 +11,14 @@ import {
   createVendorEvaluation,
   updateVendorEvaluation,
   deleteVendorEvaluation,
+  getContracts,
 } from "/assets/js/api-client.js";
+import {
+  contractsForVendor,
+  renderVendorContracts,
+  renderVendorContractsError,
+  renderVendorContractsLoading,
+} from "/assets/js/vendor-contracts-panel.js";
 import { bindStarPicker, renderStarRating, starRatingFromScore, starPickerHtml, starRatingHtml, syncStarPicker } from "/assets/js/star-rating.js";
 
 let criteria = [];
@@ -20,6 +27,7 @@ let history = [];
 let selectedVendorId = "";
 let editingId = null;
 let sessionUser = {};
+let contractsPromise = null;
 
 function esc(s) {
   return String(s ?? "")
@@ -225,11 +233,35 @@ async function loadHistory() {
     .join("");
 }
 
+async function loadVendorContracts() {
+  const card = document.getElementById("eval-contracts-card");
+  const host = document.getElementById("eval-contracts-body");
+  if (!card || !host) return;
+  const vendorId = selectedVendorId;
+  card.hidden = !vendorId;
+  if (!vendorId) return;
+  const link = document.getElementById("eval-contracts-registry");
+  if (link) link.href = `/pages/Manager/ManagerContracts.html?vendor=${encodeURIComponent(vendorId)}`;
+  renderVendorContractsLoading(host);
+  contractsPromise ??= getContracts().catch((e) => {
+    contractsPromise = null;
+    throw e;
+  });
+  try {
+    const rows = await contractsPromise;
+    if (vendorId !== selectedVendorId) return;
+    renderVendorContracts(host, contractsForVendor(rows, vendorId));
+  } catch (e) {
+    renderVendorContractsError(host, e.message || "Could not load contracts.");
+  }
+}
+
 async function selectVendor(id) {
   selectedVendorId = String(id || "");
   renderVendorList();
   renderVendorMeta();
   resetForm();
+  loadVendorContracts();
   await loadHistory();
 }
 

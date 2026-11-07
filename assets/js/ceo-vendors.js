@@ -1,5 +1,11 @@
-import { getVendorSummary, setApiContext } from "/assets/js/api-client.js";
+import { getContracts, getVendorSummary, setApiContext } from "/assets/js/api-client.js";
 import { renderStarRating, starRatingHtml } from "/assets/js/star-rating.js";
+import {
+  contractsForVendor,
+  renderVendorContracts,
+  renderVendorContractsError,
+  renderVendorContractsLoading,
+} from "/assets/js/vendor-contracts-panel.js";
 
 const formatPeso = (value) =>
   new Intl.NumberFormat("en-PH", {
@@ -17,6 +23,25 @@ function escapeHtml(s) {
 }
 
 let vendors = [];
+let contractsPromise = null;
+
+async function showVendorContracts(vendorId) {
+  const host = document.getElementById("v-contract-list");
+  const link = document.getElementById("v-open-registry");
+  if (link) link.href = `/pages/CEO/CEO_AllContracts.html?vendor=${encodeURIComponent(String(vendorId))}`;
+  renderVendorContractsLoading(host);
+  contractsPromise ??= getContracts().catch((e) => {
+    contractsPromise = null;
+    throw e;
+  });
+  try {
+    const rows = await contractsPromise;
+    if (document.getElementById("modal-vendor")?.dataset.vendorId !== String(vendorId)) return;
+    renderVendorContracts(host, contractsForVendor(rows, vendorId));
+  } catch (e) {
+    renderVendorContractsError(host, `Could not load contracts (${e.message}).`);
+  }
+}
 
 function render(rows) {
   const host = document.getElementById("ceo-vendors-table-body");
@@ -83,7 +108,10 @@ function render(rows) {
       document.getElementById("v-risk").innerHTML = `<span class="pill pill-${risk}">${risk.toUpperCase()}</span>`;
       const rs = document.getElementById("v-risk-score");
       if (rs) rs.textContent = String(r.risk_score ?? "—");
-      document.getElementById("modal-vendor")?.classList.add("open");
+      const modal = document.getElementById("modal-vendor");
+      if (modal) modal.dataset.vendorId = String(r.vendor_id);
+      modal?.classList.add("open");
+      showVendorContracts(r.vendor_id);
     });
   });
 
