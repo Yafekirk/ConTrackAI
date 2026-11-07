@@ -93,16 +93,9 @@ async function signup(payload) {
     throw new Error("Server returned invalid response.");
   }
   if (!response.ok) {
-    const error = new Error(data.error || "Signup failed");
-    error.status = response.status;
-    throw error;
+    throw new Error(data.error || "Signup failed");
   }
   return data;
-}
-
-/** Emails a 6-digit code to prove the vendor owns the address; the account is only created once it comes back. */
-function sendVerificationCode(email) {
-  return signup({ action: "send_code", email });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -112,87 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   initTermsLinks();
 
-  const codeGroup = document.getElementById("signupCodeGroup");
-  const codeInput = document.getElementById("signupCode");
-  const codeHint = document.getElementById("signupCodeHint");
-  const resendBtn = document.getElementById("signupResend");
-  const submitBtn = document.getElementById("signupSubmit");
-  const submitLabel = submitBtn?.textContent || "SIGN UP →";
-  let codeSentTo = "";
-  let busy = false;
-  let resendTimer = null;
-
-  const showError = (message) => {
-    errorEl.textContent = message;
-    errorEl.style.display = message ? "block" : "none";
-  };
-
-  const startResendCountdown = (seconds) => {
-    if (!resendBtn) return;
-    window.clearInterval(resendTimer);
-    let left = Math.max(0, Number(seconds) || 0);
-    const paint = () => {
-      resendBtn.disabled = left > 0;
-      resendBtn.textContent = left > 0 ? `Resend code (${left}s)` : "Resend code";
-    };
-    paint();
-    resendTimer = window.setInterval(() => {
-      left -= 1;
-      paint();
-      if (left <= 0) window.clearInterval(resendTimer);
-    }, 1000);
-  };
-
-  const resetVerification = () => {
-    codeSentTo = "";
-    if (codeGroup) codeGroup.hidden = true;
-    if (codeInput) codeInput.value = "";
-    setFieldError("signupCodeError", "");
-    if (submitBtn) submitBtn.textContent = submitLabel;
-    window.clearInterval(resendTimer);
-  };
-
-  const requestCode = async (email) => {
-    const result = await sendVerificationCode(email);
-    codeSentTo = email;
-    if (codeGroup) codeGroup.hidden = false;
-    if (codeHint) codeHint.textContent = `We sent a 6-digit code to ${email}. Check your inbox (and spam folder), then enter it here.`;
-    if (submitBtn) submitBtn.textContent = "VERIFY & SIGN UP →";
-    startResendCountdown(result?.resend_after ?? 60);
-    codeInput?.focus();
-  };
-
-  document.getElementById("signupEmail")?.addEventListener("input", () => {
-    const current = (document.getElementById("signupEmail")?.value.trim() || "").toLowerCase();
-    if (codeSentTo && current !== codeSentTo) resetVerification();
-  });
-
-  codeInput?.addEventListener("input", () => {
-    const digits = codeInput.value.replace(/\D/g, "").slice(0, 6);
-    if (digits !== codeInput.value) codeInput.value = digits;
-  });
-
-  resendBtn?.addEventListener("click", async () => {
-    if (!codeSentTo || busy) return;
-    busy = true;
-    showError("");
-    setFieldError("signupCodeError", "");
-    try {
-      await requestCode(codeSentTo);
-    } catch (error) {
-      setFieldError("signupCodeError", error.message);
-    } finally {
-      busy = false;
-    }
-  });
-
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (busy) return;
     errorEl.style.display = "none";
     errorEl.textContent = "";
     clearFieldErrors();
-    setFieldError("signupCodeError", "");
 
     const name = document.getElementById("signupName")?.value.trim() || "";
     const email = (document.getElementById("signupEmail")?.value.trim() || "").toLowerCase();
@@ -227,25 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    busy = true;
     try {
-      // First press: prove the email address is real by sending it a code.
-      if (codeSentTo !== email) {
-        try {
-          await requestCode(email);
-        } catch (error) {
-          setFieldError("signupEmailError", error.message);
-        }
-        return;
-      }
-
-      const code = (codeInput?.value || "").replace(/\D/g, "");
-      if (code.length !== 6) {
-        setFieldError("signupCodeError", "Enter the 6-digit code we emailed you.");
-        codeInput?.focus();
-        return;
-      }
-
       await signup({
         name,
         company_name: name,
@@ -255,20 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
         password,
         confirm_password: confirmPassword,
         accepted_terms: true,
-        verification_code: code,
       });
       localStorage.removeItem("contrack_user");
       sessionStorage.setItem("contrack_signup_pending", "1");
       window.location.href = LOGIN_ROUTE;
     } catch (error) {
-      if (error.status === 422 || error.status === 429) {
-        setFieldError("signupCodeError", error.message);
-        codeInput?.focus();
-      } else {
-        showError(error.message);
-      }
-    } finally {
-      busy = false;
+      errorEl.textContent = error.message;
+      errorEl.style.display = "block";
     }
   });
 

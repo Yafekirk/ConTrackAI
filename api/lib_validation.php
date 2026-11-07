@@ -59,22 +59,6 @@ function contrack_email_error(string $email): ?string
     return null;
 }
 
-/**
- * Rejects addresses whose domain cannot receive mail (no MX and no A record), e.g. "gmial.con".
- * Whether the mailbox itself exists is proven by the emailed verification code, not here.
- */
-function contrack_email_domain_error(string $email): ?string
-{
-    $domain = strtolower((string)substr((string)strrchr($email, "@"), 1));
-    if ($domain === "" || !function_exists("checkdnsrr")) {
-        return null;
-    }
-    if (checkdnsrr($domain . ".", "MX") || checkdnsrr($domain . ".", "A")) {
-        return null;
-    }
-    return "The email address you entered is invalid. Please check it for typos and try again.";
-}
-
 function contrack_contact_error(string $raw, bool $required): ?string
 {
     $contact = contrack_normalize_contact($raw);
