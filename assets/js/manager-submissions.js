@@ -176,6 +176,41 @@ function renderQueue() {
   });
 }
 
+function contractTerm(r) {
+  const start = r.start_date ? String(r.start_date).slice(0, 10) : "";
+  const end = r.end_date ? String(r.end_date).slice(0, 10) : "";
+  if (!start && !end) return "";
+  return `${start || "—"} to ${end || "—"}`;
+}
+
+function renderAiSummary(r) {
+  const host = document.getElementById("ai-summary");
+  if (!host) return;
+  const risk = r.risk ? String(r.risk).toUpperCase() + (r.risk_score != null && r.risk_score !== "" ? ` (score ${r.risk_score})` : "") : "";
+  const rows = [
+    ["CONTRACT TITLE", r.contract_title],
+    ["CLASSIFICATION", r.classification || r.contract_type],
+    ["CONTRACT TERM", contractTerm(r)],
+    ["PAYMENT TERMS", r.payment_terms],
+    ["RENEWAL", r.renewal_terms],
+    ["RISK LEVEL", risk],
+    ["SCOPE OF WORK", r.scope_of_work],
+    ["PENALTIES", r.penalty_clause],
+    ["TERMINATION", r.termination_clause],
+    ["FINANCIAL OBLIGATIONS", r.financial_obligations],
+  ].filter(([, v]) => v != null && String(v).trim() !== "");
+  host.innerHTML = rows.length
+    ? rows
+        .map(
+          ([k, v]) => `<div class="ai-summary-row">
+            <div class="ai-summary-key">${esc(k)}</div>
+            <div class="ai-summary-val">${esc(String(v).trim())}</div>
+          </div>`,
+        )
+        .join("")
+    : `<div class="ai-summary-empty">No clauses were extracted for this contract. Open the original PDF to review it.</div>`;
+}
+
 function openReview(id, editable) {
   document.getElementById("mq-save")?.remove();
   document.getElementById("modal-view-footer")?.classList.remove("modal-footer--review");
@@ -189,6 +224,7 @@ function openReview(id, editable) {
   if (boxes[1]) boxes[1].textContent = row.vendor_name || "—";
   if (boxes[2]) boxes[2].textContent = formatPeso(row.contract_value);
   if (boxes[3]) boxes[3].textContent = String(row.status || "").toUpperCase();
+  renderAiSummary(row);
 
   const mgrEl = document.getElementById("mgr-clause");
   const ceoEl = document.getElementById("ceo-clause");

@@ -1122,6 +1122,25 @@ body {
   border-color: rgba(66, 194, 110, 0.2);
   border-left: 4px solid var(--green);
 }
+.ai-summary {
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius);
+  padding: 4px 16px;
+}
+.ai-summary-row {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--gray-100);
+}
+.ai-summary-row:last-child { border-bottom: none; }
+.ai-summary-key { font-size: 9.5px; letter-spacing: 1.5px; color: var(--gray-400); font-weight: 700; padding-top: 2px; }
+.ai-summary-val { font-size: 13px; color: var(--gray-700); line-height: 1.6; white-space: pre-line; word-break: break-word; }
+.ai-summary-empty { font-size: 13px; color: var(--gray-400); padding: 10px 0; }
+@media (max-width: 560px) {
+  .ai-summary-row { grid-template-columns: 1fr; gap: 4px; }
+}
 .contract-meta-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
