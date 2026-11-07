@@ -3,8 +3,13 @@ FROM php:8.2-cli
 RUN apt-get update && apt-get install -y --no-install-recommends \
         python3 python3-pip python3-venv \
         libcurl4-openssl-dev pkg-config \
-    && docker-php-ext-install curl \
+    && docker-php-ext-install curl opcache \
     && rm -rf /var/lib/apt/lists/*
+
+# Keep compiled PHP in memory instead of re-parsing every file on each request. The code never changes inside
+# a running container, so timestamp checks are skipped.
+RUN printf "opcache.enable=1\nopcache.enable_cli=1\nopcache.validate_timestamps=0\nopcache.memory_consumption=64\n" \
+        > /usr/local/etc/php/conf.d/zz-opcache.ini
 
 WORKDIR /app
 COPY . /app

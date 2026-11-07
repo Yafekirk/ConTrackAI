@@ -22,7 +22,7 @@ $requests = [
     "scores" => ["GET", "vendor_evaluations?" . ($isVendor ? "vendor_id=eq.{$userId}&" : "") . "select=id,updated_at&order=id.asc"],
 ];
 if (!$isVendor) {
-    $requests["users"] = ["GET", "users?select=id,role,is_disabled,name,company_name&order=id.asc"];
+    $requests["users"] = ["GET", "users?select=id,role,is_disabled,name,company_name,approval_status&order=id.asc"];
 }
 
 $results = supabase_request_many($requests);
@@ -33,6 +33,10 @@ if (!$results["contracts"]["ok"]) {
         "GET",
         "vendor_contracts?select=id,status,reviewed_at,manager_reviewed_at{$contractScope}&order=id.asc"
     );
+}
+// Databases without vendor approval: fall back to the account columns alone.
+if (isset($results["users"]) && !$results["users"]["ok"]) {
+    $results["users"] = supabase_request("GET", "users?select=id,role,is_disabled,name,company_name&order=id.asc");
 }
 
 $parts = [];

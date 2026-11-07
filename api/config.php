@@ -71,8 +71,56 @@ function env_flag(string $key, bool $default = false): bool
 function json_response($data, int $status = 200): never
 {
     http_response_code($status);
-    echo json_encode($data);
+    $body = (string)json_encode($data);
+    // php -S never compresses; contract lists are large enough that gzip noticeably shortens page loads.
+    if (strlen($body) > 2048 && !headers_sent() && function_exists("gzencode")
+        && stripos((string)($_SERVER["HTTP_ACCEPT_ENCODING"] ?? ""), "gzip") !== false) {
+        $gz = gzencode($body, 5);
+        if ($gz !== false) {
+            header("Content-Encoding: gzip");
+            header("Vary: Accept-Encoding");
+            $body = $gz;
+        }
+    }
+    echo $body;
     exit;
+}
+
+/** File holding the time of the last write that changes what the portals show (read by api/pulse.php). */
+function contrack_pulse_file(): string
+{
+    return sys_get_temp_dir() . DIRECTORY_SEPARATOR . "contrack_pulse_" . substr(sha1(dirname(__DIR__)), 0, 12);
+}
+
+/**
+ * True when a successful write changes data another portal displays. Session rows, audit rows, NLP usage,
+ * password resets, read/unread flips and login/heartbeat timestamps are left out so they never wake every open tab.
+ */
+function contrack_write_moves_portals(string $method, string $path, ?array $payload): bool
+{
+    if (strtoupper($method) === "GET") {
+        return false;
+    }
+    $table = (string)strtok(ltrim($path, "/"), "?");
+    if (in_array($table, ["vendor_contracts", "vendor_evaluations", "vendor_evaluation_scores", "vendor_score_criteria"], true)) {
+        return true;
+    }
+    if ($table === "alerts") {
+        return strtoupper($method) === "POST";
+    }
+    if ($table === "users") {
+        if (strtoupper($method) !== "PATCH") {
+            return true;
+        }
+        $row = is_array($payload) && isset($payload[0]) && is_array($payload[0]) ? $payload[0] : ($payload ?? []);
+        return array_intersect(array_keys($row), ["role", "is_disabled", "name", "company_name", "approval_status"]) !== [];
+    }
+    return false;
+}
+
+function contrack_bump_pulse(): void
+{
+    @file_put_contents(contrack_pulse_file(), sprintf("%.6f", microtime(true)), LOCK_EX);
 }
 
 function json_error(string $message, int $status = 400): never
@@ -618,7 +666,7 @@ function supabase_request(string $method, string $path, ?array $payload = null):
     $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     $error = curl_error($ch);
 
-    return supabase_finish_response($method, $path, $raw, (int)$status, (string)$error);
+    return supabase_finish_response($method, $path, $raw, (int)$status, (string)$error, $payload);
 }
 
 /**
@@ -662,7 +710,7 @@ function supabase_request_many(array $requests): array
         if ($error === "" && $httpStatus === 0) {
             $error = "request did not complete";
         }
-        $out[$key] = supabase_finish_response((string)$requests[$key][0], (string)$requests[$key][1], $raw, $httpStatus, $error);
+        $out[$key] = supabase_finish_response((string)$requests[$key][0], (string)$requests[$key][1], $raw, $httpStatus, $error, $requests[$key][2] ?? null);
         curl_multi_remove_handle($mh, $ch);
         curl_close($ch);
     }
@@ -670,10 +718,12 @@ function supabase_request_many(array $requests): array
     return $out;
 }
 
-function supabase_finish_response(string $method, string $path, $raw, int $status, string $error): array
+function supabase_finish_response(string $method, string $path, $raw, int $status, string $error, ?array $payload = null): array
 {
     if ($error || $status < 200 || $status >= 300) {
         contrack_note_upstream_failure($method, $path, (int)$status, (string)$error, is_string($raw) ? $raw : "");
+    } elseif (contrack_write_moves_portals($method, $path, $payload)) {
+        contrack_bump_pulse();
     }
 
     if ($error) {

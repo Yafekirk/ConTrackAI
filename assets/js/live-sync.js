@@ -11,17 +11,25 @@
  *    refresh waits until the user clicks it or the page is idle again.
  *  - Pages restored from the browser's back/forward cache are reloaded
  *    so the Back button never shows stale data.
+ *  - Between full checks it watches /api/pulse.php, a free "something
+ *    was saved" signal, so a vendor upload or a manager/CEO decision
+ *    reaches the other portals within a couple of seconds.
  * ================================================================ */
 
 const POLL_MS = 15000;
+const PULSE_MS = 2000;
 const IDLE_AFTER_INTERACTION_MS = 4000;
 
 let baseline = null;
 let pendingUpdate = false;
 let polling = false;
+let pollAgain = false;
 let formDirty = false;
 let lastInteraction = 0;
 let timer = null;
+let pulseTimer = null;
+let lastPulse = null;
+let pulseChecking = false;
 let bar = null;
 
 async function fetchVersion() {
@@ -127,7 +135,11 @@ function applyPending() {
 }
 
 async function poll() {
-  if (polling || document.visibilityState !== "visible") return;
+  if (document.visibilityState !== "visible") return;
+  if (polling) {
+    pollAgain = true;
+    return;
+  }
   polling = true;
   try {
     const parts = await fetchVersion();
@@ -142,12 +154,37 @@ async function poll() {
     applyPending();
   } finally {
     polling = false;
+    if (pollAgain) {
+      pollAgain = false;
+      poll();
+    }
+  }
+}
+
+async function checkPulse() {
+  if (pulseChecking || document.visibilityState !== "visible") return;
+  pulseChecking = true;
+  try {
+    const response = await fetch("/api/pulse.php", { credentials: "same-origin", cache: "no-store" });
+    if (!response.ok) return;
+    const payload = await response.json().catch(() => null);
+    const pulse = payload && typeof payload.pulse === "string" ? payload.pulse : null;
+    if (pulse === null) return;
+    const moved = lastPulse !== null && pulse !== lastPulse;
+    lastPulse = pulse;
+    if (moved) poll();
+  } catch (_) {
+    /* the regular poll still covers this tab */
+  } finally {
+    pulseChecking = false;
   }
 }
 
 function schedule() {
   if (timer) window.clearInterval(timer);
   timer = window.setInterval(poll, POLL_MS);
+  if (pulseTimer) window.clearInterval(pulseTimer);
+  pulseTimer = window.setInterval(checkPulse, PULSE_MS);
 }
 
 function markInteraction() {
@@ -182,6 +219,7 @@ export function startLiveSync() {
   });
 
   poll();
+  checkPulse();
   schedule();
 }
 

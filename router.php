@@ -68,10 +68,28 @@ $ext = strtolower((string)pathinfo($file, PATHINFO_EXTENSION));
 if (isset($noCacheTypes[$ext])) {
     $path = realpath(__DIR__ . $normalized);
     if ($path !== false && is_file($path) && strpos($path, realpath(__DIR__)) === 0) {
+        // no-cache still lets the browser keep a copy; the ETag lets a revalidation end in a bodiless 304.
+        $etag = '"' . dechex((int)filemtime($path)) . "-" . dechex((int)filesize($path)) . '"';
         header("Content-Type: " . $noCacheTypes[$ext]);
         header("Cache-Control: no-cache, must-revalidate");
-        header("Content-Length: " . (string)filesize($path));
-        readfile($path);
+        header("ETag: " . $etag);
+        header("Vary: Accept-Encoding");
+        $ifNoneMatch = (string)($_SERVER["HTTP_IF_NONE_MATCH"] ?? "");
+        if ($ifNoneMatch !== "" && in_array($etag, array_map(static fn(string $t): string => trim(str_replace("W/", "", $t)), explode(",", $ifNoneMatch)), true)) {
+            http_response_code(304);
+            exit;
+        }
+        $body = (string)file_get_contents($path);
+        if (strlen($body) > 1024 && function_exists("gzencode")
+            && stripos((string)($_SERVER["HTTP_ACCEPT_ENCODING"] ?? ""), "gzip") !== false) {
+            $gz = gzencode($body, 6);
+            if ($gz !== false) {
+                header("Content-Encoding: gzip");
+                $body = $gz;
+            }
+        }
+        header("Content-Length: " . (string)strlen($body));
+        echo $body;
         exit;
     }
 }
