@@ -79,7 +79,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // "AVG VENDOR SCORE" is the mean of latest stored evaluations.
     const vendorScores = vendorSummary
-      .map((v) => (v?.has_manual_score ? Number(v.vendor_score ?? v.ai_score || 0) : 0))
+      .map((v) => (v?.has_manual_score ? Number((v.vendor_score ?? v.ai_score) || 0) : 0))
       .filter((n) => n > 0);
     const avgVendorScore = vendorScores.length
       ? Math.round(vendorScores.reduce((a, b) => a + b, 0) / vendorScores.length)

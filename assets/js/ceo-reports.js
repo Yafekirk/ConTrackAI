@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const renewalRate = ytd ? Math.round((renewal / ytd) * 100) : 0;
   const scored = vendors.filter((v) => v.has_manual_score);
   const avgScore = scored.length
-    ? Math.round(scored.reduce((s, v) => s + Number(v.vendor_score ?? v.ai_score || 0), 0) / scored.length)
+    ? Math.round(scored.reduce((s, v) => s + Number((v.vendor_score ?? v.ai_score) || 0), 0) / scored.length)
     : 0;
   if (nums[0]) nums[0].textContent = String(ytd);
   if (nums[1]) nums[1].textContent = formatPeso(avgVal);
@@ -96,7 +96,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const buckets = [0, 0, 0, 0, 0];
   vendors.forEach((v) => {
     if (!v.has_manual_score) return;
-    const s = Number(v.vendor_score ?? v.ai_score || 0);
+    const s = Number((v.vendor_score ?? v.ai_score) || 0);
     if (s < 60) buckets[0]++;
     else if (s < 70) buckets[1]++;
     else if (s < 80) buckets[2]++;
