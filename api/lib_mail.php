@@ -139,21 +139,12 @@ function contrack_send_mail(string $to, string $subject, string $body): ?string
         return $fail($fp, "Gmail refused the message.");
     }
 
-    $encodedName = "=?UTF-8?B?" . base64_encode($fromName) . "?=";
-    $safeSubject = str_replace(["\r", "\n"], "", $subject);
-    $lines = preg_split("/\r\n|\n|\r/", $body) ?: [];
+    $lines = preg_split("/\r\n|\n|\r/", rtrim(contrack_mime_message($fromName, $user, $to, $subject, $body), "\r\n")) ?: [];
     $stuffed = [];
     foreach ($lines as $line) {
         $stuffed[] = (isset($line[0]) && $line[0] === ".") ? "." . $line : $line;
     }
-    $message = "From: {$encodedName} <{$user}>\r\n"
-        . "To: <{$to}>\r\n"
-        . "Subject: {$safeSubject}\r\n"
-        . "MIME-Version: 1.0\r\n"
-        . "Content-Type: text/plain; charset=UTF-8\r\n"
-        . "\r\n"
-        . implode("\r\n", $stuffed)
-        . "\r\n.";
+    $message = implode("\r\n", $stuffed) . "\r\n.";
     fwrite($fp, $message . "\r\n");
     $sent = contrack_smtp_read($fp);
     contrack_smtp_cmd($fp, "QUIT", [221]);
@@ -204,15 +195,7 @@ function contrack_send_mail_gmail_api(
         }
     }
 
-    $encodedName = "=?UTF-8?B?" . base64_encode($fromName) . "?=";
-    $safeSubject = str_replace(["\r", "\n"], "", $subject);
-    $rfc822 = "From: {$encodedName} <{$fromEmail}>\r\n"
-        . "To: <{$to}>\r\n"
-        . "Subject: {$safeSubject}\r\n"
-        . "MIME-Version: 1.0\r\n"
-        . "Content-Type: text/plain; charset=UTF-8\r\n"
-        . "\r\n"
-        . str_replace(["\r\n", "\r"], "\n", $body);
+    $rfc822 = contrack_mime_message($fromName, $fromEmail, $to, $subject, $body);
     $raw = rtrim(strtr(base64_encode($rfc822), "+/", "-_"), "=");
     $sent = contrack_https_json(
         "POST",
@@ -227,6 +210,65 @@ function contrack_send_mail_gmail_api(
         return null;
     }
     return "Gmail did not accept the message.";
+}
+
+/** Optional Reply-To (MAIL_REPLY_TO) so replies reach a monitored inbox; null when unset or invalid. */
+function contrack_mail_reply_to(): ?string
+{
+    $replyTo = trim((string)env_value("MAIL_REPLY_TO", ""));
+    return filter_var($replyTo, FILTER_VALIDATE_EMAIL) !== false ? $replyTo : null;
+}
+
+/** RFC 2047 encoding for header text that is not plain ASCII (company names, accented subjects). */
+function contrack_mail_header_text(string $text): string
+{
+    $text = str_replace(["\r", "\n"], "", $text);
+    return preg_match('/[^\x20-\x7E]/', $text) === 1 ? "=?UTF-8?B?" . base64_encode($text) . "?=" : $text;
+}
+
+/**
+ * HTML twin of a plain-text email: escaped, links made clickable, line breaks kept.
+ * Spam filters trust a text + HTML pair more than a bare text message.
+ */
+function contrack_mail_html(string $subject, string $text): string
+{
+    $escaped = htmlspecialchars(str_replace(["\r\n", "\r"], "\n", $text), ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+    $linked = preg_replace('~https?://[^\s<]+~', '<a href="$0" style="color:#7A0C0C">$0</a>', $escaped) ?? $escaped;
+    $title = htmlspecialchars($subject, ENT_QUOTES | ENT_SUBSTITUTE, "UTF-8");
+    return "<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"UTF-8\"><title>{$title}</title></head>"
+        . "<body style=\"margin:0;padding:24px;background:#f6f6f6;font-family:Arial,Helvetica,sans-serif;color:#222\">"
+        . "<div style=\"max-width:560px;margin:0 auto;background:#fff;border-radius:8px;padding:28px;font-size:15px;line-height:1.55\">"
+        . nl2br($linked, false)
+        . "</div></body></html>";
+}
+
+/** Complete RFC 5322 message (headers + multipart text/HTML body) for the SMTP and Gmail API senders. */
+function contrack_mime_message(string $fromName, string $fromEmail, string $to, string $subject, string $text): string
+{
+    $domain = substr((string)strrchr($fromEmail, "@"), 1) ?: "contrack.local";
+    $boundary = "contrack-" . bin2hex(random_bytes(12));
+    $text = str_replace(["\r\n", "\r"], "\n", $text);
+    $headers = [
+        "From: " . contrack_mail_header_text($fromName) . " <{$fromEmail}>",
+        "To: <{$to}>",
+        "Subject: " . contrack_mail_header_text($subject),
+        "Date: " . date(DATE_RFC2822),
+        "Message-ID: <" . bin2hex(random_bytes(16)) . "@{$domain}>",
+        "MIME-Version: 1.0",
+        "Content-Type: multipart/alternative; boundary=\"{$boundary}\"",
+    ];
+    $replyTo = contrack_mail_reply_to();
+    if ($replyTo !== null) {
+        $headers[] = "Reply-To: <{$replyTo}>";
+    }
+    $part = static fn(string $type, string $content): string => "--{$boundary}\r\n"
+        . "Content-Type: {$type}; charset=UTF-8\r\n"
+        . "Content-Transfer-Encoding: base64\r\n\r\n"
+        . chunk_split(base64_encode($content), 76, "\r\n");
+    return implode("\r\n", $headers) . "\r\n\r\n"
+        . $part("text/plain", str_replace("\n", "\r\n", $text))
+        . $part("text/html", contrack_mail_html($subject, $text))
+        . "--{$boundary}--\r\n";
 }
 
 /** @return array{status:int,json:array<string,mixed>} */
@@ -269,12 +311,18 @@ function contrack_send_mail_brevo(string $to, string $subject, string $body, str
         return "PHP cURL is required to send mail.";
     }
 
-    $payload = json_encode([
+    $message = [
         "sender" => ["name" => $fromName, "email" => $fromEmail],
         "to" => [["email" => $to]],
         "subject" => $subject,
         "textContent" => $body,
-    ], JSON_UNESCAPED_UNICODE);
+        "htmlContent" => contrack_mail_html($subject, $body),
+    ];
+    $replyTo = contrack_mail_reply_to();
+    if ($replyTo !== null) {
+        $message["replyTo"] = ["email" => $replyTo];
+    }
+    $payload = json_encode($message, JSON_UNESCAPED_UNICODE);
     if ($payload === false) {
         return "Could not prepare the email.";
     }

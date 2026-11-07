@@ -135,12 +135,36 @@ function contrack_decide_vendor(int $vendorId, string $decision, ?int $actorId, 
     );
 
     $base = contrack_public_base_url();
+    $greeting = "Hello" . ($company !== "" ? " {$company}" : "") . ",";
+    $why = "You are receiving this email because a vendor account was requested on ConTrack AI with this email address ({$email}).";
     $body = $status === "approved"
-        ? "Good news! Your ConTrack AI vendor account for {$company} was approved by the CEO.\r\n\r\n"
-            . "You can now sign in" . ($base !== null ? " at {$base}/" : "") . " with the email and password you registered."
-        : "Your ConTrack AI vendor account request for {$company} was not approved.\r\n\r\n"
-            . "If you think this is a mistake, please contact the company directly.";
-    $subject = $status === "approved" ? "Your ConTrack AI account is approved" : "Your ConTrack AI account request";
+        ? implode("\r\n", [
+            $greeting,
+            "",
+            "Your vendor account on ConTrack AI has been approved. You can now sign in with the email address and password you used when you registered.",
+            "",
+            $base !== null ? "Sign in here: {$base}/" : "You can sign in from the ConTrack AI login page.",
+            "",
+            $why,
+            "",
+            "Regards,",
+            "ConTrack AI",
+        ])
+        : implode("\r\n", [
+            $greeting,
+            "",
+            "Your vendor account request on ConTrack AI was reviewed and was not approved.",
+            "",
+            "If you believe this is a mistake, please contact the company directly.",
+            "",
+            $why,
+            "",
+            "Regards,",
+            "ConTrack AI",
+        ]);
+    $subject = $status === "approved"
+        ? "Your ConTrack AI vendor account has been approved"
+        : "Update on your ConTrack AI vendor account request";
     if ($email !== "") {
         $mailError = contrack_send_mail($email, $subject, $body);
         if ($mailError !== null) {
