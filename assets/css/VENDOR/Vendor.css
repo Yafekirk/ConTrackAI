@@ -1489,6 +1489,57 @@ html, body {
   font-weight: 700;
   margin-top: 4px;
 }
+.perf-summary > * { min-width: 0; }
+.perf-card .card-header { flex-wrap: wrap; gap: 4px 12px; }
+.perf-card .criterion-star-row { flex-wrap: wrap; }
+.perf-card .criterion-star-name { flex: 1 1 140px; min-width: 0; }
+.perf-history .t-cell-label { display: none; }
+
+@media (max-width: 767px) {
+  .perf-card .card-body { padding: 16px; }
+  .perf-summary {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .perf-score-ring {
+    padding: 8px 0 18px;
+    border-bottom: 1px solid var(--gray-200);
+  }
+  .perf-card #perf-intro { text-align: center; }
+
+  .perf-history { overflow-x: visible !important; }
+  .perf-history .t-cols { display: none; }
+  .perf-history .t-row {
+    min-width: 0;
+    display: flex !important;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 14px 16px;
+  }
+  .perf-history .t-row > div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 13px;
+    min-width: 0;
+  }
+  .perf-history .t-cell-label {
+    display: inline;
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    color: var(--gray-400);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .perf-history .t-cell-value { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .perf-history .t-row > div:last-child { justify-content: flex-end; }
+  .perf-history .t-row > div:last-child .btn { width: 100%; justify-content: center; }
+  .perf-history .t-foot { flex-wrap: wrap; gap: 8px; }
+
+  #modal-eval .modal-body > div:last-child { gap: 8px; }
+}
 
 /* ============================
    INFO BOX

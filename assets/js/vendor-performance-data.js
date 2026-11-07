@@ -119,10 +119,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         histHost.innerHTML = history
           .slice(0, 12)
           .map((r, i) => `<div class="t-row" style="grid-template-columns:1.4fr 1fr 1.2fr 1.4fr 90px;">
-            <div>${esc(r.evaluated_at ? new Date(r.evaluated_at).toLocaleString() : "—")}</div>
-            <div>${starRatingHtml(r.overall_score, { size: 14, plain: true })}</div>
-            <div>${esc(r.rating_label || "")}</div>
-            <div>${esc(r.evaluator_name || "—")}</div>
+            <div><span class="t-cell-label">DATE</span><span class="t-cell-value">${esc(r.evaluated_at ? new Date(r.evaluated_at).toLocaleString() : "—")}</span></div>
+            <div><span class="t-cell-label">SCORE</span><span class="t-cell-value">${starRatingHtml(r.overall_score, { size: 14, plain: true })}</span></div>
+            <div><span class="t-cell-label">RATING</span><span class="t-cell-value">${esc(r.rating_label || "—")}</span></div>
+            <div><span class="t-cell-label">EVALUATOR</span><span class="t-cell-value">${esc(r.evaluator_name || "—")}</span></div>
             <div><button type="button" class="btn btn-ghost btn-sm" data-view-eval="${i}" title="View remarks and trend">View</button></div>
           </div>`)
           .join("");
