@@ -42,7 +42,162 @@ function statusPillClass(st) {
   if (s === "approved") return "pill-active";
   if (s === "pending") return "pill-pending";
   if (s === "rejected") return "pill-rejected";
+  if (s === "renegotiation") return "pill-renewal";
+  if (s === "modification") return "pill-revision";
   return "pill-inactive";
+}
+
+function statusLabel(st) {
+  const s = String(st || "").toLowerCase();
+  if (s === "renegotiation") return "FOR RENEWAL";
+  if (s === "modification") return "MODIFY";
+  return s.toUpperCase() || "—";
+}
+
+/** Server-classified risk when present, otherwise the value thresholds used across the portals. */
+function riskLevel(r) {
+  const server = String(r.risk || "").toLowerCase();
+  if (["low", "medium", "high"].includes(server)) return server;
+  const v = Number(r.contract_value) || 0;
+  if (v >= 5000000) return "high";
+  if (v >= 1000000) return "medium";
+  return "low";
+}
+
+function startOfToday() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today;
+}
+
+function matchesStatus(r, pick) {
+  const s = String(r.status || "").toLowerCase();
+  const end = parseDay(r.end_date);
+  const today = startOfToday();
+  const days = end ? (end - today) / 86400000 : null;
+  switch (pick) {
+    case "Active":
+      return s === "approved" && (days === null || days >= 0);
+    case "Net 30":
+      return s === "approved" && days !== null && days >= 0 && days <= 30;
+    case "Expired":
+      return (s === "approved" && days !== null && days < 0) || s === "terminated";
+    case "For Renewal":
+      return s === "renegotiation" || !!r.renewal_due;
+    case "Pending":
+      return s === "pending";
+    default:
+      return true;
+  }
+}
+
+function filterSelects() {
+  const sels = document.querySelectorAll(".filter-bar .filter-select");
+  const text = (i) => sels[i]?.options[sels[i].selectedIndex]?.text?.trim() || "";
+  return { status: text(0), risk: text(1), vendor: sels[2]?.value || "all", sort: text(3) };
+}
+
+function filteredRows() {
+  const q = (document.querySelector(".filter-search")?.value || "").trim().toLowerCase();
+  const { status, risk, vendor, sort } = filterSelects();
+  let list = contractRows.filter((r) => {
+    if (q) {
+      const hay = [contractRef(r), r.id, r.contract_title, r.vendor_name, r.payment_terms, r.classification]
+        .map((x) => String(x ?? "").toLowerCase())
+        .join(" ");
+      if (!hay.includes(q)) return false;
+    }
+    if (status && status !== "All Status" && !matchesStatus(r, status)) return false;
+    if (risk && risk !== "All Risk" && riskLevel(r) !== risk.toLowerCase()) return false;
+    if (vendor !== "all" && String(r.vendor_id ?? "") !== vendor) return false;
+    return true;
+  });
+  const time = (v) => new Date(v || 0).getTime() || 0;
+  if (sort === "Sort: Oldest") {
+    list.sort((a, b) => time(a.uploaded_at) - time(b.uploaded_at));
+  } else if (sort === "Sort: Value ↓") {
+    list.sort((a, b) => (Number(b.contract_value) || 0) - (Number(a.contract_value) || 0));
+  } else if (sort === "Sort: Expiry") {
+    const endTime = (r) => parseDay(r.end_date)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+    list.sort((a, b) => endTime(a) - endTime(b));
+  } else {
+    list.sort((a, b) => time(b.uploaded_at) - time(a.uploaded_at));
+  }
+  return list;
+}
+
+function populateVendorFilter() {
+  const sel = document.querySelectorAll(".filter-bar .filter-select")[2];
+  if (!sel) return;
+  const picked = sel.value;
+  const vendors = new Map();
+  contractRows.forEach((r) => {
+    const id = String(r.vendor_id ?? "");
+    if (id && !vendors.has(id)) vendors.set(id, String(r.vendor_name || "Vendor"));
+  });
+  sel.innerHTML =
+    `<option value="all">All Vendors</option>` +
+    [...vendors.entries()]
+      .sort((a, b) => a[1].localeCompare(b[1]))
+      .map(([id, name]) => `<option value="${esc(id)}">${esc(name)}</option>`)
+      .join("");
+  if (vendors.has(picked)) sel.value = picked;
+}
+
+function renderContracts() {
+  const body = document.getElementById("contracts-body");
+  const foot = body?.closest(".table-card")?.querySelector(".t-showing");
+  if (!body) return;
+
+  if (contractRows.length === 0) {
+    body.innerHTML = `<div style="padding:60px 20px;text-align:center;">
+      <div style="font-size:14px;font-weight:600;color:var(--gray-500);margin-bottom:6px;">No contracts yet</div>
+      <div style="font-size:12px;color:var(--gray-400);">Submitted vendor contracts will appear here.</div>
+    </div>`;
+    if (foot) foot.textContent = "0 contracts";
+    return;
+  }
+
+  const rows = filteredRows();
+  if (rows.length === 0) {
+    body.innerHTML = `<div style="padding:48px 20px;text-align:center;">
+      <div style="font-size:14px;font-weight:600;color:var(--gray-500);margin-bottom:6px;">No contracts match the current filters</div>
+      <div style="font-size:12px;color:var(--gray-400);">Clear the search or choose different filters.</div>
+    </div>`;
+    if (foot) foot.textContent = `Showing 0 of ${contractRows.length} contracts`;
+    return;
+  }
+
+  body.innerHTML = rows
+    .map((r) => {
+      const end = parseDay(r.end_date);
+      const endLabel = end ? end.toLocaleDateString() : "—";
+      const net30 = isNet30Expiring(r.end_date) ? ` ${net30BadgeHtml()}` : "";
+      const idAttr = String(r.id ?? "").replace(/"/g, "&quot;");
+      const risk = riskLevel(r);
+      return `
+    <div class="t-row" style="grid-template-columns:1.4fr 2fr 1.4fr 1.2fr 1fr 1fr 1fr;">
+      <div class="t-cell-meta">${esc(contractRef(r))}</div>
+      <div>
+        <div class="t-cell-primary">${esc(r.contract_title || "Untitled")}</div>
+        <div class="t-cell-meta">${esc(r.vendor_name || "")} · ${esc(r.payment_terms || "—")}</div>
+      </div>
+      <div>${formatPeso(r.contract_value)}</div>
+      <div>${esc(endLabel)}${net30}</div>
+      <div><span class="pill ${statusPillClass(r.status)}">${esc(statusLabel(r.status))}</span></div>
+      <div><span class="pill pill-${risk}">${risk.toUpperCase()}</span></div>
+      <div>
+        <button type="button" class="btn btn-ghost btn-sm" data-view-id="${idAttr}">View</button>
+      </div>
+    </div>`;
+    })
+    .join("");
+
+  body.querySelectorAll("[data-view-id]").forEach((btn) => {
+    btn.addEventListener("click", () => globalThis.viewManagerContract(btn.getAttribute("data-view-id")));
+  });
+
+  if (foot) foot.textContent = `Showing ${rows.length} of ${contractRows.length} contracts`;
 }
 
 let contractRows = [];
@@ -83,8 +238,7 @@ function fillModal(row) {
   const detailRows = document.querySelectorAll("#modal-detail .detail-row .detail-val");
   const vendorScore = vendorScores[String(row.vendor_id)];
   if (detailRows[0]) detailRows[0].textContent = row.vendor_name || "—";
-  // Risk level stays blank until vendor evaluations produce real risk data.
-  if (detailRows[1]) detailRows[1].textContent = "—";
+  if (detailRows[1]) detailRows[1].textContent = riskLevel(row).toUpperCase();
   if (detailRows[2]) renderStarRating(detailRows[2], vendorScore == null || vendorScore === "" ? null : vendorScore, { size: 15 });
   if (detailRows[3]) detailRows[3].textContent = row.ceo_notes || "—";
 
@@ -183,49 +337,8 @@ async function loadContracts() {
     if (statNums[2]) statNums[2].textContent = String(stats.expiring_30_days ?? 0);
     if (statNums[3]) statNums[3].textContent = String(expired);
 
-    const body = document.getElementById("contracts-body");
-    const foot = document.querySelector("#contracts-body")?.closest(".table-card")?.querySelector(".t-showing");
-    if (!body) return;
-
-    if (contractRows.length === 0) {
-      body.innerHTML = `<div style="padding:60px 20px;text-align:center;">
-        <div style="font-size:14px;font-weight:600;color:var(--gray-500);margin-bottom:6px;">No contracts yet</div>
-        <div style="font-size:12px;color:var(--gray-400);">Submitted vendor contracts will appear here.</div>
-      </div>`;
-      if (foot) foot.textContent = "0 contracts";
-      return;
-    }
-
-    body.innerHTML = contractRows
-      .map((r) => {
-        const end = parseDay(r.end_date);
-        const endLabel = end ? end.toLocaleDateString() : "—";
-        const st = String(r.status || "").toUpperCase();
-        const net30 = isNet30Expiring(r.end_date) ? ` ${net30BadgeHtml()}` : "";
-        const idAttr = String(r.id ?? "").replace(/"/g, "&quot;");
-        return `
-      <div class="t-row" style="grid-template-columns:1.4fr 2fr 1.4fr 1.2fr 1fr 1fr 1fr;">
-        <div class="t-cell-meta">${esc(contractRef(r))}</div>
-        <div>
-          <div class="t-cell-primary">${esc(r.contract_title || "Untitled")}</div>
-          <div class="t-cell-meta">${esc(r.vendor_name || "")} · ${esc(r.payment_terms || "—")}</div>
-        </div>
-        <div>${formatPeso(r.contract_value)}</div>
-        <div>${esc(endLabel)}${net30}</div>
-        <div><span class="pill ${statusPillClass(r.status)}">${esc(st)}</span></div>
-        <div class="t-cell-secondary">${esc(r.manager_reviewed_at ? "Reviewed" : "—")}</div>
-        <div>
-          <button type="button" class="btn btn-ghost btn-sm" data-view-id="${idAttr}">View</button>
-        </div>
-      </div>`;
-      })
-      .join("");
-
-    body.querySelectorAll("[data-view-id]").forEach((btn) => {
-      btn.addEventListener("click", () => globalThis.viewManagerContract(btn.getAttribute("data-view-id")));
-    });
-
-    if (foot) foot.textContent = `${contractRows.length} contracts`;
+    populateVendorFilter();
+    renderContracts();
   } catch (e) {
     console.error(e);
   }
@@ -248,6 +361,18 @@ document.addEventListener("DOMContentLoaded", () => {
   bind("mgr-contract-approve", "escalate_to_ceo");
   bind("mgr-contract-modify", "modification");
   bind("mgr-contract-reject", "reject");
+
+  const search = document.querySelector(".filter-search");
+  const initialQuery = new URLSearchParams(window.location.search).get("q");
+  if (search && initialQuery) search.value = initialQuery;
+  search?.addEventListener("input", renderContracts);
+  document.querySelectorAll(".filter-bar .filter-select").forEach((el) => el.addEventListener("change", renderContracts));
+  // The top-bar search box feeds the same filter as the search field above the table.
+  const topSearch = document.querySelector(".top-search");
+  topSearch?.addEventListener("input", () => {
+    if (search) search.value = topSearch.value;
+    renderContracts();
+  });
 
   loadContracts();
 });

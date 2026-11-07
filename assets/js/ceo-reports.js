@@ -2,9 +2,11 @@ import {
   getContracts,
   getDashboardStats,
   getVendorSummary,
+  runRenewalReminders,
   setApiContext,
 } from "/assets/js/api-client.js";
 import { contractRef, downloadCsv, formatPaymentTerms, isRenewalDue, monitorLabel } from "/assets/js/contract-intel.js";
+import { printReport } from "/assets/js/report-print.js";
 import { renderStarRating, starRatingFromScore } from "/assets/js/star-rating.js";
 
 function formatPeso(v) {
@@ -147,73 +149,123 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function packStatusReport() {
-    return downloadCsv(
-      "contract-status-summary.csv",
-      ["contract_id", "title", "vendor", "status", "monitor", "value", "payment_terms", "start", "end"],
-      contracts.map((r) => [
-        contractRef(r),
-        r.contract_title,
-        r.vendor_name,
-        r.status,
-        monitorLabel(r),
-        r.contract_value,
-        formatPaymentTerms(r.payment_terms),
-        r.start_date,
-        r.end_date,
-      ]),
-    );
-  }
-  function packVendorReport() {
-    return downloadCsv(
-      "vendor-performance.csv",
-      ["vendor", "star_rating", "risk", "risk_score", "contracts", "value", "recommendations"],
-      vendors.map((v) => [
-        v.vendor_name,
-        starRatingFromScore(v.vendor_score ?? v.ai_score) ?? "",
-        v.risk,
-        v.risk_score,
-        v.contract_count,
-        v.total_value,
-        (v.recommendations || []).join(" | "),
-      ]),
-    );
-  }
-  function packRenewalReport() {
-    return downloadCsv(
-      "expiration-renewal-tracker.csv",
-      ["contract_id", "title", "vendor", "end_date", "days_until_end", "renewal_terms", "payment_terms"],
-      contracts.filter(isRenewalDue).map((r) => [
-        contractRef(r),
-        r.contract_title,
-        r.vendor_name,
-        r.end_date,
-        r.days_until_end,
-        r.renewal_terms,
-        formatPaymentTerms(r.payment_terms),
-      ]),
-    );
-  }
-  function packExecReport() {
-    return downloadCsv(
-      "executive-summary.csv",
-      ["metric", "value"],
-      [
+  // csv: machine-readable values; pdf: the same rows formatted for reading.
+  const reports = {
+    status: {
+      file: "contract-status-summary.csv",
+      title: "Contract Status Summary",
+      description: "Full breakdown of all contract statuses.",
+      csvHeaders: ["contract_id", "title", "vendor", "status", "monitor", "value", "payment_terms", "start", "end"],
+      labels: ["Contract ID", "Title", "Vendor", "Status", "Monitoring", "Value", "Payment Terms", "Start", "End"],
+      rows: (pdf) =>
+        contracts.map((r) => [
+          contractRef(r),
+          r.contract_title,
+          r.vendor_name,
+          r.status,
+          monitorLabel(r),
+          pdf ? formatPeso(r.contract_value) : r.contract_value,
+          formatPaymentTerms(r.payment_terms),
+          r.start_date,
+          r.end_date,
+        ]),
+    },
+    vendor: {
+      file: "vendor-performance.csv",
+      title: "Vendor Performance Report",
+      description: "Manual evaluation scores and rankings for all vendors.",
+      csvHeaders: ["vendor", "star_rating", "risk", "risk_score", "contracts", "value", "recommendations"],
+      labels: ["Vendor", "Star Rating", "Risk", "Risk Score", "Contracts", "Total Value", "Recommendations"],
+      rows: (pdf) =>
+        vendors.map((v) => {
+          const stars = starRatingFromScore(v.vendor_score ?? v.ai_score);
+          return [
+            v.vendor_name,
+            pdf ? (stars == null ? "Not rated" : `${stars} / 5`) : stars ?? "",
+            v.risk,
+            v.risk_score,
+            v.contract_count,
+            pdf ? formatPeso(v.total_value) : v.total_value,
+            (v.recommendations || []).join(pdf ? "; " : " | "),
+          ];
+        }),
+    },
+    renewal: {
+      file: "expiration-renewal-tracker.csv",
+      title: "Expiration & Renewal Tracker",
+      description: "Contracts subject for renewal or expiring soon.",
+      csvHeaders: ["contract_id", "title", "vendor", "end_date", "days_until_end", "renewal_terms", "payment_terms"],
+      labels: ["Contract ID", "Title", "Vendor", "End Date", "Days Left", "Renewal Terms", "Payment Terms"],
+      rows: () =>
+        contracts.filter(isRenewalDue).map((r) => [
+          contractRef(r),
+          r.contract_title,
+          r.vendor_name,
+          r.end_date,
+          r.days_until_end,
+          r.renewal_terms,
+          formatPaymentTerms(r.payment_terms),
+        ]),
+    },
+    exec: {
+      file: "executive-summary.csv",
+      title: "Executive Summary",
+      description: "High-level portfolio overview for executive review.",
+      csvHeaders: ["metric", "value"],
+      labels: ["Metric", "Value"],
+      rows: (pdf) => [
         ["Total contracts", ytd],
         ["Active", stats.active_contracts ?? ""],
         ["Pending", stats.pending ?? ""],
-        ["Expiring 30 days", stats.expiring_30_days ?? ""],
+        ["Expiring in 30 days", stats.expiring_30_days ?? ""],
         ["Archived / inactive", stats.archived_contracts ?? ""],
-        ["Avg vendor rating", scored.length ? starRatingFromScore(avgScore) : ""],
-        ["Renewal rate %", renewalRate],
+        ["Average contract value", pdf ? formatPeso(avgVal) : Math.round(avgVal)],
+        ["Average vendor rating", scored.length ? starRatingFromScore(avgScore) : ""],
+        [pdf ? "Renewal rate" : "Renewal rate %", pdf ? `${renewalRate}%` : renewalRate],
       ],
-    );
-  }
+    },
+  };
 
-  const downloads = document.querySelectorAll(".report-item .btn");
-  if (downloads[0]) downloads[0].addEventListener("click", packStatusReport);
-  if (downloads[1]) downloads[1].addEventListener("click", packVendorReport);
-  if (downloads[2]) downloads[2].addEventListener("click", packRenewalReport);
-  if (downloads[3]) downloads[3].addEventListener("click", packExecReport);
-  document.querySelector(".page-header .btn-primary")?.addEventListener("click", packExecReport);
+  const preparedBy = saved.name || saved.email || "";
+  const toSection = (rep) => ({ title: rep.title, description: rep.description, labels: rep.labels, rows: rep.rows(true) });
+
+  document.querySelectorAll("[data-report]").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const rep = reports[btn.getAttribute("data-report")];
+      if (!rep) return;
+      if (btn.getAttribute("data-format") === "pdf") {
+        printReport(rep.title, [toSection(rep)], { preparedBy });
+      } else {
+        downloadCsv(rep.file, rep.csvHeaders, rep.rows(false));
+      }
+    });
+  });
+  document.getElementById("export-full-report")?.addEventListener("click", () => {
+    printReport(
+      "Contract & Vendor Report",
+      ["exec", "status", "renewal", "vendor"].map((k) => toSection(reports[k])),
+      { preparedBy },
+    );
+  });
+
+  const remindBtn = document.getElementById("send-renewal-reminders");
+  remindBtn?.addEventListener("click", async () => {
+    if (!confirm("Send the renewal reminder emails that are due now? Reminders already sent are not sent again.")) return;
+    remindBtn.disabled = true;
+    try {
+      const res = await runRenewalReminders();
+      alert(
+        res?.skipped
+          ? res.skipped
+          : res?.sent
+            ? `Sent ${res.sent} renewal reminder(s) to vendors, managers, and the CEO.`
+            : "No renewal reminders are due right now.",
+      );
+    } catch (err) {
+      alert(err.message || "Could not send renewal reminders.");
+    } finally {
+      remindBtn.disabled = false;
+    }
+  });
 });

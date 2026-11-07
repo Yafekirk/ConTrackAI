@@ -220,7 +220,27 @@ function closeModal(id) {
   if (el) el.classList.remove("open");
 }
 
+function updateVendorRequestsBadges(pendingCount) {
+  const n = Number(pendingCount) || 0;
+  document.querySelectorAll("[data-vendor-requests-badge]").forEach((el) => {
+    el.textContent = String(n);
+    el.style.display = n > 0 ? "inline-flex" : "none";
+  });
+}
+
+async function refreshVendorRequestsBadge() {
+  try {
+    const res = await fetch("/api/vendor_requests.php?count=1", { credentials: "same-origin", headers: apiHeaders() });
+    if (!res.ok) return;
+    const data = await res.json();
+    updateVendorRequestsBadges(data?.pending);
+  } catch (_) {
+    /* the badge just stays hidden */
+  }
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
+  refreshVendorRequestsBadge();
   await refreshNotificationsFromApi();
   updateBadge();
   renderNotifications();

@@ -1,4 +1,10 @@
-import { getContracts, getDashboardStats, setApiContext } from "/assets/js/api-client.js";
+import {
+  getContracts,
+  getDashboardStats,
+  openContractPdfInNewTab,
+  postContractDecision,
+  setApiContext,
+} from "/assets/js/api-client.js";
 import { contractRef, bindCsvExport } from "/assets/js/contract-intel.js";
 
 const formatPeso = (value) =>
@@ -96,32 +102,133 @@ function renderTable(rows) {
     if (!btn) return;
     const id = btn.getAttribute("data-contract-id");
     const r = rows.find((x) => String(x.id) === id) || allRows.find((x) => String(x.id) === id);
-    if (!r) return;
-    const pill = statusPill(r);
-    const risk = riskFromValue(r.contract_value);
-    const setTxt = (elId, val) => {
-      const el = document.getElementById(elId);
-      if (el) el.textContent = val;
-    };
-    setTxt("d-id", contractRef(r));
-    setTxt("d-vendor", String(r.vendor_name ?? "—"));
-    setTxt("d-value", formatPeso(r.contract_value));
-    setTxt("d-start", r.start_date ? String(r.start_date) : "—");
-    setTxt("d-end", r.end_date ? String(r.end_date) : "—");
-    const st = document.getElementById("d-status");
-    if (st) st.innerHTML = `<span class="pill ${pill.cls}">${pill.label}</span>`;
-    const rk = document.getElementById("d-risk");
-    if (rk) rk.innerHTML = `<span class="pill pill-${risk}">${risk.toUpperCase()}</span>`;
-    setTxt("d-payment", r.payment_terms || "—");
-    setTxt("d-class", r.classification || "—");
-    const clauses = document.getElementById("d-clauses");
-    if (clauses) {
-      clauses.innerHTML = `<strong>Renewal:</strong> ${escapeHtml(r.renewal_terms || "—")}<br>
-        <strong>Penalties:</strong> ${escapeHtml(r.penalty_clause || "—")}<br>
-        <strong>Financial obligations:</strong> ${escapeHtml(r.financial_obligations || formatPeso(r.contract_value))}`;
-    }
-    globalThis.openModal?.("modal-detail");
+    if (r) openDetail(r);
   };
+}
+
+let detailRow = null;
+
+/** Renewal term length in months, read from the extracted renewal clause (defaults to 12). */
+function renewalMonths(terms) {
+  const m = String(terms || "").match(/(\d{1,2})\s*(month|year)/i);
+  if (!m) return 12;
+  const n = Number(m[1]);
+  return /year/i.test(m[2]) ? n * 12 : n;
+}
+
+function isoDate(d) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+/** Default renewal end date: one renewal term after the later of today and the current end date. */
+function suggestedRenewalEnd(r) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const end = r.end_date ? new Date(`${String(r.end_date).slice(0, 10)}T00:00:00`) : today;
+  const base = end > today ? end : today;
+  const next = new Date(base);
+  next.setMonth(next.getMonth() + renewalMonths(r.renewal_terms));
+  return isoDate(next);
+}
+
+function setupActions(r) {
+  const status = String(r.status || "").toLowerCase();
+  const canRenew = status === "approved" || status === "renegotiation";
+  const canRenegotiate = status === "approved";
+  const canTerminate = status === "approved" || status === "renegotiation";
+  const panel = document.getElementById("d-actions");
+  const show = (id, on) => {
+    const el = document.getElementById(id);
+    if (el) el.hidden = !on;
+  };
+  show("d-actions", canRenew || canTerminate);
+  show("d-renew", canRenew);
+  show("d-renew-row", canRenew);
+  show("d-renegotiate", canRenegotiate);
+  show("d-terminate", canTerminate);
+  if (!panel) return;
+  const hint = document.getElementById("d-actions-hint");
+  if (hint) {
+    hint.textContent =
+      status === "renegotiation"
+        ? "This contract is under renegotiation. Renew it with a new end date once terms are agreed, or terminate it."
+        : "Renew extends the end date. Renegotiate marks the contract FOR RENEWAL and asks the vendor for updated terms. Terminate ends it and archives it.";
+  }
+  const newEnd = document.getElementById("d-new-end");
+  if (newEnd) {
+    newEnd.value = suggestedRenewalEnd(r);
+    newEnd.min = isoDate(new Date(Date.now() + 86400000));
+  }
+  const notes = document.getElementById("d-ceo-notes");
+  if (notes) notes.value = "";
+  const msg = document.getElementById("d-action-msg");
+  if (msg) msg.textContent = "";
+}
+
+async function runAction(kind) {
+  const r = detailRow;
+  if (!r) return;
+  const notes = document.getElementById("d-ceo-notes")?.value.trim() || "";
+  const msg = document.getElementById("d-action-msg");
+  const say = (text) => {
+    if (msg) msg.textContent = text;
+  };
+  const payload = { id: r.id, ceo_notes: notes || null };
+  const ref = contractRef(r);
+  if (kind === "renew") {
+    const newEnd = document.getElementById("d-new-end")?.value || "";
+    if (!newEnd) return say("Choose the new end date first.");
+    if (!confirm(`Renew ${ref} until ${newEnd}?`)) return;
+    Object.assign(payload, { status: "renewed", new_end_date: newEnd });
+  } else if (kind === "renegotiate") {
+    if (!confirm(`Mark ${ref} for renegotiation? The vendor will be asked to submit updated terms.`)) return;
+    payload.status = "renegotiation";
+  } else {
+    if (!notes) return say("Add a reason in CEO notes before terminating.");
+    if (!confirm(`Terminate ${ref}? This ends the contract and archives it. It cannot be undone.`)) return;
+    payload.status = "terminated";
+  }
+  const buttons = ["d-renew", "d-renegotiate", "d-terminate"].map((id) => document.getElementById(id));
+  buttons.forEach((b) => b && (b.disabled = true));
+  say("");
+  try {
+    await postContractDecision(payload);
+    globalThis.closeModal?.("modal-detail");
+    await loadContracts();
+  } catch (e) {
+    say(e.message || "Could not save the action.");
+  } finally {
+    buttons.forEach((b) => b && (b.disabled = false));
+  }
+}
+
+function openDetail(r) {
+  detailRow = r;
+  const pill = statusPill(r);
+  const risk = riskFromValue(r.contract_value);
+  const setTxt = (elId, val) => {
+    const el = document.getElementById(elId);
+    if (el) el.textContent = val;
+  };
+  setTxt("d-id", contractRef(r));
+  setTxt("d-vendor", String(r.vendor_name ?? "—"));
+  setTxt("d-value", formatPeso(r.contract_value));
+  setTxt("d-start", r.start_date ? String(r.start_date) : "—");
+  setTxt("d-end", r.end_date ? String(r.end_date) : "—");
+  const st = document.getElementById("d-status");
+  if (st) st.innerHTML = `<span class="pill ${pill.cls}">${pill.label}</span>`;
+  const rk = document.getElementById("d-risk");
+  if (rk) rk.innerHTML = `<span class="pill pill-${risk}">${risk.toUpperCase()}</span>`;
+  setTxt("d-payment", r.payment_terms || "—");
+  setTxt("d-class", r.classification || "—");
+  const clauses = document.getElementById("d-clauses");
+  if (clauses) {
+    clauses.innerHTML = `<strong>Renewal:</strong> ${escapeHtml(r.renewal_terms || "—")}<br>
+      <strong>Penalties:</strong> ${escapeHtml(r.penalty_clause || "—")}<br>
+      <strong>Financial obligations:</strong> ${escapeHtml(r.financial_obligations || formatPeso(r.contract_value))}`;
+  }
+  setupActions(r);
+  globalThis.openModal?.("modal-detail");
 }
 
 function applyFilters() {
@@ -204,7 +311,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   const saved = JSON.parse(localStorage.getItem("contrack_user") || "{}");
   setApiContext({ role: saved.role || "ceo", userId: saved.id || null });
   bindCsvExport("export-contracts-csv", () => allRows, "ceo-all-contracts.csv");
+  document.getElementById("d-renew")?.addEventListener("click", () => runAction("renew"));
+  document.getElementById("d-renegotiate")?.addEventListener("click", () => runAction("renegotiate"));
+  document.getElementById("d-terminate")?.addEventListener("click", () => runAction("terminate"));
+  document.getElementById("d-open-pdf")?.addEventListener("click", async () => {
+    if (!detailRow) return;
+    try {
+      await openContractPdfInNewTab(detailRow.id);
+    } catch (e) {
+      alert(e.message || "Could not open PDF.");
+    }
+  });
+  document.querySelector(".filter-search")?.addEventListener("input", applyFilters);
+  document.querySelectorAll(".filter-select").forEach((el) => el.addEventListener("change", applyFilters));
+  await loadContracts();
+});
 
+async function loadContracts() {
   try {
     const [rowsRes, statsRes] = await Promise.allSettled([
       getContracts(),
@@ -221,6 +344,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (statNums[3]) statNums[3].textContent = String(stats.expired_approved ?? 0);
 
     const vendorSel = document.querySelectorAll(".filter-select")[2];
+    const pickedVendor = vendorSel?.value || "all";
     if (vendorSel) {
       const seen = new Map();
       allRows.forEach((r) => {
@@ -234,12 +358,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           .map(([id, name]) => `<option value="${escapeHtml(id)}">${escapeHtml(name)}</option>`)
           .join("");
       vendorSel.innerHTML = opts;
+      if (seen.has(pickedVendor)) vendorSel.value = pickedVendor;
     }
 
-    renderTable(allRows);
-
-    document.querySelector(".filter-search")?.addEventListener("input", applyFilters);
-    document.querySelectorAll(".filter-select").forEach((el) => el.addEventListener("change", applyFilters));
+    applyFilters();
   } catch (e) {
     console.error("All contracts:", e.message);
     const host = document.getElementById("ceo-contracts-table-body");
@@ -249,4 +371,4 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div></div>`;
     }
   }
-});
+}

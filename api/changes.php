@@ -9,8 +9,10 @@ declare(strict_types=1);
  */
 
 require_once __DIR__ . "/config.php";
+require_once __DIR__ . "/lib_renewal_reminders.php";
 
 $userId = require_user_id();
+contrack_maybe_run_daily_renewal_reminders();
 $isVendor = normalize_role(get_request_role()) === "vendor";
 
 $contractCols = "id,status,reviewed_at,manager_reviewed_at,recommended_action,is_archived,original_pdf_stored";

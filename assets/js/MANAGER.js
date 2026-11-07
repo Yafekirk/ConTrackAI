@@ -439,3 +439,16 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 });
 
+
+
+// Pages with their own table filter (All Contracts, My Submissions) handle the top search as you type;
+// everywhere else, Enter opens All Contracts filtered by the typed text.
+document.addEventListener("keydown", (e) => {
+  const input = e.target;
+  if (e.key !== "Enter" || !input?.classList?.contains("top-search")) return;
+  if (document.querySelector(".filter-bar .filter-search")) return;
+  const q = input.value.trim();
+  if (!q) return;
+  window.location.href = `/pages/Manager/ManagerContracts.html?q=${encodeURIComponent(q)}`;
+});
+

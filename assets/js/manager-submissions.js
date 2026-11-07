@@ -52,15 +52,52 @@ function updateStats() {
   const pendingCeo = mine.filter((r) => String(r.status).toLowerCase() === "pending").length;
   const approved = mine.filter((r) => String(r.status).toLowerCase() === "approved").length;
   const rework = mine.filter((r) =>
-    ["rejected", "renegotiation", "terminated"].includes(String(r.status).toLowerCase()),
+    ["modification", "renegotiation"].includes(String(r.status).toLowerCase()),
   ).length;
   if (statNums[0]) statNums[0].textContent = String(total);
   if (statNums[1]) statNums[1].textContent = String(approved);
   if (statNums[2]) statNums[2].textContent = String(pendingCeo);
   if (statNums[3]) statNums[3].textContent = String(rework);
+}
 
-  const meta = document.querySelector("#submissions-body")?.closest(".table-card")?.querySelector(".t-showing");
-  if (meta) meta.textContent = `${pending.length + mine.length} items loaded`;
+function matchesCeoStatus(r, pick) {
+  const s = String(r.status || "").toLowerCase();
+  if (pick === "Approved") return s === "approved";
+  if (pick === "Pending") return s === "pending";
+  if (pick === "Rejected") return s === "rejected" || s === "terminated";
+  if (pick === "Revision") return s === "modification" || s === "renegotiation";
+  return true;
+}
+
+/** Date filter on the time the row last moved: the manager review, else the vendor upload. */
+function matchesDate(r, pick) {
+  if (!pick || pick === "All Dates") return true;
+  const when = new Date(r.manager_reviewed_at || r.uploaded_at || 0);
+  if (Number.isNaN(when.getTime()) || when.getTime() === 0) return false;
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  if (pick === "This Week") start.setDate(start.getDate() - start.getDay());
+  if (pick === "This Month") start.setDate(1);
+  return when >= start;
+}
+
+function filteredQueue(rows) {
+  const q = (document.querySelector(".filter-search")?.value || "").trim().toLowerCase();
+  const sels = document.querySelectorAll(".filter-bar .filter-select");
+  const text = (i) => sels[i]?.options[sels[i].selectedIndex]?.text?.trim() || "";
+  const statusPick = text(0);
+  const datePick = text(1);
+  return rows.filter((r) => {
+    if (q) {
+      const status = String(r.status || "").toLowerCase();
+      const hay = [contractRef(r), r.id, r.contract_title, r.vendor_name, status, status === "modification" ? "modify" : ""]
+        .map((x) => String(x ?? "").toLowerCase())
+        .join(" ");
+      if (!hay.includes(q)) return false;
+    }
+    if (statusPick && statusPick !== "All CEO Status" && !matchesCeoStatus(r, statusPick)) return false;
+    return matchesDate(r, datePick);
+  });
 }
 
 function renderQueue() {
@@ -68,7 +105,7 @@ function renderQueue() {
   if (!body) return;
 
   const seen = new Set();
-  const rows = [...pending, ...mine]
+  const allQueue = [...pending, ...mine]
     .filter((r) => {
       const id = String(r.id);
       if (!id || seen.has(id)) return false;
@@ -80,11 +117,21 @@ function renderQueue() {
       const tb = new Date(b.uploaded_at || b.manager_reviewed_at || 0).getTime();
       return tb - ta;
     });
+  const rows = filteredQueue(allQueue);
+  const meta = body.closest(".table-card")?.querySelector(".t-showing");
+  if (meta) meta.textContent = `Showing ${rows.length} of ${allQueue.length} submissions`;
 
-  if (rows.length === 0) {
+  if (allQueue.length === 0) {
     body.innerHTML = `<div style="padding:60px 20px;text-align:center;">
       <div style="font-size:14px;font-weight:600;color:var(--gray-500);margin-bottom:6px;">No submissions yet</div>
       <div style="font-size:12px;color:var(--gray-400);">Vendor contracts appear here after submission.</div>
+    </div>`;
+    return;
+  }
+  if (rows.length === 0) {
+    body.innerHTML = `<div style="padding:48px 20px;text-align:center;">
+      <div style="font-size:14px;font-weight:600;color:var(--gray-500);margin-bottom:6px;">No submissions match the current filters</div>
+      <div style="font-size:12px;color:var(--gray-400);">Clear the search or choose different filters.</div>
     </div>`;
     return;
   }
@@ -251,4 +298,15 @@ async function reload() {
   renderQueue();
 }
 
-document.addEventListener("DOMContentLoaded", () => reload());
+document.addEventListener("DOMContentLoaded", () => {
+  const search = document.querySelector(".filter-search");
+  search?.addEventListener("input", renderQueue);
+  document.querySelectorAll(".filter-bar .filter-select").forEach((el) => el.addEventListener("change", renderQueue));
+  // The top-bar search box feeds the same filter as the search field above the table.
+  const topSearch = document.querySelector(".top-search");
+  topSearch?.addEventListener("input", () => {
+    if (search) search.value = topSearch.value;
+    renderQueue();
+  });
+  reload();
+});

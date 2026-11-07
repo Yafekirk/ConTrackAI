@@ -46,6 +46,8 @@ function contrack_send_vendor_approval_request(array $vendor, string $token): in
         $tokenEnc = rawurlencode($token);
         $lines[] = "Approve: {$base}/api/vendor_approval.php?token={$tokenEnc}&decision=approve";
         $lines[] = "Reject:  {$base}/api/vendor_approval.php?token={$tokenEnc}&decision=reject";
+        $lines[] = "";
+        $lines[] = "You can also decide from Vendor Requests in the CEO panel: {$base}/pages/CEO/CEO_VendorRequests.html";
     } else {
         error_log("vendor approval email sent without links: set CONTRACK_PUBLIC_URL");
         $lines[] = "Approval links are unavailable because CONTRACK_PUBLIC_URL is not set on the server.";

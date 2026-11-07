@@ -45,8 +45,23 @@
       <div class="detail-row"><div class="detail-key">CLASSIFICATION</div><div class="detail-val" id="d-class">—</div></div>
       <div class="detail-section-title">AI-EXTRACTED CLAUSES</div>
       <div class="detail-clause" id="d-clauses">Contract clause data will appear here once connected to the AI extraction module.</div>
+      <div id="d-actions" hidden>
+        <div class="detail-section-title">CONTRACT ACTIONS</div>
+        <div id="d-actions-hint" style="font-size:12px;color:var(--gray-500);margin-bottom:10px;"></div>
+        <div id="d-renew-row" style="margin-bottom:10px;">
+          <label class="fgl" for="d-new-end">NEW END DATE (FOR RENEWAL)</label>
+          <input type="date" id="d-new-end" class="fgi">
+        </div>
+        <label class="fgl" for="d-ceo-notes">CEO NOTES</label>
+        <textarea id="d-ceo-notes" class="fgi" maxlength="4000" style="height:70px;resize:none;" placeholder="Required when terminating. Shared with the vendor and the reviewing manager."></textarea>
+        <div id="d-action-msg" style="font-size:12px;margin-top:8px;color:var(--red);" role="status"></div>
+      </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="flex-wrap:wrap;">
+      <button type="button" class="btn btn-outline" id="d-open-pdf">View PDF</button>
+      <button type="button" class="reject-btn" id="d-terminate" hidden>Terminate</button>
+      <button type="button" class="btn btn-ghost" id="d-renegotiate" hidden>Renegotiate</button>
+      <button type="button" class="btn btn-success" id="d-renew" hidden>Renew</button>
       <button class="btn btn-ghost" onclick="closeModal('modal-detail')">Close</button>
     </div>
   </div>
@@ -80,6 +95,7 @@
         <a class="sb-item" href="/pages/CEO/CEO_Approvals.html"><svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Approvals<span class="sb-badge" style="display:none;">0</span></a>
         <a class="sb-item active" href="/pages/CEO/CEO_AllContracts.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>All Contracts</a>
         <a class="sb-item" href="/pages/CEO/CEO_Vendors.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Vendor Overview</a>
+        <a class="sb-item" href="/pages/CEO/CEO_VendorRequests.html"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>Vendor Requests<span class="sb-badge" data-vendor-requests-badge style="display:none">0</span></a>
         <a class="sb-item" href="/pages/CEO/CEO_Reports.html"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports &amp; Analytics</a>
       </div>
       <div class="sb-section">
@@ -102,7 +118,7 @@
       <div class="page-header">
         <div>
           <div class="page-title">All Contracts</div>
-          <div class="page-sub">Complete contract repository across all vendors and departments.</div>
+          <div class="page-sub">Complete contract repository across all vendors and departments. Open a contract to renew, renegotiate, or terminate it.</div>
         </div>
         <button class="btn btn-ghost btn-sm" id="export-contracts-csv" type="button">
           <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>

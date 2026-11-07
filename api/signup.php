@@ -100,7 +100,7 @@ if (contrack_send_vendor_approval_request($user, $approvalToken) === 0) {
 notify_role_users(
     "ceo",
     "New vendor awaiting approval",
-    "{$companyName} ({$email}) signed up and needs your approval before they can sign in."
+    "{$companyName} ({$email}) signed up and needs your approval before they can sign in. Open Vendor Requests to approve or reject."
 );
 
 json_response([

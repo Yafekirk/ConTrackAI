@@ -27,6 +27,14 @@ function contracts_input_with_id(): array
     return $input;
 }
 
+/** A real calendar date as YYYY-MM-DD, or null for blanks and impossible dates such as 2026-02-30. */
+function contracts_iso_date(?string $raw): ?string
+{
+    $raw = substr(trim((string)$raw), 0, 10);
+    $date = DateTimeImmutable::createFromFormat("!Y-m-d", $raw);
+    return ($date !== false && $date->format("Y-m-d") === $raw) ? $raw : null;
+}
+
 /** "CODE · " prefix for alert messages, empty when the contract has no code yet. */
 function contracts_code_label(array $row): string
 {
@@ -805,18 +813,26 @@ if ($view === "decision") {
         json_error("id and status are required");
     }
     $status = strtolower((string)$input["status"]);
-    if (!in_array($status, ["approved", "rejected", "terminated", "renegotiation"], true)) {
+    // "renewed" is a CEO action, not a stored status: the contract stays approved with a later end date.
+    if (!in_array($status, ["approved", "rejected", "terminated", "renegotiation", "renewed"], true)) {
         json_error("Invalid decision status");
     }
 
     $contractId = urlencode((string)$input["id"]);
-    $current = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=id,status,manager_reviewed_at&limit=1");
+    $current = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=id,status,manager_reviewed_at,end_date&limit=1");
     $currentRow = ($current["ok"] && is_array($current["data"][0] ?? null)) ? $current["data"][0] : json_error("Contract not found", 404);
     $currentStatus = strtolower((string)($currentRow["status"] ?? ""));
-    // Approve/reject belongs to the pending queue; terminate/renegotiate may also act on a live contract.
-    $decidableFrom = in_array($status, ["terminated", "renegotiation"], true) ? ["pending", "approved"] : ["pending"];
+    // Approve/reject belongs to the pending queue; terminate/renegotiate/renew act on a live contract.
+    $decidableFrom = match ($status) {
+        "terminated" => ["pending", "approved", "renegotiation"],
+        "renegotiation" => ["pending", "approved"],
+        "renewed" => ["approved", "renegotiation"],
+        default => ["pending"],
+    };
     if (!in_array($currentStatus, $decidableFrom, true)) {
-        json_error("This contract is already marked {$currentStatus} and cannot be decided again.", 409);
+        json_error($status === "renewed"
+            ? "Only approved contracts or contracts under renegotiation can be renewed."
+            : "This contract is already marked {$currentStatus} and cannot be decided again.", 409);
     }
     if (in_array($status, ["approved", "rejected"], true) && empty($currentRow["manager_reviewed_at"])) {
         json_error("A manager must review this contract before a CEO decision.", 409);
@@ -824,18 +840,52 @@ if ($view === "decision") {
 
     $ceoNotesRaw = $input["ceo_notes"] ?? null;
     $ceoNotes = is_scalar($ceoNotesRaw) ? substr(trim((string)$ceoNotesRaw), 0, 4000) : "";
-    $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=in.(" . implode(",", $decidableFrom) . ")", [
-        "status" => $status,
+    if ($status === "terminated" && $ceoNotes === "") {
+        json_error("Add a reason before terminating this contract.");
+    }
+    $patch = [
+        "status" => $status === "renewed" ? "approved" : $status,
         "ceo_notes" => $ceoNotes === "" ? null : $ceoNotes,
         "reviewed_at" => gmdate("c"),
         "reviewed_by" => "ceo_user:" . (string)(int)$ceoId,
-    ]);
+    ];
+    $newEndDate = null;
+    if ($status === "renewed") {
+        $newEndDate = contracts_iso_date(is_scalar($input["new_end_date"] ?? null) ? (string)$input["new_end_date"] : null);
+        if ($newEndDate === null) {
+            json_error("Choose a valid new end date for the renewal.");
+        }
+        $currentEnd = contracts_iso_date(isset($currentRow["end_date"]) ? (string)$currentRow["end_date"] : null);
+        if ($newEndDate <= date("Y-m-d") || ($currentEnd !== null && $newEndDate <= $currentEnd)) {
+            json_error("The new end date must be later than today and later than the current end date.");
+        }
+        $patch += ["end_date" => $newEndDate, "is_archived" => false, "archived_at" => null];
+    }
+
+    $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=in.(" . implode(",", $decidableFrom) . ")", $patch);
+    if ($result["ok"] && is_array($result["data"]) && $result["data"] === []) {
+        json_error("This contract changed while you were deciding. Refresh and try again.", 409);
+    }
     if ($result["ok"]) {
-        audit_log_event("contract_decision", ["contract_id" => (string)$input["id"], "decision" => $status], (int)$ceoId);
+        audit_log_event(
+            "contract_decision",
+            array_filter(["contract_id" => (string)$input["id"], "decision" => $status, "new_end_date" => $newEndDate]),
+            (int)$ceoId
+        );
         $decided = is_array($result["data"][0] ?? null) ? $result["data"][0] : [];
-        $title = (string)($decided["contract_title"] ?? "Contract");
-        create_user_alert((int)($decided["vendor_id"] ?? 0), "CEO decision: " . strtoupper($status), "{$title} was marked {$status} by the CEO.", "contract", true);
-        create_user_alert((int)($decided["manager_reviewed_by"] ?? 0), "CEO decided on a contract you reviewed", "{$title} was marked {$status}.", "contract", true);
+        $title = contracts_code_label($decided) . (string)($decided["contract_title"] ?? "Contract");
+        $reason = $ceoNotes !== "" ? " CEO notes: {$ceoNotes}" : "";
+        [$vendorTitle, $vendorMessage] = match ($status) {
+            "renewed" => ["Contract renewed", "{$title} was renewed by the CEO. New end date: {$newEndDate}.{$reason}"],
+            "terminated" => ["Contract terminated", "{$title} was terminated by the CEO.{$reason}"],
+            "renegotiation" => [
+                "Contract marked for renegotiation",
+                "{$title} is subject for renewal. The CEO asked to renegotiate its terms; submit the updated contract for review.{$reason}",
+            ],
+            default => ["CEO decision: " . strtoupper($status), "{$title} was marked {$status} by the CEO.{$reason}"],
+        };
+        create_user_alert((int)($decided["vendor_id"] ?? 0), $vendorTitle, $vendorMessage, "contract", true);
+        create_user_alert((int)($decided["manager_reviewed_by"] ?? 0), "CEO decided on a contract you reviewed", "{$title}: {$vendorTitle}.", "contract", true);
     }
     json_result($result, "Supabase request failed", ["ok" => true]);
 }

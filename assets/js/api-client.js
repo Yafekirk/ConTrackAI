@@ -218,6 +218,21 @@ export async function postContractDecision(payload) {
   });
 }
 
+export async function getVendorRequests() {
+  return apiRequest("/vendor_requests.php");
+}
+
+export async function decideVendorRequest(id, decision) {
+  return apiRequest("/vendor_requests.php", {
+    method: "POST",
+    body: JSON.stringify({ id, decision }),
+  });
+}
+
+export async function runRenewalReminders() {
+  return apiRequest("/renewal_reminders.php", { method: "POST", body: "{}" });
+}
+
 export async function getAlerts(limit = 50) {
   return apiRequest(`/alerts.php?limit=${encodeURIComponent(String(limit))}`);
 }
