@@ -18,12 +18,15 @@ if ($email === "" || $password === "") {
     json_error("Email and password are required");
 }
 
-login_guard_reject_if_server_locked($email);
-
-$result = supabase_request(
-    "GET",
-    "users?email=eq." . urlencode($email) . "&select=id,name,company_name,email,role,password,is_disabled,approval_status,last_login_at,last_seen_at&limit=1"
-);
+// The account lookup runs alongside the lock checks; its result is only used once no lock applies.
+// Terms status is a separate query so a database without the terms columns still signs in.
+$lookups = login_guard_reject_if_server_locked($email, [
+    "user" => ["GET", "users?email=eq." . urlencode($email) . "&select=id,name,company_name,email,role,password,is_disabled,approval_status,last_login_at,last_seen_at&limit=1"],
+    "terms" => ["GET", "users?email=eq." . urlencode($email) . "&select=terms_accepted_at&limit=1"],
+]);
+$result = $lookups["user"];
+$termsRow = ($lookups["terms"]["ok"] ?? false) && is_array($lookups["terms"]["data"] ?? null) ? ($lookups["terms"]["data"][0] ?? null) : null;
+$termsAccepted = is_array($termsRow) && is_string($termsRow["terms_accepted_at"] ?? null) && $termsRow["terms_accepted_at"] !== "";
 
 if (!$result["ok"]) {
     $hint = $result["error"] ?? null;
@@ -72,13 +75,17 @@ if ($approvalStatus !== "approved") {
 // Auto-upgrade legacy plain text passwords (or outdated hashes) on successful login.
 $now = gmdate("c");
 $idEnc = urlencode((string)$user["id"]);
+$writes = ["seen" => ["PATCH", "users?id=eq.{$idEnc}", ["last_login_at" => $now, "last_seen_at" => $now]]];
 if ($needsUpgrade) {
-    supabase_request("PATCH", "users?id=eq.{$idEnc}", ["password" => password_hash($password, PASSWORD_DEFAULT)]);
+    $writes["upgrade"] = ["PATCH", "users?id=eq.{$idEnc}", ["password" => password_hash($password, PASSWORD_DEFAULT)]];
 }
-supabase_request("PATCH", "users?id=eq.{$idEnc}", ["last_login_at" => $now, "last_seen_at" => $now]);
 
 unset($user["password"], $user["approval_status"]);
 login_guard_clear();
 contrack_start_authenticated_session($user);
-audit_log_event("login_success", ["email" => $user["email"] ?? $email], (int)$user["id"]);
-json_response(["user" => $user]);
+$writes["audit"] = audit_log_request("login_success", ["email" => $user["email"] ?? $email], (int)$user["id"]);
+$written = supabase_request_many($writes);
+if (!$written["audit"]["ok"]) {
+    error_log("audit_logs insert failed: " . (string)($written["audit"]["raw"] ?? $written["audit"]["error"] ?? ""));
+}
+json_response(["user" => $user] + ($termsAccepted ? ["terms_accepted" => true] : []));

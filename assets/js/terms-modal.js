@@ -186,7 +186,8 @@ export function showTerms() {
  * Resolves true when the signed-in account has already agreed, otherwise asks.
  * A failed status read resolves true so a backend hiccup cannot lock anyone out.
  */
-export async function ensureTermsAccepted() {
+export async function ensureTermsAccepted(knownAccepted = false) {
+  if (knownAccepted === true) return true;
   let status = null;
   try {
     status = await getTermsStatus();

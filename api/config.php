@@ -634,6 +634,25 @@ function supabase_configure_handle($ch, string $method, string $path, ?array $pa
     if ($payload !== null) {
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
     }
+
+    // Parallel calls wait for the open HTTP/2 connection and ride on it instead of each opening a new one.
+    curl_setopt($ch, CURLOPT_PIPEWAIT, true);
+}
+
+/**
+ * One multi handle per PHP request. Its connection pool outlives each call, so every Supabase call of the
+ * request (single or parallel) shares one HTTP/2 connection and only the first pays for the TLS handshake.
+ */
+function supabase_multi_handle()
+{
+    static $mh = null;
+    if ($mh === null) {
+        $mh = curl_multi_init();
+        if (defined("CURLMOPT_PIPELINING") && defined("CURLPIPE_MULTIPLEX")) {
+            curl_multi_setopt($mh, CURLMOPT_PIPELINING, CURLPIPE_MULTIPLEX);
+        }
+    }
+    return $mh;
 }
 
 function supabase_curl_missing(): array
@@ -651,9 +670,11 @@ function supabase_request(string $method, string $path, ?array $payload = null):
     if (!function_exists("curl_init")) {
         return supabase_curl_missing();
     }
+    if (function_exists("curl_multi_init")) {
+        return supabase_request_many(["single" => [$method, $path, $payload]])["single"];
+    }
 
-    // One handle per PHP request: curl keeps the HTTPS connection to Supabase open between calls,
-    // so only the first call pays for the TCP + TLS handshake.
+    // Without curl_multi: one handle per PHP request keeps the HTTPS connection open between calls.
     static $ch = null;
     if ($ch === null) {
         $ch = curl_init();
@@ -686,7 +707,7 @@ function supabase_request_many(array $requests): array
         return $out;
     }
 
-    $mh = curl_multi_init();
+    $mh = supabase_multi_handle();
     $handles = [];
     foreach ($requests as $key => $req) {
         $ch = curl_init();
@@ -695,26 +716,38 @@ function supabase_request_many(array $requests): array
         $handles[$key] = $ch;
     }
 
+    $codes = [];
     do {
         $status = curl_multi_exec($mh, $running);
+        while (($info = curl_multi_info_read($mh)) !== false) {
+            $codes[spl_object_id($info["handle"])] = (int)$info["result"];
+        }
         if ($running > 0) {
             curl_multi_select($mh, 1.0);
         }
     } while ($running > 0 && $status === CURLM_OK);
 
-    $out = [];
+    // Detach every handle before finishing: finishing can log an error, which makes its own Supabase call.
+    $collected = [];
     foreach ($handles as $key => $ch) {
-        $raw = curl_multi_getcontent($ch);
-        $httpStatus = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $code = $codes[spl_object_id($ch)] ?? 0;
         $error = (string)curl_error($ch);
+        if ($error === "" && $code !== 0) {
+            $error = curl_strerror($code);
+        }
+        $httpStatus = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
         if ($error === "" && $httpStatus === 0) {
             $error = "request did not complete";
         }
-        $out[$key] = supabase_finish_response((string)$requests[$key][0], (string)$requests[$key][1], $raw, $httpStatus, $error, $requests[$key][2] ?? null);
+        $collected[$key] = [curl_multi_getcontent($ch), $httpStatus, $error];
         curl_multi_remove_handle($mh, $ch);
         curl_close($ch);
     }
-    curl_multi_close($mh);
+
+    $out = [];
+    foreach ($collected as $key => [$raw, $httpStatus, $error]) {
+        $out[$key] = supabase_finish_response((string)$requests[$key][0], (string)$requests[$key][1], $raw, $httpStatus, $error, $requests[$key][2] ?? null);
+    }
     return $out;
 }
 
@@ -821,17 +854,23 @@ function contrack_enforce_same_origin(): void
  */
 function audit_log_event(string $event_type, array $details = [], ?int $actor_user_id = null): void
 {
-    $payload = [[
+    [, $path, $payload] = audit_log_request($event_type, $details, $actor_user_id);
+    $result = supabase_request("POST", $path, $payload);
+    if (!$result["ok"]) {
+        error_log("audit_logs insert failed: " . (string)($result["raw"] ?? $result["error"] ?? ""));
+    }
+}
+
+/** The audit_logs insert as a [method, path, payload] request, for batching with supabase_request_many(). */
+function audit_log_request(string $event_type, array $details = [], ?int $actor_user_id = null): array
+{
+    return ["POST", "audit_logs", [[
         "event_type" => $event_type,
         "details" => $details,
         "actor_user_id" => $actor_user_id,
         "ip_address" => client_ip(),
         "created_at" => gmdate("c"),
-    ]];
-    $result = supabase_request("POST", "audit_logs", $payload);
-    if (!$result["ok"]) {
-        error_log("audit_logs insert failed: " . (string)($result["raw"] ?? $result["error"] ?? ""));
-    }
+    ]]];
 }
 
 /**

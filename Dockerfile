@@ -23,8 +23,9 @@ ENV CONTRACK_HTTPS=true
 ENV CONTRACK_TRUST_PROXY=true
 # php -S serves one request at a time by default, so a single contract upload (Python NLP) or a slow
 # Supabase call froze the site for everyone. Workers let requests run side by side. Each worker is a
-# separate PHP process (~20-30 MB); raise this on instances with more memory.
-ENV PHP_CLI_SERVER_WORKERS=4
+# separate PHP process (~20-30 MB); raise this on instances with more memory. A dashboard opens with about
+# 8 API calls at once, so fewer workers than that makes them queue.
+ENV PHP_CLI_SERVER_WORKERS=8
 
 EXPOSE 10000
 # router.php hides .git, sql, scripts, stored PDFs and other non-public paths from the built-in server.

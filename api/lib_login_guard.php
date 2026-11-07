@@ -13,23 +13,31 @@ const LOGIN_GUARD_IP_LOCK_AFTER = 30;
 
 /**
  * Seconds left on a server-side lock for this email or the caller's IP (0 when not locked).
- * A lookup failure never blocks a login.
+ * A lookup failure never blocks a login. $alongside requests run in the same parallel batch and their
+ * results are handed back through $alongsideResults, so the caller's own lookups cost no extra round trip.
  */
-function login_guard_server_wait(string $email): int
+function login_guard_server_wait(string $email, array $alongside = [], ?array &$alongsideResults = null): int
 {
     $since = rawurlencode(gmdate("c", time() - LOGIN_GUARD_WINDOW_SECONDS));
     $base = "audit_logs?event_type=eq.login_failed&created_at=gte.{$since}&select=created_at&order=created_at.desc";
     $checks = [];
     if ($email !== "") {
-        $checks[] = [LOGIN_GUARD_EMAIL_LOCK_AFTER, $base . "&details-%3E%3Eemail=eq." . rawurlencode($email)];
+        $checks["guard_email"] = [LOGIN_GUARD_EMAIL_LOCK_AFTER, $base . "&details-%3E%3Eemail=eq." . rawurlencode($email)];
     }
     $ip = client_ip();
     if ($ip !== null && $ip !== "") {
-        $checks[] = [LOGIN_GUARD_IP_LOCK_AFTER, $base . "&ip_address=eq." . rawurlencode($ip)];
+        $checks["guard_ip"] = [LOGIN_GUARD_IP_LOCK_AFTER, $base . "&ip_address=eq." . rawurlencode($ip)];
     }
+    $batch = $alongside;
+    foreach ($checks as $key => [$limit, $path]) {
+        $batch[$key] = ["GET", $path . "&limit={$limit}"];
+    }
+    $results = supabase_request_many($batch);
+    $alongsideResults = array_intersect_key($results, $alongside);
+
     $wait = 0;
-    foreach ($checks as [$limit, $path]) {
-        $result = supabase_request("GET", $path . "&limit={$limit}");
+    foreach ($checks as $key => [$limit]) {
+        $result = $results[$key];
         if (!$result["ok"] || !is_array($result["data"]) || count($result["data"]) < $limit) {
             continue;
         }
@@ -42,9 +50,10 @@ function login_guard_server_wait(string $email): int
     return max(0, $wait);
 }
 
-function login_guard_reject_if_server_locked(string $email): void
+/** Answer 429 when the server-side lock is on; otherwise return the results of the $alongside requests. */
+function login_guard_reject_if_server_locked(string $email, array $alongside = []): array
 {
-    $wait = login_guard_server_wait($email);
+    $wait = login_guard_server_wait($email, $alongside, $alongsideResults);
     if ($wait > 0) {
         json_response([
             "fails" => (int)($_SESSION["login_fail_count"] ?? 0),
@@ -53,6 +62,7 @@ function login_guard_reject_if_server_locked(string $email): void
             "forgot" => false,
         ], 429);
     }
+    return $alongsideResults ?? [];
 }
 
 function login_guard_payload(): array

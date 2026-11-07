@@ -175,7 +175,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setApiContext({ role: userSession.role, userId: userSession.id });
 
       // Credentials are valid; the agreement is the last gate before the portal.
-      if (!(await ensureTermsAccepted())) {
+      if (!(await ensureTermsAccepted(payload.terms_accepted === true))) {
         await endSession();
         passwordInput.value = "";
         showNotice(TERMS_DECLINED_NOTICE);
