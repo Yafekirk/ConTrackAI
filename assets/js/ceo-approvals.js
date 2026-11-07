@@ -71,11 +71,6 @@ function renderList(filterRisk) {
 
   const sbBadge = document.getElementById("ceo-approvals-badge");
   if (sbBadge) sbBadge.textContent = String(queue.length);
-  const topNotif = document.getElementById("notif-badge");
-  if (topNotif) {
-    topNotif.textContent = String(queue.length);
-    topNotif.style.display = queue.length ? "flex" : "none";
-  }
 
   if (badge) badge.textContent = `${list.length} Pending`;
 

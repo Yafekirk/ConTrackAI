@@ -37,6 +37,35 @@ function getNotifIcon(type) {
   return icons[type] || icons.info;
 }
 
+// Status/renewal notices are rebuilt from live data on every load and have no stored read flag,
+// so the ones the user opened or cleared are remembered here (per user, newest 500).
+function notifReadKey() {
+  try {
+    const u = JSON.parse(localStorage.getItem("contrack_user") || "{}");
+    return `contrack_notif_read_${u.id || "anon"}`;
+  } catch (_) {
+    return "contrack_notif_read_anon";
+  }
+}
+
+function loadReadNotifIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(notifReadKey()) || "[]").map(String));
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function rememberReadNotifIds(ids) {
+  const set = loadReadNotifIds();
+  ids.forEach((id) => set.add(String(id)));
+  try {
+    localStorage.setItem(notifReadKey(), JSON.stringify([...set].slice(-500)));
+  } catch (_) {
+    /* storage full or blocked: the notice just shows as unread again */
+  }
+}
+
 function mapContractsToNotifications(rows) {
   if (!Array.isArray(rows)) return [];
   return rows.slice(0, 25).map((r) => {
@@ -46,7 +75,8 @@ function mapContractsToNotifications(rows) {
     if (st === "approved") type = "success";
     if (st === "rejected") type = "error";
     return {
-      id: r.id,
+      // The status is part of the id so a later status change shows as a new notice.
+      id: `status-${r.id}-${st}`,
       type,
       title: r.contract_title || "Contract",
       desc: `Status: ${String(r.monitor_status || st).toUpperCase()}`,
@@ -103,6 +133,10 @@ async function refreshVendorNotifications() {
     }));
     vendorNotifData = [...alertNotes, ...renewalNotes, ...statusNotes.filter((n) => !n.archived)];
     vendorArchivedData = statusNotes.filter((n) => n.archived);
+    const read = loadReadNotifIds();
+    vendorNotifData.forEach((n) => {
+      if (!n.alertId && read.has(String(n.id))) n.unread = false;
+    });
   } catch (e) {
     console.error(e);
     vendorNotifData = [];
@@ -197,6 +231,7 @@ globalThis.markRead = function markRead(id) {
   if (!n || !n.unread) return;
   n.unread = false;
   if (n.alertId) markAlertRead(n.alertId).catch(() => {});
+  else rememberReadNotifIds([n.id]);
   updateVendorBadge();
   renderVendorNotifications(vendorNotifActiveFilter);
 };
@@ -207,6 +242,7 @@ globalThis.markAllRead = function markAllRead() {
     n.unread = false;
   });
   if (hadStoredAlerts) markAllAlertsRead().catch(() => {});
+  rememberReadNotifIds(vendorNotifData.filter((n) => !n.alertId).map((n) => n.id));
   updateVendorBadge();
   renderVendorNotifications(vendorNotifActiveFilter);
 };

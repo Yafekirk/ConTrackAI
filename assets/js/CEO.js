@@ -32,6 +32,35 @@ function updateApprovalsSidebarBadges(pendingCount) {
   });
 }
 
+// Pending/renewal notices are rebuilt from live data on every load and have no stored read flag,
+// so the ones the user opened or cleared are remembered here (per user, newest 500).
+function notifReadKey() {
+  try {
+    const u = JSON.parse(localStorage.getItem("contrack_user") || "{}");
+    return `contrack_notif_read_${u.id || "anon"}`;
+  } catch (_) {
+    return "contrack_notif_read_anon";
+  }
+}
+
+function loadReadNotifIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(notifReadKey()) || "[]").map(String));
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function rememberReadNotifIds(ids) {
+  const set = loadReadNotifIds();
+  ids.forEach((id) => set.add(String(id)));
+  try {
+    localStorage.setItem(notifReadKey(), JSON.stringify([...set].slice(-500)));
+  } catch (_) {
+    /* storage full or blocked: the notice just shows as unread again */
+  }
+}
+
 async function fetchJson(url) {
   const res = await fetch(url, { credentials: "same-origin", headers: apiHeaders() });
   if (!res.ok) return [];
@@ -102,6 +131,10 @@ async function refreshNotificationsFromApi() {
       }));
     window.__ceoArchivedNotifs = archivedNotes;
     notifications = [...alertNotes, ...renewalNotes, ...pendingNotes];
+    const read = loadReadNotifIds();
+    notifications.forEach((n) => {
+      if (!n.alertId && read.has(String(n.id))) n.unread = false;
+    });
   } catch (_) {
     notifications = [];
     updateApprovalsSidebarBadges(0);
@@ -187,6 +220,7 @@ function readNotif(id) {
   if (!n || !n.unread) return;
   n.unread = false;
   if (n.alertId) patchAlerts({ id: n.alertId, status: "read" });
+  else rememberReadNotifIds([n.id]);
   updateBadge();
   renderNotifications();
 }
@@ -197,6 +231,7 @@ function markAllRead() {
     n.unread = false;
   });
   if (hadStoredAlerts) patchAlerts({ mark_all: true, status: "read" });
+  rememberReadNotifIds(notifications.filter((n) => !n.alertId).map((n) => n.id));
   updateBadge();
   renderNotifications();
 }

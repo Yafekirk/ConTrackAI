@@ -50,6 +50,35 @@ function esc(s) {
 
 
 
+// Review-queue/renewal notices are rebuilt from live data on every load and have no stored read flag,
+// so the ones the user opened or cleared are remembered here (per user, newest 500).
+function notifReadKey() {
+  try {
+    const u = JSON.parse(localStorage.getItem("contrack_user") || "{}");
+    return `contrack_notif_read_${u.id || "anon"}`;
+  } catch (_) {
+    return "contrack_notif_read_anon";
+  }
+}
+
+function loadReadNotifIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(notifReadKey()) || "[]").map(String));
+  } catch (_) {
+    return new Set();
+  }
+}
+
+function rememberReadNotifIds(ids) {
+  const set = loadReadNotifIds();
+  ids.forEach((id) => set.add(String(id)));
+  try {
+    localStorage.setItem(notifReadKey(), JSON.stringify([...set].slice(-500)));
+  } catch (_) {
+    /* storage full or blocked: the notice just shows as unread again */
+  }
+}
+
 async function refreshNotificationsFromApi() {
 
   try {
@@ -196,6 +225,10 @@ async function refreshNotificationsFromApi() {
 
 
     notifications = [...alertNotes, ...queueNotes, ...renewalNotes];
+    const read = loadReadNotifIds();
+    notifications.forEach((n) => {
+      if (!n.alertId && read.has(String(n.id))) n.unread = false;
+    });
 
   } catch (_) {
 
@@ -369,6 +402,10 @@ function markRead(id) {
 
       }).catch(() => {});
 
+    } else {
+
+      rememberReadNotifIds([n.id]);
+
     }
 
   }
@@ -400,6 +437,8 @@ function markAllRead() {
     body: JSON.stringify({ mark_all: true, status: "read" }),
 
   }).catch(() => {});
+
+  rememberReadNotifIds(notifications.filter((n) => !n.alertId).map((n) => n.id));
 
   updateBadge();
 
