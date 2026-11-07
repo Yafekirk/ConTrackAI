@@ -10,26 +10,18 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/config.php";
 
-require_session();
-$role = normalize_role(get_request_role());
-$userId = get_request_user_id();
-if ($userId === null) {
-    http_response_code(401);
-    echo json_encode(["error" => "Sign in required"]);
-    exit;
-}
+$userId = require_user_id();
+$isVendor = normalize_role(get_request_role()) === "vendor";
 
 $contractCols = "id,status,reviewed_at,manager_reviewed_at,recommended_action,is_archived,original_pdf_stored";
-$contractScope = $role === "vendor" ? "&vendor_id=eq.{$userId}" : "";
+$contractScope = $isVendor ? "&vendor_id=eq.{$userId}" : "";
 
 $requests = [
     "contracts" => ["GET", "vendor_contracts?select={$contractCols}{$contractScope}&order=id.asc"],
     "alerts" => ["GET", "alerts?user_id=eq.{$userId}&select=id&order=id.desc&limit=1"],
+    "scores" => ["GET", "vendor_evaluations?" . ($isVendor ? "vendor_id=eq.{$userId}&" : "") . "select=id,updated_at&order=id.asc"],
 ];
-if ($role === "vendor") {
-    $requests["scores"] = ["GET", "vendor_evaluations?vendor_id=eq.{$userId}&select=id,updated_at&order=id.asc"];
-} else {
-    $requests["scores"] = ["GET", "vendor_evaluations?select=id,updated_at&order=id.asc"];
+if (!$isVendor) {
     $requests["users"] = ["GET", "users?select=id,role,is_disabled,name,company_name&order=id.asc"];
 }
 
@@ -51,7 +43,7 @@ foreach ($results as $key => $res) {
 ksort($parts);
 
 header("Cache-Control: no-store");
-echo json_encode([
+json_response([
     "version" => substr(sha1(json_encode($parts)), 0, 16),
     "parts" => array_map(static fn(string $h): string => substr($h, 0, 12), $parts),
 ]);

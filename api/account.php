@@ -5,23 +5,10 @@ require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_validation.php";
 
 // ---------------------------------------------------------------------------
-// Helpers
+// GET: read own profile (any signed-in user, no admin rights needed)
 // ---------------------------------------------------------------------------
 
-/** Send a JSON error response and stop. */
-function account_fail(int $status, string $message): void
-{
-    http_response_code($status);
-    echo json_encode(["error" => $message]);
-    exit;
-}
-
-// ---------------------------------------------------------------------------
-// GET: read own profile
-// ---------------------------------------------------------------------------
-
-// Lets any signed-in user read their own profile without admin rights.
-function account_handle_get(array $sessionUser): void
+function account_handle_get(array $sessionUser): never
 {
     $selfId = urlencode((string)($sessionUser["id"] ?? 0));
     $me = supabase_request(
@@ -30,10 +17,9 @@ function account_handle_get(array $sessionUser): void
         . "notify_alerts,notify_announcements,position_title,department,theme_preference&limit=1"
     );
     if (!$me["ok"] || !is_array($me["data"][0] ?? null)) {
-        account_fail(500, "Unable to load your profile");
+        json_error("Unable to load your profile", 500);
     }
-    echo json_encode($me["data"][0]);
-    exit;
+    json_response($me["data"][0]);
 }
 
 // ---------------------------------------------------------------------------
@@ -48,12 +34,11 @@ function account_optional_label(array $input, string $key, string $label): ?stri
     if ($value === "") {
         return null;
     }
-    $len = function_exists("mb_strlen") ? mb_strlen($value) : strlen($value);
-    if ($len > 80) {
-        account_fail(400, "{$label} must be 80 characters or fewer.");
+    if ((function_exists("mb_strlen") ? mb_strlen($value) : strlen($value)) > 80) {
+        json_error("{$label} must be 80 characters or fewer.");
     }
     if (preg_match("/[\\x00-\\x1F\\x7F]/", $value)) {
-        account_fail(400, "{$label} cannot include line breaks.");
+        json_error("{$label} cannot include line breaks.");
     }
     return $value;
 }
@@ -62,91 +47,76 @@ function account_optional_label(array $input, string $key, string $label): ?stri
 function account_build_profile_patch(array $input): array
 {
     $patch = [];
+    $has = static fn(string $key): bool => array_key_exists($key, $input);
 
-    if (array_key_exists("company_name", $input)) {
+    if ($has("company_name")) {
         $company = trim((string)$input["company_name"]);
-        $companyError = contrack_company_error($company, true);
-        if ($companyError !== null) {
-            account_fail(400, $companyError);
+        if (($error = contrack_company_error($company, true)) !== null) {
+            json_error($error);
         }
         $patch["company_name"] = $company;
         $patch["name"] = $company;
-    } elseif (array_key_exists("name", $input)) {
+    } elseif ($has("name")) {
         $name = trim((string)$input["name"]);
-        $nameError = contrack_name_error($name);
-        if ($nameError !== null) {
-            account_fail(400, $nameError);
+        if (($error = contrack_name_error($name)) !== null) {
+            json_error($error);
         }
         $patch["name"] = $name;
     }
 
-    if (array_key_exists("notify_alerts", $input)) {
-        $patch["notify_alerts"] = filter_var($input["notify_alerts"], FILTER_VALIDATE_BOOLEAN);
+    foreach (["notify_alerts", "notify_announcements"] as $key) {
+        if ($has($key)) {
+            $patch[$key] = filter_var($input[$key], FILTER_VALIDATE_BOOLEAN);
+        }
     }
-    if (array_key_exists("notify_announcements", $input)) {
-        $patch["notify_announcements"] = filter_var($input["notify_announcements"], FILTER_VALIDATE_BOOLEAN);
-    }
-
-    if (array_key_exists("position_title", $input)) {
-        $patch["position_title"] = account_optional_label($input, "position_title", "Position");
-    }
-    if (array_key_exists("department", $input)) {
-        $patch["department"] = account_optional_label($input, "department", "Department");
+    foreach (["position_title" => "Position", "department" => "Department"] as $key => $label) {
+        if ($has($key)) {
+            $patch[$key] = account_optional_label($input, $key, $label);
+        }
     }
 
-    if (array_key_exists("theme_preference", $input)) {
+    if ($has("theme_preference")) {
         $theme = strtolower(trim((string)$input["theme_preference"]));
         if (!in_array($theme, ["light", "dark"], true)) {
-            account_fail(400, "Appearance must be light or dark.");
+            json_error("Appearance must be light or dark.");
         }
         $patch["theme_preference"] = $theme;
     }
 
-    if (array_key_exists("contact_number", $input)) {
+    if ($has("contact_number")) {
         $contact = contrack_normalize_contact((string)$input["contact_number"]);
-        if ($contact === "") {
-            $patch["contact_number"] = null;
-        } else {
-            $contactError = contrack_contact_error($contact, false);
-            if ($contactError !== null) {
-                account_fail(400, $contactError);
-            }
-            $patch["contact_number"] = $contact;
+        if ($contact !== "" && ($error = contrack_contact_error($contact, false)) !== null) {
+            json_error($error);
         }
+        $patch["contact_number"] = $contact === "" ? null : $contact;
     }
 
-    if ($patch === []) {
-        account_fail(400, "No profile fields to update");
-    }
-
-    return $patch;
+    return $patch !== [] ? $patch : json_error("No profile fields to update");
 }
 
-function account_handle_profile_update(array $sessionUser, array $input): void
+function account_handle_profile_update(array $sessionUser, array $input): never
 {
     $selfId = (int)($sessionUser["id"] ?? 0);
     $patch = account_build_profile_patch($input);
 
     $updated = supabase_request("PATCH", "users?id=eq." . urlencode((string)$selfId), $patch);
     if (!$updated["ok"]) {
-        account_fail($updated["status"] ?: 500, contrack_upstream_error($updated, "Failed to update profile"));
+        json_error(contrack_upstream_error($updated, "Failed to update profile"), $updated["status"] ?: 500);
     }
 
     contrack_session_reopen();
-    if (isset($patch["name"])) {
-        $_SESSION["contrack_user"]["name"] = $patch["name"];
-    }
-    if (isset($patch["company_name"])) {
-        $_SESSION["contrack_user"]["company_name"] = $patch["company_name"];
+    foreach (["name", "company_name"] as $key) {
+        if (isset($patch[$key])) {
+            $_SESSION["contrack_user"][$key] = $patch[$key];
+        }
     }
 
     audit_log_event("profile_updated", ["fields" => array_keys($patch)], $selfId);
-    echo json_encode([
+    json_response([
         "ok" => true,
         "user" => get_session_user(),
         "contact_number" => $patch["contact_number"] ?? null,
     ]);
-    exit;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,79 +138,63 @@ function account_enforce_password_throttle(int $userId): void
     if ($recentMisses["ok"] && is_array($recentMisses["data"]) && count($recentMisses["data"]) >= 5) {
         $lastMiss = strtotime((string)($recentMisses["data"][0]["created_at"] ?? ""));
         if ($lastMiss !== false && (time() - $lastMiss) < 60) {
-            account_fail(429, "Too many incorrect attempts. Try again in a minute.");
+            json_error("Too many incorrect attempts. Try again in a minute.", 429);
         }
     }
 }
 
-function account_handle_password_change(array $sessionUser, array $input): void
+function account_handle_password_change(array $sessionUser, array $input): never
 {
     $current = (string)($input["current_password"] ?? "");
     $new = (string)($input["new_password"] ?? "");
     if ($current === "" || $new === "") {
-        account_fail(400, "current_password and new_password are required");
+        json_error("current_password and new_password are required");
     }
-
-    $passwordError = contrack_password_error($new);
-    if ($passwordError !== null) {
-        account_fail(400, $passwordError);
+    if (($passwordError = contrack_password_error($new)) !== null) {
+        json_error($passwordError);
     }
 
     $userId = (int)($sessionUser["id"] ?? 0);
-
     account_enforce_password_throttle($userId);
 
-    $result = supabase_request(
-        "GET",
-        "users?id=eq." . urlencode((string)$userId) . "&select=id,password&limit=1"
-    );
+    $result = supabase_request("GET", "users?id=eq." . urlencode((string)$userId) . "&select=id,password&limit=1");
     if (!$result["ok"] || !is_array($result["data"]) || count($result["data"]) === 0) {
-        account_fail(500, "Unable to load user record");
+        json_error("Unable to load user record", 500);
     }
 
-    $row = $result["data"][0];
-    $stored = (string)($row["password"] ?? "");
+    $stored = (string)($result["data"][0]["password"] ?? "");
     if (!contrack_password_matches($stored, $current)) {
         audit_log_event("password_change_failed", [], $userId);
-        account_fail(401, "Current password is incorrect");
+        json_error("Current password is incorrect", 401);
     }
-
     if (contrack_password_was_used($userId, $stored, $new)) {
-        account_fail(400, "You already used this password before. Choose a new one.");
+        json_error("You already used this password before. Choose a new one.");
     }
 
     $patch = contrack_set_password($userId, $stored, $new);
     if (!$patch["ok"]) {
-        account_fail($patch["status"] ?: 500, contrack_upstream_error($patch, "Failed to update password"));
+        json_error(contrack_upstream_error($patch, "Failed to update password"), $patch["status"] ?: 500);
     }
-
     audit_log_event("password_changed", [], $userId);
-    echo json_encode(["ok" => true]);
-    exit;
+    json_response(["ok" => true]);
 }
 
 // ---------------------------------------------------------------------------
 // Request dispatch
 // ---------------------------------------------------------------------------
 
-$method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
+$method = request_method();
 if (!in_array($method, ["GET", "POST"], true)) {
-    account_fail(405, "Method not allowed");
+    json_error("Method not allowed", 405);
 }
 
 $sessionUser = require_session();
-
 if ($method === "GET") {
     account_handle_get($sessionUser);
 }
 
-$input = json_decode(file_get_contents("php://input"), true);
-if (!is_array($input)) {
-    account_fail(400, "Invalid request body");
-}
-
+$input = json_body();
 if (($input["action"] ?? "") === "profile") {
     account_handle_profile_update($sessionUser, $input);
 }
-
 account_handle_password_change($sessionUser, $input);

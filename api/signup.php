@@ -3,29 +3,17 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/config.php";
 require_once __DIR__ . "/lib_validation.php";
+require_once __DIR__ . "/lib_vendor_approval.php";
 
 /** Keep in sync with api/terms.php CONTRACK_TERMS_VERSION. */
 const CONTRACK_TERMS_VERSION = "2026-01";
 
-if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-    http_response_code(405);
-    echo json_encode(["error" => "Method not allowed"]);
-    exit;
-}
-
-$input = json_decode(file_get_contents("php://input"), true);
-if (!is_array($input)) {
-    http_response_code(400);
-    echo json_encode(["error" => "Invalid request body"]);
-    exit;
-}
+require_method("POST");
+$input = json_body();
 
 $acceptedTerms = $input["accepted_terms"] ?? $input["accept_terms"] ?? null;
-$termsOk = $acceptedTerms === true || $acceptedTerms === "true" || $acceptedTerms === 1 || $acceptedTerms === "1";
-if (!$termsOk) {
-    http_response_code(400);
-    echo json_encode(["error" => "You must agree to the Terms & Conditions and Privacy Policy to create an account."]);
-    exit;
+if (!in_array($acceptedTerms, [true, "true", 1, "1"], true)) {
+    json_error("You must agree to the Terms & Conditions and Privacy Policy to create an account.");
 }
 
 $companyName = trim((string)($input["company_name"] ?? $input["name"] ?? ""));
@@ -34,29 +22,23 @@ $password = (string)($input["password"] ?? "");
 $contactNumber = contrack_normalize_contact((string)($input["contact_number"] ?? ""));
 $supplierType = trim((string)($input["supplier_type"] ?? ""));
 
-$confirmPassword = (string)($input["confirm_password"] ?? "");
-if (!hash_equals($password, $confirmPassword)) {
-    http_response_code(400);
-    echo json_encode(["error" => "Passwords do not match."]);
-    exit;
+if (!hash_equals($password, (string)($input["confirm_password"] ?? ""))) {
+    json_error("Passwords do not match.");
 }
 
-$errors = [
+$errors = array_values(array_filter([
     contrack_company_error($companyName, true),
     contrack_email_error($email),
     contrack_contact_error($contactNumber, true),
     contrack_supplier_error($supplierType, true),
     contrack_password_error($password),
-];
-$errors = array_values(array_filter($errors));
+]));
 if ($errors !== []) {
-    http_response_code(400);
-    echo json_encode(["error" => $errors[0]]);
-    exit;
+    json_error($errors[0]);
 }
 
-$now = gmdate("c");
-$payload = [[
+$approvalToken = bin2hex(random_bytes(32));
+$account = [
     "name" => $companyName,
     "company_name" => $companyName,
     "email" => $email,
@@ -64,86 +46,68 @@ $payload = [[
     "role" => "vendor",
     "contact_number" => $contactNumber,
     "supplier_type" => $supplierType,
-    "terms_accepted_at" => $now,
-    "terms_version" => CONTRACK_TERMS_VERSION,
-]];
+    "approval_status" => "pending",
+    "approval_token_hash" => hash("sha256", $approvalToken),
+];
+$saved = static fn(array $r): bool => $r["ok"] && is_array($r["data"]) && count($r["data"]) > 0;
 
-$created = supabase_request("POST", "users", $payload);
-if (!$created["ok"] || !is_array($created["data"]) || count($created["data"]) === 0) {
-    $lowLevelError = (string)($created["error"] ?? "");
+$created = supabase_request("POST", "users", [$account + ["terms_accepted_at" => gmdate("c"), "terms_version" => CONTRACK_TERMS_VERSION]]);
+if (!$saved($created)) {
+    // Older schemas without terms columns: create the account without them.
     $raw = (string)($created["raw"] ?? "");
-    $duplicate = stripos($raw, "duplicate key") !== false || stripos($raw, "23505") !== false;
-    $invalidKey = stripos($raw, "Invalid API key") !== false || stripos($raw, "JWT") !== false;
-    $missingCurl = stripos($lowLevelError, "cURL extension") !== false;
-    $checkFail = stripos($raw, "check constraint") !== false || stripos($raw, "23514") !== false;
     $termsMissing = (stripos($raw, "does not exist") !== false || stripos($raw, "42703") !== false)
         && (stripos($raw, "terms_accepted_at") !== false || stripos($raw, "terms_version") !== false);
-
-    // Older schemas without terms columns: create the account, then terms are recorded after session starts.
     if ($termsMissing) {
-        $payload = [[
-            "name" => $companyName,
-            "company_name" => $companyName,
-            "email" => $email,
-            "password" => password_hash($password, PASSWORD_DEFAULT),
-            "role" => "vendor",
-            "contact_number" => $contactNumber,
-            "supplier_type" => $supplierType,
-        ]];
-        $created = supabase_request("POST", "users", $payload);
-    }
-
-    if (!$created["ok"] || !is_array($created["data"]) || count($created["data"]) === 0) {
-        $lowLevelError = (string)($created["error"] ?? "");
-        $raw = (string)($created["raw"] ?? "");
-        $duplicate = stripos($raw, "duplicate key") !== false || stripos($raw, "23505") !== false;
-        $invalidKey = stripos($raw, "Invalid API key") !== false || stripos($raw, "JWT") !== false;
-        $missingCurl = stripos($lowLevelError, "cURL extension") !== false;
-        $checkFail = stripos($raw, "check constraint") !== false || stripos($raw, "23514") !== false;
-
-        if ($duplicate) {
-            http_response_code(409);
-            echo json_encode(["error" => "Email is already registered"]);
-            exit;
-        }
-
-        if ($checkFail) {
-            http_response_code(400);
-            echo json_encode(["error" => "Account details do not meet signup requirements."]);
-            exit;
-        }
-
-        if ($invalidKey) {
-            http_response_code(500);
-            error_log("signup: Supabase key rejected: " . substr($raw, 0, 300));
-            echo json_encode(["error" => env_flag("CONTRACK_DEBUG", false)
-                ? "Supabase key is invalid or missing. Re-check SUPABASE_SERVICE_ROLE_KEY before starting the PHP server."
-                : "Account service is temporarily unavailable."]);
-            exit;
-        }
-
-        if ($missingCurl) {
-            http_response_code(500);
-            error_log("signup: " . $lowLevelError);
-            echo json_encode(["error" => env_flag("CONTRACK_DEBUG", false) ? $lowLevelError : "Account service is temporarily unavailable."]);
-            exit;
-        }
-
-        http_response_code($created["status"] ?: 500);
-        echo json_encode(["error" => contrack_upstream_error($created, "Failed to create account")]);
-        exit;
+        $created = supabase_request("POST", "users", [$account]);
     }
 }
 
-$user = $created["data"][0];
-unset($user["password"]);
-contrack_start_authenticated_session($user);
+if (!$saved($created)) {
+    $lowLevelError = (string)($created["error"] ?? "");
+    $raw = (string)($created["raw"] ?? "");
+    $has = static fn(string ...$needles): bool => array_filter($needles, static fn(string $n): bool => stripos($raw, $n) !== false) !== [];
+    $debug = env_flag("CONTRACK_DEBUG", false);
+    if ($has("duplicate key", "23505")) {
+        json_error("Email is already registered", 409);
+    }
+    if ($has("check constraint", "23514")) {
+        json_error("Account details do not meet signup requirements.");
+    }
+    if ($has("Invalid API key", "JWT")) {
+        error_log("signup: Supabase key rejected: " . substr($raw, 0, 300));
+        json_error($debug
+            ? "Supabase key is invalid or missing. Re-check SUPABASE_SERVICE_ROLE_KEY before starting the PHP server."
+            : "Account service is temporarily unavailable.", 500);
+    }
+    if (stripos($lowLevelError, "cURL extension") !== false) {
+        error_log("signup: " . $lowLevelError);
+        json_error($debug ? $lowLevelError : "Account service is temporarily unavailable.", 500);
+    }
+    json_error(contrack_upstream_error($created, "Failed to create account"), $created["status"] ?: 500);
+}
 
-audit_log_event("account_created", ["email" => $email, "role" => "vendor"], (int)($user["id"] ?? 0));
-audit_log_event(
-    "terms_accepted",
-    ["email" => $email, "version" => CONTRACK_TERMS_VERSION, "source" => "signup"],
-    (int)($user["id"] ?? 0)
+$user = $created["data"][0];
+unset($user["password"], $user["approval_token_hash"]);
+$userId = (int)($user["id"] ?? 0);
+
+audit_log_event("account_created", ["email" => $email, "role" => "vendor", "approval_status" => "pending"], $userId);
+audit_log_event("terms_accepted", ["email" => $email, "version" => CONTRACK_TERMS_VERSION, "source" => "signup"], $userId);
+
+// The vendor is not signed in: the account stays locked until the CEO approves it.
+if (contrack_send_vendor_approval_request($user, $approvalToken) === 0) {
+    error_log("signup: no CEO approval email was delivered for {$email}");
+}
+notify_role_users(
+    "ceo",
+    "New vendor awaiting approval",
+    "{$companyName} ({$email}) signed up and needs your approval before they can sign in."
 );
 
-echo json_encode(["user" => $user]);
+json_response([
+    "pending" => true,
+    "message" => "Your account was created and is waiting for CEO approval. You will receive an email once it is approved.",
+    "user" => [
+        "company_name" => (string)($user["company_name"] ?? $companyName),
+        "email" => (string)($user["email"] ?? $email),
+    ],
+]);

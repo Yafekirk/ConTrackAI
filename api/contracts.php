@@ -8,70 +8,85 @@ require_once __DIR__ . "/lib_contract_intel.php";
 require_once __DIR__ . "/lib_python_nlp.php";
 require_once __DIR__ . "/lib_vendor_score.php";
 
+/** Rows from a successful Supabase read; answers with the upstream error otherwise. */
+function contracts_rows(array $result): array
+{
+    if (!$result["ok"]) {
+        json_error(contrack_upstream_error($result, "Supabase request failed"), (int)$result["status"]);
+    }
+    return is_array($result["data"]) ? $result["data"] : [];
+}
+
+/** JSON body that names a contract, answering 400 "id is required" otherwise. */
+function contracts_input_with_id(): array
+{
+    $input = json_input();
+    if ($input === null || empty($input["id"])) {
+        json_error("id is required");
+    }
+    return $input;
+}
+
+/** "CODE · " prefix for alert messages, empty when the contract has no code yet. */
+function contracts_code_label(array $row): string
+{
+    $code = trim((string)($row["contract_code"] ?? ""));
+    return $code !== "" ? "{$code} · " : "";
+}
+
 $view = $_GET["view"] ?? "stats";
 require_session();
 $role = normalize_role(get_request_role());
 $userId = get_request_user_id();
+$isVendor = $role === "vendor";
+// Vendors only ever see their own contracts.
+$vendorScope = $isVendor ? "&vendor_id=eq." . $userId : "";
+
+if ($isVendor && $userId === null && in_array($view, ["performance", "stats", "list", "renewals"], true)) {
+    json_error("Vendor/client requests require user_id");
+}
 
 if ($view === "duplicate_check") {
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
-    $input = json_decode(file_get_contents("php://input"), true);
-    $pdfSha256 = is_array($input) ? (string)($input["pdf_sha256"] ?? "") : "";
-    $pdfSize = is_array($input) && isset($input["pdf_size"]) ? (int)$input["pdf_size"] : null;
+    require_method("POST");
+    $input = json_input() ?? [];
+    $pdfSize = isset($input["pdf_size"]) ? (int)$input["pdf_size"] : null;
     $match = $userId !== null
-        ? contract_duplicate_match_pdf(contract_duplicate_vendor_rows($userId), $pdfSha256, $pdfSize)
+        ? contract_duplicate_match_pdf(contract_duplicate_vendor_rows($userId), (string)($input["pdf_sha256"] ?? ""), $pdfSize)
         : null;
     if ($match === null) {
-        echo json_encode(["duplicate" => false]);
-        exit;
+        json_response(["duplicate" => false]);
     }
-    echo json_encode([
+    json_response([
         "duplicate" => true,
         "reason" => "pdf",
         "error" => contract_duplicate_message($match, "pdf"),
         "duplicate_of" => contract_duplicate_summary($match),
     ]);
-    exit;
 }
 
 if ($view === "nlp_extract") {
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
-
+    require_method("POST");
     $text = "";
     $pdfTmp = null;
-    $contentType = (string)($_SERVER["CONTENT_TYPE"] ?? "");
-    if (stripos($contentType, "multipart/form-data") !== false) {
+    if (stripos((string)($_SERVER["CONTENT_TYPE"] ?? ""), "multipart/form-data") !== false) {
         $text = trim((string)($_POST["contract_text"] ?? ""));
-        $err = (int)($_FILES["contract_pdf"]["error"] ?? UPLOAD_ERR_NO_FILE);
-        if ($err === UPLOAD_ERR_OK) {
+        if ((int)($_FILES["contract_pdf"]["error"] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) {
             $name = strtolower((string)($_FILES["contract_pdf"]["name"] ?? ""));
             $tmp = (string)($_FILES["contract_pdf"]["tmp_name"] ?? "");
             $head = ($tmp !== "" && is_file($tmp)) ? (string)@file_get_contents($tmp, false, null, 0, 5) : "";
             $isPdf = str_ends_with($name, ".pdf") || str_starts_with($head, "%PDF");
             $uploadSize = (int)($_FILES["contract_pdf"]["size"] ?? 0);
-            if ($isPdf && $tmp !== "" && is_uploaded_file($tmp) && $uploadSize > 0 && $uploadSize <= 26 * 1024 * 1024 && ($err === UPLOAD_ERR_OK)) {
+            if ($isPdf && $tmp !== "" && is_uploaded_file($tmp) && $uploadSize > 0 && $uploadSize <= 26 * 1024 * 1024) {
                 $pdfTmp = $tmp;
             }
         }
     } else {
-        $input = json_decode(file_get_contents("php://input"), true);
-        $text = trim((string)($input["contract_text"] ?? ""));
+        $text = trim((string)(json_input()["contract_text"] ?? ""));
     }
 
     $nlpStarted = microtime(true);
     $extracted = python_nlp_extract($text, $pdfTmp);
     if ($extracted === null) {
-        if ($pdfTmp !== null && $text === "") {
-            $text = "";
-        }
         $extracted = extract_contract_fields($text);
         $extracted["engine"] = "php-regex";
     }
@@ -82,61 +97,41 @@ if ($view === "nlp_extract") {
         "input_kind" => nlp_input_kind($pdfTmp, $text),
         "input_chars" => strlen($text),
     ]);
-    $flags = JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES;
-    $payload = json_encode(["extracted" => $extracted], $flags);
+    $payload = json_encode(["extracted" => $extracted], JSON_INVALID_UTF8_SUBSTITUTE | JSON_UNESCAPED_SLASHES);
     if ($payload === false) {
-        echo json_encode(["error" => "Could not encode extraction result"]);
-        exit;
+        json_error("Could not encode extraction result", 200);
     }
     echo $payload;
     exit;
 }
 
 if ($view === "performance") {
-    if ($role === "vendor" && $userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Vendor/client requests require user_id"]);
-        exit;
-    }
-    $path = "vendor_contracts?select=id,status,contract_value,uploaded_at,contract_title,start_date,end_date,payment_terms,submission_text,scope_of_work,classification,renewal_terms,penalty_clause,financial_obligations";
-    if ($role === "vendor") {
-        $path .= "&vendor_id=eq." . $userId;
-    }
-    $result = supabase_request("GET", $path);
+    $result = supabase_request("GET", "vendor_contracts?select=id,status,contract_value,uploaded_at,contract_title,start_date,end_date,payment_terms,submission_text,scope_of_work,classification,renewal_terms,penalty_clause,financial_obligations" . $vendorScope);
     if (!$result["ok"]) {
         // Older schemas may lack submission_text / NLP columns — retry with a minimal select.
-        $fallback = "vendor_contracts?select=id,status,contract_value,uploaded_at,contract_title,start_date,end_date,payment_terms";
-        if ($role === "vendor") {
-            $fallback .= "&vendor_id=eq." . $userId;
-        }
-        $result = supabase_request("GET", $fallback);
+        $result = supabase_request("GET", "vendor_contracts?select=id,status,contract_value,uploaded_at,contract_title,start_date,end_date,payment_terms" . $vendorScope);
     }
-    if (!$result["ok"]) {
-        http_response_code($result["status"]);
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-        exit;
-    }
-    $rows = is_array($result["data"]) ? $result["data"] : [];
+    $rows = contracts_rows($result);
     $metrics = build_vendor_metrics($rows);
 
-    $evalVendorId = $role === "vendor" ? $userId : null;
     $latestEval = null;
     $evalHistory = [];
     $breakdown = [];
     $criteriaView = vendor_score_criteria_view([]);
-    if ($evalVendorId !== null) {
+    if ($isVendor) {
         $evals = supabase_request(
             "GET",
-            "vendor_evaluations?vendor_id=eq.{$evalVendorId}&select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at&order=evaluated_at.desc&limit=24"
+            "vendor_evaluations?vendor_id=eq.{$userId}&select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at&order=evaluated_at.desc&limit=24"
         );
         if ($evals["ok"] && is_array($evals["data"])) {
             $attached = vendor_score_attach_people($evals["data"]);
             foreach ($attached as $ev) {
+                $score = (float)($ev["overall_score"] ?? 0);
                 $evalHistory[] = [
                     "id" => $ev["id"] ?? null,
                     "evaluated_at" => $ev["evaluated_at"] ?? null,
-                    "overall_score" => (float)($ev["overall_score"] ?? 0),
-                    "star_rating" => vendor_star_rating((float)($ev["overall_score"] ?? 0)),
+                    "overall_score" => $score,
+                    "star_rating" => vendor_star_rating($score),
                     "rating" => $ev["rating"] ?? null,
                     "rating_label" => vendor_score_rating_label((string)($ev["rating"] ?? "")),
                     "evaluator_name" => $ev["evaluator_name"] ?? null,
@@ -152,23 +147,20 @@ if ($view === "performance") {
         }
     }
 
-    $history = [];
-    foreach (enrich_contract_rows($rows) as $row) {
-        $history[] = [
-            "id" => $row["id"] ?? null,
-            "contract_title" => $row["contract_title"] ?? "",
-            "start_date" => $row["start_date"] ?? null,
-            "end_date" => $row["end_date"] ?? null,
-            "contract_value" => $row["contract_value"] ?? 0,
-            "status" => $row["status"] ?? "",
-            "monitor_status" => $row["monitor_status"] ?? "",
-            "risk" => $row["risk"] ?? "low",
-        ];
-    }
+    $history = array_map(static fn(array $row): array => [
+        "id" => $row["id"] ?? null,
+        "contract_title" => $row["contract_title"] ?? "",
+        "start_date" => $row["start_date"] ?? null,
+        "end_date" => $row["end_date"] ?? null,
+        "contract_value" => $row["contract_value"] ?? 0,
+        "status" => $row["status"] ?? "",
+        "monitor_status" => $row["monitor_status"] ?? "",
+        "risk" => $row["risk"] ?? "low",
+    ], enrich_contract_rows($rows));
 
     $overall = $latestEval !== null ? (float)$latestEval["overall_score"] : 0.0;
     $rating = $latestEval !== null ? (string)$latestEval["rating"] : null;
-    echo json_encode([
+    json_response([
         "overall_score" => $overall,
         "star_rating" => $latestEval !== null ? vendor_star_rating($overall) : null,
         "rating" => $rating,
@@ -184,121 +176,71 @@ if ($view === "performance") {
         "history" => $evalHistory,
         "contracts" => $history,
     ]);
-    exit;
 }
 
 if ($view === "stats") {
-    if ($role === "vendor" && $userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Vendor/client requests require user_id"]);
-        exit;
-    }
-
-    $path = "vendor_contracts?select=id,status,contract_value,end_date,uploaded_at";
-    if ($role === "vendor") {
-        $path .= "&vendor_id=eq." . $userId;
-    }
-    $result = supabase_request("GET", $path);
-
-    if (!$result["ok"]) {
-        http_response_code($result["status"]);
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-        exit;
-    }
-
-    $rows = is_array($result["data"]) ? $result["data"] : [];
+    $rows = contracts_rows(supabase_request("GET", "vendor_contracts?select=id,status,contract_value,end_date,uploaded_at" . $vendorScope));
     $today = new DateTimeImmutable("today");
     $todayPlus30 = $today->add(new DateInterval("P30D"));
-
-    $pending = 0;
-    $rejected = 0;
-    $approvedStatusTotal = 0;
-    $activeContracts = 0;
-    $expiredApproved = 0;
-    $expiringApproved30 = 0;
-    $renegotiation = 0;
-    $terminated = 0;
-
-    $totalValueAll = 0.0;
-    $totalValueActive = 0.0;
-    $valuePending = 0.0;
-    $valueRejected = 0.0;
-    $valueExpiring = 0.0;
+    $count = array_fill_keys(["pending", "rejected", "renegotiation", "terminated", "approved", "active", "expired", "expiring"], 0);
+    $value = array_fill_keys(["all", "active", "pending", "rejected", "expiring"], 0.0);
 
     foreach ($rows as $row) {
         $status = strtolower((string)($row["status"] ?? ""));
-        $value = (float)($row["contract_value"] ?? 0);
-        $totalValueAll += $value;
-
-        if ($status === "pending") {
-            $pending++;
-            $valuePending += $value;
-            continue;
-        }
-        if ($status === "rejected") {
-            $rejected++;
-            $valueRejected += $value;
-            continue;
-        }
-        if ($status === "renegotiation") {
-            $renegotiation++;
-            continue;
-        }
-        if ($status === "terminated") {
-            $terminated++;
+        $amount = (float)($row["contract_value"] ?? 0);
+        $value["all"] += $amount;
+        if (in_array($status, ["pending", "rejected", "renegotiation", "terminated"], true)) {
+            $count[$status]++;
+            if (isset($value[$status])) {
+                $value[$status] += $amount;
+            }
             continue;
         }
         if ($status !== "approved") {
             continue;
         }
-
-        $approvedStatusTotal++;
+        $count["approved"]++;
+        // Approved contracts with no (or an unreadable) end date count as active.
+        $endDay = null;
         $endRaw = $row["end_date"] ?? null;
-        if ($endRaw === null || $endRaw === "") {
-            $activeContracts++;
-            $totalValueActive += $value;
+        if ($endRaw !== null && $endRaw !== "") {
+            try {
+                $endDay = (new DateTimeImmutable((string)$endRaw))->setTime(0, 0, 0);
+            } catch (Exception) {
+                $endDay = null;
+            }
+        }
+        if ($endDay !== null && $endDay < $today) {
+            $count["expired"]++;
             continue;
         }
-
-        try {
-            $endDate = new DateTimeImmutable((string)$endRaw);
-            $endDay = $endDate->setTime(0, 0, 0);
-            if ($endDay < $today) {
-                $expiredApproved++;
-            } else {
-                $activeContracts++;
-                $totalValueActive += $value;
-                if ($endDay <= $todayPlus30) {
-                    $expiringApproved30++;
-                    $valueExpiring += $value;
-                }
-            }
-        } catch (Exception $exception) {
-            $activeContracts++;
-            $totalValueActive += $value;
+        $count["active"]++;
+        $value["active"] += $amount;
+        if ($endDay !== null && $endDay <= $todayPlus30) {
+            $count["expiring"]++;
+            $value["expiring"] += $amount;
         }
     }
 
-    echo json_encode([
+    json_response([
         "total_contracts" => count($rows),
-        "approved" => $approvedStatusTotal,
-        "active_contracts" => $activeContracts,
-        "expired_approved" => $expiredApproved,
-        "pending" => $pending,
-        "rejected" => $rejected,
-        "renegotiation" => $renegotiation,
-        "terminated" => $terminated,
-        "expiring_30_days" => $expiringApproved30,
-        "total_contract_value" => round($totalValueAll, 2),
-        "total_contract_value_active" => round($totalValueActive, 2),
-        "value_pending" => round($valuePending, 2),
-        "value_rejected" => round($valueRejected, 2),
-        "value_expiring" => round($valueExpiring, 2),
-        "archived_contracts" => $expiredApproved + $terminated + $rejected,
-        "renewal_due" => $expiringApproved30 + $renegotiation,
+        "approved" => $count["approved"],
+        "active_contracts" => $count["active"],
+        "expired_approved" => $count["expired"],
+        "pending" => $count["pending"],
+        "rejected" => $count["rejected"],
+        "renegotiation" => $count["renegotiation"],
+        "terminated" => $count["terminated"],
+        "expiring_30_days" => $count["expiring"],
+        "total_contract_value" => round($value["all"], 2),
+        "total_contract_value_active" => round($value["active"], 2),
+        "value_pending" => round($value["pending"], 2),
+        "value_rejected" => round($value["rejected"], 2),
+        "value_expiring" => round($value["expiring"], 2),
+        "archived_contracts" => $count["expired"] + $count["terminated"] + $count["rejected"],
+        "renewal_due" => $count["expiring"] + $count["renegotiation"],
         "role_scope" => $role,
     ]);
-    exit;
 }
 
 if ($view === "vendor_summary") {
@@ -308,16 +250,8 @@ if ($view === "vendor_summary") {
         "users" => ["GET", "users?role=eq.vendor&select=id,name,company_name,email,role,created_at&order=name.asc"],
         "scores" => ["GET", VENDOR_SCORE_LATEST_PATH],
     ]);
-    $cRes = $batch["contracts"];
-    $uRes = $batch["users"];
-    if (!$cRes["ok"]) {
-        http_response_code($cRes["status"]);
-        echo json_encode(["error" => contrack_upstream_error($cRes, "Supabase request failed")]);
-        exit;
-    }
-
-    $contractRows = is_array($cRes["data"]) ? $cRes["data"] : [];
-    $userRows = ($uRes["ok"] && is_array($uRes["data"])) ? $uRes["data"] : [];
+    $contractRows = contracts_rows($batch["contracts"]);
+    $userRows = ($batch["users"]["ok"] && is_array($batch["users"]["data"])) ? $batch["users"]["data"] : [];
 
     $userById = [];
     foreach ($userRows as $u) {
@@ -327,88 +261,54 @@ if ($view === "vendor_summary") {
         }
     }
 
+    // Group contracts per vendor, keeping the longest vendor name seen on any of them.
     $agg = [];
     foreach ($contractRows as $row) {
         $vid = (int)($row["vendor_id"] ?? 0);
         if ($vid <= 0) {
             continue;
         }
-        if (!isset($agg[$vid])) {
-            $agg[$vid] = [
-                "vendor_id" => $vid,
-                "vendor_name" => trim((string)($row["vendor_name"] ?? "")),
-                "contracts" => [],
-            ];
-        }
+        $agg[$vid] ??= ["vendor_name" => "", "contracts" => []];
         $agg[$vid]["contracts"][] = $row;
         $vn = trim((string)($row["vendor_name"] ?? ""));
-        if ($vn !== "" && strlen($vn) > strlen((string)$agg[$vid]["vendor_name"])) {
+        if (strlen($vn) > strlen($agg[$vid]["vendor_name"])) {
             $agg[$vid]["vendor_name"] = $vn;
         }
     }
-
     foreach ($userById as $vid => $u) {
-        if (!isset($agg[$vid])) {
-            $agg[$vid] = [
-                "vendor_id" => $vid,
-                "vendor_name" => contrack_public_name($u),
-                "contracts" => [],
-            ];
-        }
+        $agg[$vid] ??= ["vendor_name" => contrack_public_name($u), "contracts" => []];
     }
-
-    foreach ($agg as $vid => &$bundle) {
-        if (isset($userById[$vid])) {
-            $u = $userById[$vid];
-            $bundle["vendor_email"] = (string)($u["email"] ?? "");
-            $display = contrack_public_name($u);
-            if ($display !== "" && $display !== "Vendor") {
-                $bundle["vendor_name"] = $display;
-            } elseif ($bundle["vendor_name"] === "") {
-                $bundle["vendor_name"] = $display;
-            }
-        } else {
-            $bundle["vendor_email"] = $bundle["vendor_email"] ?? "";
-        }
-        if ($bundle["vendor_name"] === "") {
-            $bundle["vendor_name"] = "Vendor #" . (string)$vid;
-        }
-    }
-    unset($bundle);
 
     $latestScores = vendor_score_latest_by_vendor($batch["scores"]);
     $out = [];
     foreach ($agg as $vid => $bundle) {
+        $name = $bundle["vendor_name"];
+        $email = "";
+        if (isset($userById[$vid])) {
+            $email = (string)($userById[$vid]["email"] ?? "");
+            $display = contrack_public_name($userById[$vid]);
+            if (($display !== "" && $display !== "Vendor") || $name === "") {
+                $name = $display;
+            }
+        }
+        $name = $name !== "" ? $name : "Vendor #" . (string)$vid;
+
         $contracts = $bundle["contracts"];
-        $total = count($contracts);
-        $sumVal = 0.0;
-        $approved = 0;
-        $pend = 0;
-        $rej = 0;
+        $statusCount = ["approved" => 0, "pending" => 0, "rejected" => 0];
         $typeCounts = [];
-        $maxVal = 0.0;
+        $sumVal = 0.0;
         foreach ($contracts as $c) {
-            $v = (float)($c["contract_value"] ?? 0);
-            $sumVal += $v;
-            $maxVal = max($maxVal, $v);
+            $sumVal += (float)($c["contract_value"] ?? 0);
             $st = strtolower((string)($c["status"] ?? ""));
-            if ($st === "approved") {
-                $approved++;
-            } elseif ($st === "pending") {
-                $pend++;
-            } elseif ($st === "rejected") {
-                $rej++;
+            if (isset($statusCount[$st])) {
+                $statusCount[$st]++;
             }
             $ct = trim((string)($c["contract_type"] ?? ""));
             if ($ct !== "") {
                 $typeCounts[$ct] = ($typeCounts[$ct] ?? 0) + 1;
             }
         }
-        $primaryType = "—";
-        if ($typeCounts !== []) {
-            arsort($typeCounts);
-            $primaryType = (string)array_key_first($typeCounts);
-        }
+        arsort($typeCounts);
         $metrics = build_vendor_metrics($contracts);
         $scoreRow = $latestScores[$vid] ?? null;
         $overall = $scoreRow !== null ? (float)$scoreRow["overall_score"] : null;
@@ -416,10 +316,10 @@ if ($view === "vendor_summary") {
 
         $out[] = [
             "vendor_id" => $vid,
-            "vendor_name" => $bundle["vendor_name"],
-            "vendor_email" => $bundle["vendor_email"] ?? "",
-            "contract_type" => $primaryType,
-            "contract_count" => $total,
+            "vendor_name" => $name,
+            "vendor_email" => $email,
+            "contract_type" => $typeCounts !== [] ? (string)array_key_first($typeCounts) : "—",
+            "contract_count" => count($contracts),
             "total_value" => round($sumVal, 2),
             "vendor_score" => $overall,
             "ai_score" => $overall,
@@ -432,207 +332,102 @@ if ($view === "vendor_summary") {
             "risk_score" => $metrics["risk_score"],
             "recommendations" => $metrics["recommendations"],
             "breakdown" => [],
-            "approved_count" => $approved,
-            "pending_count" => $pend,
-            "rejected_count" => $rej,
+            "approved_count" => $statusCount["approved"],
+            "pending_count" => $statusCount["pending"],
+            "rejected_count" => $statusCount["rejected"],
         ];
     }
 
-    usort(
-        $out,
-        static function (array $a, array $b): int {
-            $cmp = ($b["total_value"] <=> $a["total_value"]);
-            return $cmp !== 0 ? $cmp : strcmp((string)$a["vendor_name"], (string)$b["vendor_name"]);
-        }
-    );
-
-    echo json_encode($out);
-    exit;
+    usort($out, static function (array $a, array $b): int {
+        $cmp = $b["total_value"] <=> $a["total_value"];
+        return $cmp !== 0 ? $cmp : strcmp((string)$a["vendor_name"], (string)$b["vendor_name"]);
+    });
+    json_response($out);
 }
 
 if ($view === "pending_approvals") {
     require_roles(["ceo", "manager", "admin"]);
     // CEO queue = pending contracts already reviewed by a manager (system flow).
     // Managers/admins may still list all pending when opening the same view.
-    $ceoPath = "vendor_contracts?status=eq.pending&manager_reviewed_at=not.is.null&select=id,contract_code,vendor_id,vendor_name,contract_title,contract_type,contract_value,end_date,status,uploaded_at,reviewed_at,reviewed_by,scope_of_work,payment_terms,manager_notes,recommended_action,manager_reviewed_at,manager_reviewed_by&order=manager_reviewed_at.desc";
-    $allPendingPath = "vendor_contracts?status=eq.pending&select=id,contract_code,vendor_id,vendor_name,contract_title,contract_type,contract_value,end_date,status,uploaded_at,reviewed_at,reviewed_by,scope_of_work,payment_terms,manager_notes,recommended_action,manager_reviewed_at,manager_reviewed_by&order=uploaded_at.desc";
-    $result = supabase_request("GET", $role === "ceo" ? $ceoPath : $allPendingPath);
-    http_response_code($result["status"]);
-    if ($result["ok"]) {
-        echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
-    } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-    }
-    exit;
+    $columns = "id,contract_code,vendor_id,vendor_name,contract_title,contract_type,contract_value,end_date,status,uploaded_at,reviewed_at,reviewed_by,scope_of_work,payment_terms,manager_notes,recommended_action,manager_reviewed_at,manager_reviewed_by";
+    $path = $role === "ceo"
+        ? "vendor_contracts?status=eq.pending&manager_reviewed_at=not.is.null&select={$columns}&order=manager_reviewed_at.desc"
+        : "vendor_contracts?status=eq.pending&select={$columns}&order=uploaded_at.desc";
+    json_response(enrich_contract_rows(contracts_rows(supabase_request("GET", $path))));
 }
 
-if ($view === "manager_pending") {
+if ($view === "manager_pending" || $view === "manager_mine") {
     require_roles(["manager", "admin"]);
-    if ($userId === null && $role !== "admin") {
-        http_response_code(400);
-        echo json_encode(["error" => "Session user id required"]);
-        exit;
+    if ($userId === null && ($view === "manager_mine" || $role !== "admin")) {
+        json_error("Session user id required");
     }
-    // Pending contracts not yet reviewed by a manager (queue).
-    $path = "vendor_contracts?status=eq.pending&manager_reviewed_at=is.null&select=*&order=uploaded_at.desc";
-    $result = supabase_request("GET", $path);
-    http_response_code($result["status"]);
-    if ($result["ok"]) {
-        echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
-    } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-    }
-    exit;
-}
-
-if ($view === "manager_mine") {
-    require_roles(["manager", "admin"]);
-    if ($userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Session user id required"]);
-        exit;
-    }
-    $path = "vendor_contracts?manager_reviewed_by=eq." . $userId . "&select=*&order=manager_reviewed_at.desc";
-    $result = supabase_request("GET", $path);
-    http_response_code($result["status"]);
-    if ($result["ok"]) {
-        echo json_encode(enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []));
-    } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-    }
-    exit;
+    // manager_pending: the queue not yet reviewed by any manager. manager_mine: contracts this manager reviewed.
+    $path = $view === "manager_pending"
+        ? "vendor_contracts?status=eq.pending&manager_reviewed_at=is.null&select=*&order=uploaded_at.desc"
+        : "vendor_contracts?manager_reviewed_by=eq." . $userId . "&select=*&order=manager_reviewed_at.desc";
+    json_response(enrich_contract_rows(contracts_rows(supabase_request("GET", $path))));
 }
 
 if ($view === "list") {
-    if ($role === "vendor" && $userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Vendor/client requests require user_id"]);
-        exit;
-    }
-    $path = "vendor_contracts?select=*&order=uploaded_at.desc";
-    if ($role === "vendor") {
-        $path .= "&vendor_id=eq." . $userId;
-    }
-    $result = supabase_request("GET", $path);
-    http_response_code($result["status"]);
-    if ($result["ok"]) {
-        $rows = enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []);
-        $filter = strtolower(trim((string)($_GET["filter"] ?? "")));
-        if ($filter === "archived") {
-            $rows = array_values(array_filter($rows, static fn(array $r): bool => !empty($r["is_archived"])));
-        } elseif ($filter === "renewals") {
-            $rows = array_values(array_filter($rows, static fn(array $r): bool => !empty($r["renewal_due"])));
-        } elseif ($filter === "active") {
-            $rows = array_values(array_filter($rows, static fn(array $r): bool => empty($r["is_archived"])));
-        }
-        echo json_encode($rows);
-    } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-    }
-    exit;
+    $rows = enrich_contract_rows(contracts_rows(supabase_request("GET", "vendor_contracts?select=*&order=uploaded_at.desc" . $vendorScope)));
+    $filters = [
+        "archived" => static fn(array $r): bool => !empty($r["is_archived"]),
+        "renewals" => static fn(array $r): bool => !empty($r["renewal_due"]),
+        "active" => static fn(array $r): bool => empty($r["is_archived"]),
+    ];
+    $filter = $filters[strtolower(trim((string)($_GET["filter"] ?? "")))] ?? null;
+    json_response($filter !== null ? array_values(array_filter($rows, $filter)) : $rows);
 }
 
 if ($view === "renewals") {
-    if ($role === "vendor" && $userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Vendor/client requests require user_id"]);
-        exit;
-    }
-    $path = "vendor_contracts?select=*&order=end_date.asc";
-    if ($role === "vendor") {
-        $path .= "&vendor_id=eq." . $userId;
-    }
-    $result = supabase_request("GET", $path);
-    if (!$result["ok"]) {
-        http_response_code($result["status"]);
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
-        exit;
-    }
     $notices = [];
-    foreach (enrich_contract_rows(is_array($result["data"]) ? $result["data"] : []) as $row) {
+    foreach (enrich_contract_rows(contracts_rows(supabase_request("GET", "vendor_contracts?select=*&order=end_date.asc" . $vendorScope))) as $row) {
         $notice = renewal_notice_for_row($row);
         if ($notice !== null && empty($row["is_archived"])) {
             $notices[] = $notice;
         }
     }
-    echo json_encode($notices);
-    exit;
+    json_response($notices);
 }
 
 if ($view === "archive") {
     require_roles(["ceo", "manager", "admin"]);
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
-    $input = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($input) || empty($input["id"])) {
-        http_response_code(400);
-        echo json_encode(["error" => "id is required"]);
-        exit;
-    }
+    require_method("POST");
+    $input = contracts_input_with_id();
     $contractId = urlencode((string)$input["id"]);
     $fetch = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=*&limit=1");
-    $row = ($fetch["ok"] && is_array($fetch["data"]) && isset($fetch["data"][0])) ? enrich_contract_row($fetch["data"][0]) : null;
-    if ($row === null) {
-        http_response_code(404);
-        echo json_encode(["error" => "Contract not found"]);
-        exit;
-    }
+    $row = ($fetch["ok"] && is_array($fetch["data"]) && isset($fetch["data"][0])) ? enrich_contract_row($fetch["data"][0]) : json_error("Contract not found", 404);
+    $archived = ["ok" => true, "id" => $input["id"], "is_archived" => true, "status" => $row["status"] ?? null];
     if (!empty($row["is_archived"])) {
-        echo json_encode(["ok" => true, "id" => $input["id"], "is_archived" => true, "status" => $row["status"] ?? null]);
-        exit;
+        json_response($archived);
     }
     if (!in_array(strtolower((string)($row["status"] ?? "")), ["rejected", "terminated"], true) && ($row["monitor_status"] ?? "") !== "expired") {
-        http_response_code(400);
-        echo json_encode(["error" => "Only inactive (expired, rejected, or terminated) contracts can be archived"]);
-        exit;
+        json_error("Only inactive (expired, rejected, or terminated) contracts can be archived");
     }
     // status is constrained to pending/approved/rejected/terminated/renegotiation — archiving is the is_archived flag.
-    $payload = ["is_archived" => true, "archived_at" => gmdate("c")];
-    $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}", $payload);
+    $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}", ["is_archived" => true, "archived_at" => gmdate("c")]);
     if (!$result["ok"]) {
-        http_response_code($result["status"]);
-        echo json_encode(["error" => contrack_upstream_error($result, "Failed to archive")]);
-        exit;
+        json_error(contrack_upstream_error($result, "Failed to archive"), (int)$result["status"]);
     }
     audit_log_event("contract_archived", ["contract_id" => (string)$input["id"]], $userId);
-    echo json_encode(["ok" => true, "id" => $input["id"], "is_archived" => true, "status" => $row["status"] ?? null]);
-    exit;
+    json_response($archived);
 }
 
 if ($view === "manager_review") {
     require_roles(["manager", "admin"]);
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
+    require_method("POST");
     if ($userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Session user id required"]);
-        exit;
+        json_error("Session user id required");
     }
-    $input = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($input) || empty($input["id"])) {
-        http_response_code(400);
-        echo json_encode(["error" => "id is required"]);
-        exit;
-    }
+    $input = contracts_input_with_id();
     $contractId = urlencode((string)$input["id"]);
     $notes = trim((string)($input["manager_notes"] ?? ""));
     $action = trim((string)($input["recommended_action"] ?? ""));
-    $allowedActions = ["escalate_to_ceo", "reject", "modification"];
-    if (!in_array($action, $allowedActions, true)) {
-        http_response_code(400);
-        echo json_encode(["error" => "Choose approve, reject, or modify"]);
-        exit;
+    if (!in_array($action, ["escalate_to_ceo", "reject", "modification"], true)) {
+        json_error("Choose approve, reject, or modify");
     }
     if ($action !== "escalate_to_ceo" && $notes === "") {
-        http_response_code(400);
-        echo json_encode(["error" => "Add manager notes before rejecting or requesting a modification"]);
-        exit;
+        json_error("Add manager notes before rejecting or requesting a modification");
     }
 
     $payload = [
@@ -647,103 +442,55 @@ if ($view === "manager_review") {
     $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=eq.pending", $payload);
     if ($result["ok"] && is_array($result["data"]) && $result["data"] === []) {
         // The guarded update matched nothing (wrong id, or no longer pending): do not audit or notify.
-        http_response_code(409);
-        echo json_encode(["error" => "This contract is no longer pending review."]);
-        exit;
+        json_error("This contract is no longer pending review.", 409);
     }
-    http_response_code($result["status"]);
-    if ($result["ok"]) {
-        $reviewedRow = is_array($result["data"][0] ?? null) ? $result["data"][0] : [];
-        if ($reviewedRow === []) {
-            $lookup = supabase_request(
-                "GET",
-                "vendor_contracts?id=eq.{$contractId}&select=id,vendor_id,vendor_name,contract_title,status,manager_reviewed_by&limit=1"
-            );
-            if ($lookup["ok"] && is_array($lookup["data"][0] ?? null)) {
-                $reviewedRow = $lookup["data"][0];
-            }
+    if (!$result["ok"]) {
+        json_result($result, "Supabase request failed");
+    }
+
+    $reviewedRow = is_array($result["data"][0] ?? null) ? $result["data"][0] : [];
+    if ($reviewedRow === []) {
+        $lookup = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=id,vendor_id,vendor_name,contract_title,status,manager_reviewed_by&limit=1");
+        if ($lookup["ok"] && is_array($lookup["data"][0] ?? null)) {
+            $reviewedRow = $lookup["data"][0];
         }
-        audit_log_event(
-            "contract_manager_review",
-            [
-                "contract_id" => (string)$input["id"],
-                "recommended_action" => $action,
-            ],
-            $userId
-        );
-        $title = (string)($reviewedRow["contract_title"] ?? "Contract");
-        $vendorLabel = (string)($reviewedRow["vendor_name"] ?? "Vendor");
-        $code = trim((string)($reviewedRow["contract_code"] ?? ""));
-        $codeLabel = $code !== "" ? "{$code} · " : "";
-        $vendorOwner = isset($reviewedRow["vendor_id"]) ? (int)$reviewedRow["vendor_id"] : 0;
-        if ($action === "modification") {
-            if ($vendorOwner > 0) {
-                create_user_alert(
-                    $vendorOwner,
-                    "Changes requested",
-                    "{$codeLabel}{$title} needs modification. Update it and resubmit for review."
-                );
-            }
-        } else {
-            $actionLabel = $action === "reject" ? "recommend rejection" : "recommend approval";
-            notify_role_users(
-                "ceo",
-                "Ready for CEO decision",
-                "{$codeLabel}{$title} from {$vendorLabel} was reviewed by a manager ({$actionLabel}). Open Approvals to decide."
-            );
-            if ($vendorOwner > 0) {
-                create_user_alert(
-                    $vendorOwner,
-                    "Manager reviewed your contract",
-                    "{$codeLabel}{$title} is awaiting CEO decision."
-                );
-            }
-        }
-        echo json_encode($result["data"] ?? ["ok" => true]);
+    }
+    audit_log_event("contract_manager_review", ["contract_id" => (string)$input["id"], "recommended_action" => $action], $userId);
+
+    $title = (string)($reviewedRow["contract_title"] ?? "Contract");
+    $vendorLabel = (string)($reviewedRow["vendor_name"] ?? "Vendor");
+    $codeLabel = contracts_code_label($reviewedRow);
+    $vendorOwner = isset($reviewedRow["vendor_id"]) ? (int)$reviewedRow["vendor_id"] : 0;
+    if ($action === "modification") {
+        create_user_alert($vendorOwner, "Changes requested", "{$codeLabel}{$title} needs modification. Update it and resubmit for review.", "contract", true);
     } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
+        $actionLabel = $action === "reject" ? "recommend rejection" : "recommend approval";
+        notify_role_users(
+            "ceo",
+            "Ready for CEO decision",
+            "{$codeLabel}{$title} from {$vendorLabel} was reviewed by a manager ({$actionLabel}). Open Approvals to decide.",
+            true
+        );
+        create_user_alert($vendorOwner, "Manager reviewed your contract", "{$codeLabel}{$title} is awaiting CEO decision.", "contract", true);
     }
-    exit;
+    json_result($result, "Supabase request failed", ["ok" => true]);
 }
 
 if ($view === "vendor_resubmit") {
     require_roles(["vendor"]);
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
+    require_method("POST");
     if ($userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Session user id required"]);
-        exit;
+        json_error("Session user id required");
     }
-    $input = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($input) || empty($input["id"])) {
-        http_response_code(400);
-        echo json_encode(["error" => "id is required"]);
-        exit;
-    }
+    $input = contracts_input_with_id();
     $contractId = urlencode((string)$input["id"]);
-    $fetch = supabase_request(
-        "GET",
-        "vendor_contracts?id=eq.{$contractId}&select=id,vendor_id,status,contract_title,contract_code&limit=1"
-    );
-    $row = ($fetch["ok"] && is_array($fetch["data"][0] ?? null)) ? $fetch["data"][0] : null;
-    if ($row === null) {
-        http_response_code(404);
-        echo json_encode(["error" => "Contract not found"]);
-        exit;
-    }
+    $fetch = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=id,vendor_id,status,contract_title,contract_code&limit=1");
+    $row = ($fetch["ok"] && is_array($fetch["data"][0] ?? null)) ? $fetch["data"][0] : json_error("Contract not found", 404);
     if ((int)($row["vendor_id"] ?? 0) !== $userId) {
-        http_response_code(403);
-        echo json_encode(["error" => "You can only resubmit your own contract"]);
-        exit;
+        json_error("You can only resubmit your own contract", 403);
     }
     if (strtolower((string)($row["status"] ?? "")) !== "modification") {
-        http_response_code(400);
-        echo json_encode(["error" => "Only contracts sent back for modification can be resubmitted"]);
-        exit;
+        json_error("Only contracts sent back for modification can be resubmitted");
     }
 
     $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=eq.modification", [
@@ -753,87 +500,51 @@ if ($view === "vendor_resubmit") {
         "recommended_action" => null,
     ]);
     if (!$result["ok"]) {
-        http_response_code($result["status"] ?: 500);
-        echo json_encode(["error" => contrack_upstream_error($result, "Failed to resubmit")]);
-        exit;
+        json_error(contrack_upstream_error($result, "Failed to resubmit"), $result["status"] ?: 500);
     }
     $title = (string)($row["contract_title"] ?? "Contract");
-    $code = trim((string)($row["contract_code"] ?? ""));
-    $codeLabel = $code !== "" ? "{$code} · " : "";
-    notify_role_users(
-        "manager",
-        "Contract resubmitted",
-        "{$codeLabel}{$title} is back in the review queue."
-    );
-    audit_log_event("contract_resubmitted", ["contract_id" => (string)$input["id"], "contract_code" => $code], $userId);
-    echo json_encode(["ok" => true, "id" => $input["id"], "status" => "pending"]);
-    exit;
+    notify_role_users("manager", "Contract resubmitted", contracts_code_label($row) . "{$title} is back in the review queue.", true);
+    audit_log_event("contract_resubmitted", ["contract_id" => (string)$input["id"], "contract_code" => trim((string)($row["contract_code"] ?? ""))], $userId);
+    json_response(["ok" => true, "id" => $input["id"], "status" => "pending"]);
 }
 
 if ($view === "create") {
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
-    if ($role === "vendor" && $userId === null) {
-        http_response_code(400);
-        echo json_encode(["error" => "Vendor/client requests require user_id"]);
-        exit;
+    require_method("POST");
+    if ($isVendor && $userId === null) {
+        json_error("Vendor/client requests require user_id");
     }
 
-    $contentType = $_SERVER["CONTENT_TYPE"] ?? "";
-    $isMultipart = stripos($contentType, "multipart/form-data") !== false;
+    $maxPdfBytes = 26 * 1024 * 1024;
     $pdfTmpPath = null;
-    if ($isMultipart) {
+    $pdfBase64 = "";
+    if (stripos((string)($_SERVER["CONTENT_TYPE"] ?? ""), "multipart/form-data") !== false) {
         $input = $_POST;
-        if (!is_array($input)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid multipart body"]);
-            exit;
-        }
         $uploadErr = (int)($_FILES["contract_pdf"]["error"] ?? UPLOAD_ERR_NO_FILE);
         if ($uploadErr !== UPLOAD_ERR_NO_FILE) {
-            $origName = strtolower((string)($_FILES["contract_pdf"]["name"] ?? ""));
-            if (preg_match("/\\.(doc|docx|xls|xlsx|txt|rtf)$/", $origName)) {
-                http_response_code(400);
-                echo json_encode(["error" => "Only PDF files are accepted. Word and other document types are not allowed."]);
-                exit;
+            if (preg_match("/\\.(doc|docx|xls|xlsx|txt|rtf)$/", strtolower((string)($_FILES["contract_pdf"]["name"] ?? "")))) {
+                json_error("Only PDF files are accepted. Word and other document types are not allowed.");
             }
             if ($uploadErr !== UPLOAD_ERR_OK) {
-                http_response_code(400);
-                echo json_encode(["error" => "PDF upload failed. Please try again with a PDF file."]);
-                exit;
+                json_error("PDF upload failed. Please try again with a PDF file.");
             }
             $tmp = (string)($_FILES["contract_pdf"]["tmp_name"] ?? "");
             $size = (int)($_FILES["contract_pdf"]["size"] ?? 0);
-            $maxBytes = 26 * 1024 * 1024;
-            if ($tmp !== "" && is_uploaded_file($tmp) && $size > 0 && $size <= $maxBytes) {
+            if ($tmp !== "" && is_uploaded_file($tmp) && $size > 0 && $size <= $maxPdfBytes) {
                 $head = @file_get_contents($tmp, false, null, 0, 5);
                 if (is_string($head) && strlen($head) >= 4 && substr($head, 0, 4) === "%PDF") {
                     $pdfTmpPath = $tmp;
                 }
             }
             if ($pdfTmpPath === null) {
-                http_response_code(400);
-                echo json_encode(["error" => "Only PDF files are accepted."]);
-                exit;
+                json_error("Only PDF files are accepted.");
             }
         }
-        $pdfBase64 = "";
     } else {
-        $input = json_decode(file_get_contents("php://input"), true);
-        if (!is_array($input)) {
-            http_response_code(400);
-            echo json_encode(["error" => "Invalid request body"]);
-            exit;
-        }
+        $input = json_body();
         $pdfBase64 = trim((string)($input["pdf_base64"] ?? ""));
         // 26 MB of PDF is about 34.7 MB of base64; refuse anything larger before decoding or running NLP.
         if (strlen($pdfBase64) > 36 * 1024 * 1024) {
-            http_response_code(413);
-            echo json_encode(["error" => "PDF is too large (26 MB maximum)."]);
-            exit;
+            json_error("PDF is too large (26 MB maximum).", 413);
         }
     }
 
@@ -841,7 +552,7 @@ if ($view === "create") {
     if (function_exists("mb_strlen") && function_exists("mb_substr")) {
         $submissionText = mb_strlen($contractTextRaw) > 500000 ? mb_substr($contractTextRaw, 0, 500000) : $contractTextRaw;
     } else {
-        $submissionText = strlen($contractTextRaw) > 500000 ? substr($contractTextRaw, 0, 500000) : $contractTextRaw;
+        $submissionText = substr($contractTextRaw, 0, 500000);
     }
 
     $nlpStarted = microtime(true);
@@ -854,123 +565,79 @@ if ($view === "create") {
         && trim((string)($input["contract_type"] ?? "")) !== ""
         && (float)($input["contract_value"] ?? 0) > 0
         && trim((string)($input["end_date"] ?? "")) !== "";
-    $nlp = null;
+    $nlp = $clientExtracted ? extract_contract_fields($contractTextRaw) : python_nlp_extract($contractTextRaw, $pdfTmpPath);
     if ($clientExtracted) {
-        $nlp = extract_contract_fields($contractTextRaw);
         $nlp["engine"] = $clientEngine;
-    } else {
-        $nlp = python_nlp_extract($contractTextRaw, $pdfTmpPath);
-    }
-    if (!is_array($nlp)) {
+    } elseif (!is_array($nlp)) {
         $nlp = extract_contract_fields($contractTextRaw);
         $nlp["engine"] = "php-regex";
     }
-    $nlpDurationMs = (int)round((microtime(true) - $nlpStarted) * 1000);
     $nlpUsageCtx = [
         "user_id" => $userId,
-        "duration_ms" => $nlpDurationMs,
+        "duration_ms" => (int)round((microtime(true) - $nlpStarted) * 1000),
         "source_file_name" => trim((string)($input["source_file_name"] ?? "")),
         "input_kind" => nlp_input_kind($pdfTmpPath, $contractTextRaw),
         "input_chars" => strlen($contractTextRaw),
     ];
+    $rejectSubmit = static function (string $message, int $status = 400, array $extra = []) use ($nlp, $nlpStarted, $nlpUsageCtx): never {
+        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
+        json_response(["error" => $message] + $extra, $status);
+    };
 
-    $contractTitle = trim((string)($input["contract_title"] ?? ""));
-    if ($contractTitle === "") {
-        $contractTitle = trim((string)($nlp["contract_title"] ?? ""));
-    }
-    $contractType = trim((string)($input["contract_type"] ?? ""));
-    if ($contractType === "") {
-        $contractType = trim((string)($nlp["contract_type"] ?? ""));
-    }
+    // Form value first, extracted value when the form left it empty.
+    $pick = static function (string $key) use ($input, $nlp): string {
+        $value = trim((string)($input[$key] ?? ""));
+        return $value !== "" ? $value : trim((string)($nlp[$key] ?? ""));
+    };
+    // Form value whenever it was sent (even empty), extracted value otherwise.
+    $sent = static fn(string $key): string => trim((string)($input[$key] ?? ($nlp[$key] ?? "")));
+    $orNull = static fn(string $value): ?string => $value !== "" ? $value : null;
+
+    $contractTitle = $pick("contract_title");
+    $contractType = $pick("contract_type");
+    $startDate = $pick("start_date");
+    $endDate = $pick("end_date");
+    $scope = $pick("scope");
+    $renewalTerms = $pick("renewal_terms");
+    $penaltyClause = $pick("penalty_clause");
+    $financialObligations = $pick("financial_obligations");
+    $terminationClause = $pick("termination_clause");
+    $classification = $sent("classification");
     $contractValue = isset($input["contract_value"]) ? (float)$input["contract_value"] : 0.0;
     if ($contractValue <= 0 && isset($nlp["contract_value"])) {
         $contractValue = (float)$nlp["contract_value"];
-    }
-    $startDate = trim((string)($input["start_date"] ?? ""));
-    if ($startDate === "") {
-        $startDate = trim((string)($nlp["start_date"] ?? ""));
-    }
-    $endDate = trim((string)($input["end_date"] ?? ""));
-    if ($endDate === "") {
-        $endDate = trim((string)($nlp["end_date"] ?? ""));
     }
     $paymentTerms = format_payment_terms_duration(trim((string)($input["payment_terms"] ?? "")));
     if ($paymentTerms === "") {
         $paymentTerms = format_payment_terms_duration(trim((string)($nlp["payment_terms"] ?? "")));
     }
-    $scope = trim((string)($input["scope"] ?? ""));
-    if ($scope === "") {
-        $scope = trim((string)($nlp["scope"] ?? ""));
-    }
-    $renewalTerms = trim((string)($input["renewal_terms"] ?? ""));
-    if ($renewalTerms === "") {
-        $renewalTerms = trim((string)($nlp["renewal_terms"] ?? ""));
-    }
-    $penaltyClause = trim((string)($input["penalty_clause"] ?? ""));
-    if ($penaltyClause === "") {
-        $penaltyClause = trim((string)($nlp["penalty_clause"] ?? ""));
-    }
-    $financialObligations = trim((string)($input["financial_obligations"] ?? ""));
-    if ($financialObligations === "") {
-        $financialObligations = trim((string)($nlp["financial_obligations"] ?? ""));
-    }
-    $classification = trim((string)($input["classification"] ?? ($nlp["classification"] ?? "")));
     $vendorName = trim((string)($input["vendor_name"] ?? ""));
     if ($vendorName === "") {
-        $sessionUser = get_session_user() ?? [];
-        $vendorName = trim((string)($nlp["vendor_name"] ?? contrack_public_name($sessionUser)));
+        $vendorName = trim((string)($nlp["vendor_name"] ?? contrack_public_name(get_session_user() ?? [])));
     }
     $currency = strtoupper(trim((string)($input["currency"] ?? "")));
     if ($currency === "") {
         $currency = strtoupper(trim((string)($nlp["currency"] ?? "PHP")));
     }
-    if (preg_match('/\b(PHP|USD|EUR)\b/', $currency, $cm)) {
-        $currency = strtoupper($cm[1]);
-    } else {
-        $currency = "PHP";
-    }
-    $terminationClause = trim((string)($input["termination_clause"] ?? ""));
-    if ($terminationClause === "") {
-        $terminationClause = trim((string)($nlp["termination_clause"] ?? ""));
-    }
-    $clientName = trim((string)($input["client_name"] ?? ($nlp["client_name"] ?? "")));
-    $vendorAddress = trim((string)($input["vendor_address"] ?? ($nlp["vendor_address"] ?? "")));
-    $clientSignatory = trim((string)($input["client_signatory"] ?? ($nlp["client_signatory"] ?? "")));
-    $vendorSignatory = trim((string)($input["vendor_signatory"] ?? ($nlp["vendor_signatory"] ?? "")));
-    $signedDate = trim((string)($input["signed_date"] ?? ($nlp["signed_date"] ?? "")));
+    $currency = preg_match('/\b(PHP|USD|EUR)\b/', $currency, $cm) ? strtoupper($cm[1]) : "PHP";
 
     if ($contractTitle === "" || $contractType === "" || $contractValue <= 0 || $endDate === "") {
-        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
-        http_response_code(400);
-        echo json_encode(["error" => "contract_title, contract_type, contract_value, and end_date are required"]);
-        exit;
+        $rejectSubmit("contract_title, contract_type, contract_value, and end_date are required");
     }
-
     $endTs = strtotime($endDate);
     $startTs = $startDate !== "" ? strtotime($startDate) : null;
-    $inputError = null;
-    if ($endTs === false) {
-        $inputError = "end_date is not a valid date";
-    } elseif ($startDate !== "" && $startTs === false) {
-        $inputError = "start_date is not a valid date";
-    } elseif ($startTs !== null && $startTs > $endTs) {
-        $inputError = "start_date cannot be after end_date";
-    } elseif ($contractValue > 1e13) {
-        $inputError = "contract_value is too large";
-    }
+    $inputError = match (true) {
+        $endTs === false => "end_date is not a valid date",
+        $startTs === false => "start_date is not a valid date",
+        $startTs !== null && $startTs > $endTs => "start_date cannot be after end_date",
+        $contractValue > 1e13 => "contract_value is too large",
+        default => null,
+    };
     if ($inputError !== null) {
-        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
-        http_response_code(400);
-        echo json_encode(["error" => $inputError]);
-        exit;
+        $rejectSubmit($inputError);
     }
-
-    $hasPdf = $pdfTmpPath !== null || $pdfBase64 !== "";
-    if ($role === "vendor" && !$hasPdf) {
-        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
-        http_response_code(400);
-        echo json_encode(["error" => "A PDF file is required. Word documents are not accepted."]);
-        exit;
+    if ($isVendor && $pdfTmpPath === null && $pdfBase64 === "") {
+        $rejectSubmit("A PDF file is required. Word documents are not accepted.");
     }
 
     if ($userId !== null) {
@@ -978,11 +645,7 @@ if ($view === "create") {
         $duplicateReason = "pdf";
         $duplicateRow = null;
         if ($pdfTmpPath !== null) {
-            $duplicateRow = contract_duplicate_match_pdf(
-                $existingRows,
-                (string)@hash_file("sha256", $pdfTmpPath),
-                (int)@filesize($pdfTmpPath)
-            );
+            $duplicateRow = contract_duplicate_match_pdf($existingRows, (string)@hash_file("sha256", $pdfTmpPath), (int)@filesize($pdfTmpPath));
         } elseif ($pdfBase64 !== "") {
             $decodedPdf = base64_decode((string)preg_replace('/\s+/', "", $pdfBase64), true);
             if ($decodedPdf !== false) {
@@ -1004,20 +667,16 @@ if ($view === "create") {
             ]);
         }
         if ($duplicateRow !== null) {
-            nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
             audit_log_event("contract_duplicate_blocked", [
                 "duplicate_of" => (string)($duplicateRow["id"] ?? ""),
                 "reason" => $duplicateReason,
                 "title" => $contractTitle,
             ], $userId);
-            http_response_code(409);
-            echo json_encode([
-                "error" => contract_duplicate_message($duplicateRow, $duplicateReason),
+            $rejectSubmit(contract_duplicate_message($duplicateRow, $duplicateReason), 409, [
                 "duplicate" => true,
                 "reason" => $duplicateReason,
                 "duplicate_of" => contract_duplicate_summary($duplicateRow),
             ]);
-            exit;
         }
     }
 
@@ -1026,28 +685,23 @@ if ($view === "create") {
     // Many Supabase schemas mark file_name / file_path NOT NULL even when files are not stored server-side yet.
     $storedPath = "/vendor-uploads/pending/" . preg_replace('/[^a-zA-Z0-9._-]/', "_", $storedBaseName);
 
-    $nlpPacked = array_merge($nlp, [
+    $submissionText = pack_submission_text($submissionText, array_merge($nlp, [
         "renewal_terms" => $renewalTerms !== "" ? $renewalTerms : ($nlp["renewal_terms"] ?? null),
         "penalty_clause" => $penaltyClause !== "" ? $penaltyClause : ($nlp["penalty_clause"] ?? null),
         "financial_obligations" => $financialObligations !== "" ? $financialObligations : ($nlp["financial_obligations"] ?? null),
         "classification" => $classification !== "" ? $classification : ($nlp["classification"] ?? null),
-        "payment_terms" => $paymentTerms !== "" ? $paymentTerms : null,
-        "start_date" => $startDate !== "" ? $startDate : null,
+        "payment_terms" => $orNull($paymentTerms),
+        "start_date" => $orNull($startDate),
         "end_date" => $endDate,
-        "client_name" => $clientName !== "" ? $clientName : null,
-        "vendor_name" => $vendorName !== "" ? $vendorName : null,
-        "vendor_address" => $vendorAddress !== "" ? $vendorAddress : null,
+        "client_name" => $orNull($sent("client_name")),
+        "vendor_name" => $orNull($vendorName),
+        "vendor_address" => $orNull($sent("vendor_address")),
         "currency" => $currency,
-        "termination_clause" => $terminationClause !== "" ? $terminationClause : null,
-        "client_signatory" => $clientSignatory !== "" ? $clientSignatory : null,
-        "vendor_signatory" => $vendorSignatory !== "" ? $vendorSignatory : null,
-        "signed_date" => $signedDate !== "" ? $signedDate : null,
-    ]);
-    if ($submissionText !== "") {
-        $submissionText = pack_submission_text($submissionText, $nlpPacked);
-    } else {
-        $submissionText = pack_submission_text("", $nlpPacked);
-    }
+        "termination_clause" => $orNull($terminationClause),
+        "client_signatory" => $orNull($sent("client_signatory")),
+        "vendor_signatory" => $orNull($sent("vendor_signatory")),
+        "signed_date" => $orNull($sent("signed_date")),
+    ]));
 
     $payload = [[
         "vendor_id" => $userId,
@@ -1055,29 +709,31 @@ if ($view === "create") {
         "contract_title" => $contractTitle,
         "contract_type" => $contractType,
         "contract_value" => $contractValue,
-        "start_date" => $startDate !== "" ? $startDate : null,
+        "start_date" => $orNull($startDate),
         "end_date" => $endDate,
-        "payment_terms" => $paymentTerms !== "" ? $paymentTerms : null,
-        "scope_of_work" => $scope !== "" ? $scope : null,
+        "payment_terms" => $orNull($paymentTerms),
+        "scope_of_work" => $orNull($scope),
         "status" => "pending",
         "uploaded_at" => gmdate("c"),
         "source_file_name" => $srcFile,
         "file_name" => $storedBaseName,
         "file_path" => $storedPath,
         "currency" => $currency,
-        "renewal_terms" => $renewalTerms !== "" ? $renewalTerms : null,
-        "penalty_clause" => $penaltyClause !== "" ? $penaltyClause : null,
-        "financial_obligations" => $financialObligations !== "" ? $financialObligations : null,
-        "classification" => $classification !== "" ? $classification : null,
+        "renewal_terms" => $orNull($renewalTerms),
+        "penalty_clause" => $orNull($penaltyClause),
+        "financial_obligations" => $orNull($financialObligations),
+        "classification" => $orNull($classification),
     ]];
     if ($submissionText !== "") {
         $payload[0]["submission_text"] = $submissionText;
     }
+
+    // Older databases may lack the optional columns: drop the ones the error names, then one at a time.
+    $optionalKeys = ["renewal_terms", "penalty_clause", "financial_obligations", "classification", "submission_text"];
     $submittedOptionalKeys = array_keys($payload[0]);
     $result = supabase_request("POST", "vendor_contracts", $payload);
     if (!$result["ok"]) {
         $rawErr = (string)($result["raw"] ?? "");
-        $optionalKeys = ["renewal_terms", "penalty_clause", "financial_obligations", "classification", "submission_text"];
         $stripped = false;
         foreach ($optionalKeys as $key) {
             if (isset($payload[0][$key]) && $rawErr !== "" && (stripos($rawErr, $key) !== false || stripos($rawErr, "schema cache") !== false || stripos($rawErr, "column") !== false)) {
@@ -1088,189 +744,100 @@ if ($view === "create") {
         if ($stripped) {
             $result = supabase_request("POST", "vendor_contracts", $payload);
         }
-        if (!$result["ok"] && isset($payload[0]["submission_text"])) {
-            unset($payload[0]["submission_text"]);
-            $result = supabase_request("POST", "vendor_contracts", $payload);
-        }
-        foreach (["renewal_terms", "penalty_clause", "financial_obligations", "classification"] as $key) {
+        foreach (["submission_text", "renewal_terms", "penalty_clause", "financial_obligations", "classification"] as $key) {
             if (!$result["ok"] && isset($payload[0][$key])) {
                 unset($payload[0][$key]);
                 $result = supabase_request("POST", "vendor_contracts", $payload);
             }
         }
     }
-    $droppedColumns = array_values(array_diff(
-        ["renewal_terms", "penalty_clause", "financial_obligations", "classification", "submission_text"],
-        array_keys($payload[0])
-    ));
-    $droppedNonEmpty = array_values(array_filter($droppedColumns, static fn(string $k): bool => in_array($k, $submittedOptionalKeys, true)));
+    $droppedNonEmpty = array_values(array_intersect(array_diff($optionalKeys, array_keys($payload[0])), $submittedOptionalKeys));
     if ($droppedNonEmpty !== []) {
         // Older database schema: the insert only succeeded after removing these columns. Run sql/schema_phase1.sql.
         error_log("contract create: saved without columns missing from the database: " . implode(",", $droppedNonEmpty));
     }
-    http_response_code($result["status"]);
-    if ($result["ok"] && is_array($result["data"]) && isset($result["data"][0])) {
-        $row = $result["data"][0];
-        $newId = (string)($row["id"] ?? "");
-        $savedPdf = false;
-        if ($newId !== "") {
-            if ($pdfTmpPath !== null && is_uploaded_file($pdfTmpPath)) {
-                $bin = @file_get_contents($pdfTmpPath);
-                if ($bin !== false && substr($bin, 0, 4) === "%PDF") {
-                    $savedPdf = file_put_contents(contract_pdf_absolute_path($newId), $bin, LOCK_EX) !== false;
-                }
-            } elseif ($pdfBase64 !== "") {
-                $savedPdf = contract_pdf_save_base64($newId, $pdfBase64);
-            }
-            if ($savedPdf) {
-                $idEnc = urlencode($newId);
-                supabase_request("PATCH", "vendor_contracts?id=eq.{$idEnc}", ["original_pdf_stored" => true]);
-                $row["original_pdf_stored"] = true;
-            }
-        }
-        audit_log_event(
-            "contract_submitted",
-            [
-                "contract_id" => (string)($row["id"] ?? ""),
-                "vendor_id" => (string)($row["vendor_id"] ?? ""),
-                "title" => $contractTitle,
-            ],
-            $userId
-        );
-        notify_role_users(
-            "manager",
-            "New contract submitted",
-            "{$contractTitle} from {$vendorName} is waiting in the manager review queue."
-        );
-        notify_role_users(
-            "admin",
-            "New contract submitted",
-            "{$contractTitle} from {$vendorName} was submitted by a vendor."
-        );
-        create_user_alert(
-            $userId,
-            "Contract submitted",
-            "{$contractTitle} was received and is now awaiting manager review."
-        );
-        nlp_usage_from_extract("submit", $nlp, $nlpStarted, array_merge($nlpUsageCtx, [
-            "contract_id" => (string)($row["id"] ?? ""),
-            "source_file_name" => $srcFile !== "" ? basename($srcFile) : $storedBaseName,
-        ]));
-        echo json_encode($row);
-    } else {
-        nlp_usage_from_extract("submit", $nlp, $nlpStarted, $nlpUsageCtx);
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
+
+    if (!$result["ok"] || !is_array($result["data"]) || !isset($result["data"][0])) {
+        $rejectSubmit(contrack_upstream_error($result, "Supabase request failed"), (int)$result["status"]);
     }
-    exit;
+
+    $row = $result["data"][0];
+    $newId = (string)($row["id"] ?? "");
+    if ($newId !== "") {
+        $savedPdf = false;
+        if ($pdfTmpPath !== null && is_uploaded_file($pdfTmpPath)) {
+            $bin = @file_get_contents($pdfTmpPath);
+            if ($bin !== false && substr($bin, 0, 4) === "%PDF") {
+                $savedPdf = file_put_contents(contract_pdf_absolute_path($newId), $bin, LOCK_EX) !== false;
+            }
+        } elseif ($pdfBase64 !== "") {
+            $savedPdf = contract_pdf_save_base64($newId, $pdfBase64);
+        }
+        if ($savedPdf) {
+            supabase_request("PATCH", "vendor_contracts?id=eq." . urlencode($newId), ["original_pdf_stored" => true]);
+            $row["original_pdf_stored"] = true;
+        }
+    }
+    audit_log_event("contract_submitted", [
+        "contract_id" => (string)($row["id"] ?? ""),
+        "vendor_id" => (string)($row["vendor_id"] ?? ""),
+        "title" => $contractTitle,
+    ], $userId);
+    notify_role_users("manager", "New contract submitted", "{$contractTitle} from {$vendorName} is waiting in the manager review queue.", true);
+    notify_role_users("admin", "New contract submitted", "{$contractTitle} from {$vendorName} was submitted by a vendor.");
+    create_user_alert($userId, "Contract submitted", "{$contractTitle} was received and is now awaiting manager review.", "contract", true);
+    nlp_usage_from_extract("submit", $nlp, $nlpStarted, array_merge($nlpUsageCtx, [
+        "contract_id" => (string)($row["id"] ?? ""),
+        "source_file_name" => $srcFile !== "" ? basename($srcFile) : $storedBaseName,
+    ]));
+    json_response($row, (int)$result["status"]);
 }
 
 if ($view === "decision") {
     require_roles(["ceo"]);
-    if (($_SERVER["REQUEST_METHOD"] ?? "GET") !== "POST") {
-        http_response_code(405);
-        echo json_encode(["error" => "Method not allowed"]);
-        exit;
-    }
-
-    $sessionUser = get_session_user();
-    $ceoId = $sessionUser["id"] ?? $userId;
+    require_method("POST");
+    $ceoId = get_session_user()["id"] ?? $userId;
     if ($ceoId === null || (int)$ceoId <= 0) {
-        http_response_code(401);
-        echo json_encode(["error" => "Active session required"]);
-        exit;
+        json_error("Active session required", 401);
     }
-
-    $input = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($input) || empty($input["id"]) || empty($input["status"])) {
-        http_response_code(400);
-        echo json_encode(["error" => "id and status are required"]);
-        exit;
+    $input = json_input();
+    if ($input === null || empty($input["id"]) || empty($input["status"])) {
+        json_error("id and status are required");
     }
-
     $status = strtolower((string)$input["status"]);
-    $allowedStatus = ["approved", "rejected", "terminated", "renegotiation"];
-    if (!in_array($status, $allowedStatus, true)) {
-        http_response_code(400);
-        echo json_encode(["error" => "Invalid decision status"]);
-        exit;
+    if (!in_array($status, ["approved", "rejected", "terminated", "renegotiation"], true)) {
+        json_error("Invalid decision status");
     }
 
     $contractId = urlencode((string)$input["id"]);
-    $current = supabase_request(
-        "GET",
-        "vendor_contracts?id=eq.{$contractId}&select=id,status,manager_reviewed_at&limit=1"
-    );
-    if (!$current["ok"] || !is_array($current["data"][0] ?? null)) {
-        http_response_code(404);
-        echo json_encode(["error" => "Contract not found"]);
-        exit;
-    }
-    $currentStatus = strtolower((string)($current["data"][0]["status"] ?? ""));
+    $current = supabase_request("GET", "vendor_contracts?id=eq.{$contractId}&select=id,status,manager_reviewed_at&limit=1");
+    $currentRow = ($current["ok"] && is_array($current["data"][0] ?? null)) ? $current["data"][0] : json_error("Contract not found", 404);
+    $currentStatus = strtolower((string)($currentRow["status"] ?? ""));
     // Approve/reject belongs to the pending queue; terminate/renegotiate may also act on a live contract.
-    $decidableFrom = in_array($status, ["terminated", "renegotiation"], true)
-        ? ["pending", "approved"]
-        : ["pending"];
+    $decidableFrom = in_array($status, ["terminated", "renegotiation"], true) ? ["pending", "approved"] : ["pending"];
     if (!in_array($currentStatus, $decidableFrom, true)) {
-        http_response_code(409);
-        echo json_encode(["error" => "This contract is already marked {$currentStatus} and cannot be decided again."]);
-        exit;
+        json_error("This contract is already marked {$currentStatus} and cannot be decided again.", 409);
     }
-    if (in_array($status, ["approved", "rejected"], true) && empty($current["data"][0]["manager_reviewed_at"])) {
-        http_response_code(409);
-        echo json_encode(["error" => "A manager must review this contract before a CEO decision."]);
-        exit;
+    if (in_array($status, ["approved", "rejected"], true) && empty($currentRow["manager_reviewed_at"])) {
+        json_error("A manager must review this contract before a CEO decision.", 409);
     }
 
     $ceoNotesRaw = $input["ceo_notes"] ?? null;
     $ceoNotes = is_scalar($ceoNotesRaw) ? substr(trim((string)$ceoNotesRaw), 0, 4000) : "";
-    $ceoNotes = $ceoNotes === "" ? null : $ceoNotes;
-
-    $reviewedBy = "ceo_user:" . (string)(int)$ceoId;
-    $payload = [
+    $result = supabase_request("PATCH", "vendor_contracts?id=eq.{$contractId}&status=in.(" . implode(",", $decidableFrom) . ")", [
         "status" => $status,
-        "ceo_notes" => $ceoNotes,
+        "ceo_notes" => $ceoNotes === "" ? null : $ceoNotes,
         "reviewed_at" => gmdate("c"),
-        "reviewed_by" => $reviewedBy,
-    ];
-    $result = supabase_request(
-        "PATCH",
-        "vendor_contracts?id=eq.{$contractId}&status=in.(" . implode(",", $decidableFrom) . ")",
-        $payload
-    );
-    http_response_code($result["status"]);
+        "reviewed_by" => "ceo_user:" . (string)(int)$ceoId,
+    ]);
     if ($result["ok"]) {
-        audit_log_event(
-            "contract_decision",
-            [
-                "contract_id" => (string)$input["id"],
-                "decision" => $status,
-            ],
-            (int)$ceoId
-        );
+        audit_log_event("contract_decision", ["contract_id" => (string)$input["id"], "decision" => $status], (int)$ceoId);
         $decided = is_array($result["data"][0] ?? null) ? $result["data"][0] : [];
         $title = (string)($decided["contract_title"] ?? "Contract");
-        $vendorOwner = isset($decided["vendor_id"]) ? (int)$decided["vendor_id"] : 0;
-        if ($vendorOwner > 0) {
-            create_user_alert(
-                $vendorOwner,
-                "CEO decision: " . strtoupper($status),
-                "{$title} was marked {$status} by the CEO."
-            );
-        }
-        $managerId = isset($decided["manager_reviewed_by"]) ? (int)$decided["manager_reviewed_by"] : 0;
-        if ($managerId > 0) {
-            create_user_alert(
-                $managerId,
-                "CEO decided on a contract you reviewed",
-                "{$title} was marked {$status}."
-            );
-        }
-        echo json_encode($result["data"] ?? ["ok" => true]);
-    } else {
-        echo json_encode(["error" => contrack_upstream_error($result, "Supabase request failed")]);
+        create_user_alert((int)($decided["vendor_id"] ?? 0), "CEO decision: " . strtoupper($status), "{$title} was marked {$status} by the CEO.", "contract", true);
+        create_user_alert((int)($decided["manager_reviewed_by"] ?? 0), "CEO decided on a contract you reviewed", "{$title} was marked {$status}.", "contract", true);
     }
-    exit;
+    json_result($result, "Supabase request failed", ["ok" => true]);
 }
 
-http_response_code(400);
-echo json_encode(["error" => "Unsupported view"]);
+json_error("Unsupported view");

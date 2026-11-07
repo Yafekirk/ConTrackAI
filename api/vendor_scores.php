@@ -7,118 +7,97 @@ require_once __DIR__ . "/lib_vendor_score.php";
 $sessionUser = require_session();
 $role = normalize_role((string)($sessionUser["role"] ?? "vendor"));
 $actorId = get_request_user_id();
-$method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
+$method = request_method();
 $view = strtolower(trim((string)($_GET["view"] ?? "list")));
+$isStaff = vendor_score_is_staff_role($role);
+$isVendor = vendor_score_is_vendor_role($role);
 
-function vendor_scores_json_error(int $status, string $message): void
-{
-    http_response_code($status);
-    echo json_encode(["error" => $message]);
-    exit;
-}
+const VENDOR_SCORES_EVAL_COLUMNS = "id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at,updated_at";
 
-function vendor_scores_load_eval(string $id): ?array
+/** Load an evaluation by a validated UUID, answering 400 / 404 when it is not usable. */
+function vendor_scores_require_eval(string $id): array
 {
-    $result = supabase_request(
-        "GET",
-        "vendor_evaluations?id=eq." . urlencode($id) . "&select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at,updated_at&limit=1"
-    );
+    if (!vendor_score_is_uuid($id)) {
+        json_error("A valid evaluation id is required.");
+    }
+    $result = supabase_request("GET", "vendor_evaluations?id=eq." . urlencode($id) . "&select=" . VENDOR_SCORES_EVAL_COLUMNS . "&limit=1");
     if (!$result["ok"] || !is_array($result["data"][0] ?? null)) {
-        return null;
+        json_error("Evaluation not found.", 404);
     }
     return $result["data"][0];
 }
 
 function vendor_scores_assert_vendor_user(int $vendorId): array
 {
-    $result = supabase_request(
-        "GET",
-        "users?id=eq.{$vendorId}&select=id,name,email,role,supplier_type,contact_number,is_disabled&limit=1"
-    );
-    $user = ($result["ok"] && is_array($result["data"][0] ?? null)) ? $result["data"][0] : null;
-    if ($user === null) {
-        vendor_scores_json_error(404, "Vendor not found.");
-    }
-    $role = normalize_role((string)($user["role"] ?? ""));
-    if ($role !== "vendor") {
-        vendor_scores_json_error(400, "That account is not a vendor.");
+    $result = supabase_request("GET", "users?id=eq.{$vendorId}&select=id,name,email,role,supplier_type,contact_number,is_disabled&limit=1");
+    $user = ($result["ok"] && is_array($result["data"][0] ?? null)) ? $result["data"][0] : json_error("Vendor not found.", 404);
+    if (normalize_role((string)($user["role"] ?? "")) !== "vendor") {
+        json_error("That account is not a vendor.");
     }
     return $user;
 }
 
-function vendor_scores_can_write(string $role, ?array $eval, ?int $actorId): bool
+/** Admins and the CEO may edit any evaluation; other staff only their own. */
+function vendor_scores_can_write(string $role, array $eval, ?int $actorId): bool
 {
-    if (!vendor_score_is_staff_role($role)) {
-        return false;
-    }
-    if ($eval === null) {
-        return true;
-    }
-    if ($role === "admin" || $role === "ceo") {
-        return true;
-    }
-    return $actorId !== null && (int)($eval["evaluator_id"] ?? 0) === $actorId;
+    return in_array($role, ["admin", "ceo"], true) || ($actorId !== null && (int)($eval["evaluator_id"] ?? 0) === $actorId);
 }
 
+/** Admins may delete any evaluation; other staff only their own. */
 function vendor_scores_can_delete(string $role, array $eval, ?int $actorId): bool
 {
-    if ($role === "admin") {
-        return true;
-    }
-    if (!vendor_score_is_staff_role($role)) {
-        return false;
-    }
-    return $actorId !== null && (int)($eval["evaluator_id"] ?? 0) === $actorId;
+    return $role === "admin" || ($actorId !== null && (int)($eval["evaluator_id"] ?? 0) === $actorId);
 }
 
 function vendor_scores_persist_lines(string $evaluationId, array $lines): bool
 {
     supabase_request("DELETE", "vendor_evaluation_scores?evaluation_id=eq." . urlencode($evaluationId));
-    $payload = [];
-    foreach ($lines as $line) {
-        $payload[] = [
-            "evaluation_id" => $evaluationId,
-            "criterion_id" => (int)$line["criterion_id"],
-            "score" => $line["score"],
-            "weighted_score" => $line["weighted_score"],
-        ];
+    $payload = array_map(static fn(array $line): array => [
+        "evaluation_id" => $evaluationId,
+        "criterion_id" => (int)$line["criterion_id"],
+        "score" => $line["score"],
+        "weighted_score" => $line["weighted_score"],
+    ], array_values($lines));
+    return $payload === [] || (bool)supabase_request("POST", "vendor_evaluation_scores", $payload)["ok"];
+}
+
+/** Validate remarks and the evaluation date shared by create and update. */
+function vendor_scores_remarks_and_date(string $remarks, string $evaluatedAt): array
+{
+    if (strlen($remarks) > 2000) {
+        json_error("Remarks must be 2000 characters or fewer.");
     }
-    if ($payload === []) {
-        return true;
+    if ($evaluatedAt === "") {
+        return [$remarks, gmdate("c")];
     }
-    $saved = supabase_request("POST", "vendor_evaluation_scores", $payload);
-    return (bool)$saved["ok"];
+    $ts = strtotime($evaluatedAt);
+    return [$remarks, $ts === false ? json_error("Evaluation date is invalid.") : gmdate("c", $ts)];
 }
 
 function vendor_scores_respond_eval(array $eval): never
 {
     $attached = vendor_score_attach_people([$eval])[0];
-    $lines = vendor_score_load_lines((string)$eval["id"]);
-    echo json_encode(vendor_score_public_row($attached, $lines));
-    exit;
+    json_response(vendor_score_public_row($attached, vendor_score_load_lines((string)$eval["id"])));
 }
 
 if ($method === "GET" && $view === "criteria") {
-    $staff = vendor_score_is_staff_role($role);
-    $path = $staff
-        ? "vendor_score_criteria?select=id,code,name,description,weight,sort_order,is_active&order=sort_order.asc"
-        : "vendor_score_criteria?is_active=eq.true&select=id,code,name,description,weight,sort_order,is_active&order=sort_order.asc";
-    $result = supabase_request("GET", $path);
-    http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => contrack_upstream_error($result, "Failed to load criteria")]);
-    exit;
+    $result = supabase_request(
+        "GET",
+        "vendor_score_criteria?" . ($isStaff ? "" : "is_active=eq.true&") . "select=id,code,name,description,weight,sort_order,is_active&order=sort_order.asc"
+    );
+    json_result($result, "Failed to load criteria");
 }
 
 if ($method === "GET" && $view === "vendors") {
-    if (!vendor_score_is_staff_role($role)) {
-        vendor_scores_json_error(403, "Only managers, the CEO, and admins can list vendors for scoring.");
+    if (!$isStaff) {
+        json_error("Only managers, the CEO, and admins can list vendors for scoring.", 403);
     }
     $users = supabase_request(
         "GET",
         "users?or=(role.eq.vendor,role.eq.client,role.eq.vendor_client)&select=id,name,company_name,email,role,supplier_type,contact_number,is_disabled&order=name.asc"
     );
     if (!$users["ok"]) {
-        vendor_scores_json_error($users["status"] ?: 500, contrack_upstream_error($users, "Failed to load vendors."));
+        json_error(contrack_upstream_error($users, "Failed to load vendors."), $users["status"] ?: 500);
     }
     $latest = vendor_score_latest_by_vendor();
     $out = [];
@@ -146,86 +125,64 @@ if ($method === "GET" && $view === "vendors") {
             "latest_evaluated_at" => $ev["evaluated_at"] ?? null,
         ];
     }
-    echo json_encode($out);
-    exit;
+    json_response($out);
 }
 
 if ($method === "GET" && ($view === "list" || $view === "summary")) {
     $vendorId = isset($_GET["vendor_id"]) ? (int)$_GET["vendor_id"] : 0;
-    $path = "vendor_evaluations?select=id,vendor_id,evaluator_id,evaluated_at,overall_score,rating,remarks,created_at,updated_at&order=evaluated_at.desc&limit=200";
-    if (vendor_score_is_vendor_role($role)) {
-        if ($actorId === null) {
-            vendor_scores_json_error(401, "Sign in required");
-        }
-        $path .= "&vendor_id=eq.{$actorId}";
+    $path = "vendor_evaluations?select=" . VENDOR_SCORES_EVAL_COLUMNS . "&order=evaluated_at.desc&limit=200";
+    if ($isVendor) {
+        $path .= "&vendor_id=eq." . ($actorId ?? json_error("Sign in required", 401));
     } elseif ($vendorId > 0) {
         $path .= "&vendor_id=eq.{$vendorId}";
-    } elseif (!vendor_score_is_staff_role($role)) {
-        vendor_scores_json_error(403, "Forbidden");
+    } elseif (!$isStaff) {
+        json_error("Forbidden", 403);
     }
 
     $result = supabase_request("GET", $path);
     if (!$result["ok"]) {
-        vendor_scores_json_error($result["status"] ?: 500, contrack_upstream_error($result, "Failed to load evaluations."));
-    }
-    $rows = vendor_score_attach_people(is_array($result["data"]) ? $result["data"] : []);
-    if ($view === "summary") {
-        $seen = [];
-        $unique = [];
-        foreach ($rows as $row) {
-            $vid = (int)($row["vendor_id"] ?? 0);
-            if ($vid <= 0 || isset($seen[$vid])) {
-                continue;
-            }
-            $seen[$vid] = true;
-            $unique[] = vendor_score_public_row($row, []);
-        }
-        echo json_encode($unique);
-        exit;
+        json_error(contrack_upstream_error($result, "Failed to load evaluations."), $result["status"] ?: 500);
     }
     $out = [];
-    foreach ($rows as $row) {
-        $out[] = vendor_score_public_row($row, []);
+    foreach (vendor_score_attach_people(is_array($result["data"]) ? $result["data"] : []) as $row) {
+        if ($view === "list") {
+            $out[] = vendor_score_public_row($row, []);
+            continue;
+        }
+        // The summary keeps only the newest evaluation per vendor.
+        $vid = (int)($row["vendor_id"] ?? 0);
+        if ($vid > 0 && !isset($out[$vid])) {
+            $out[$vid] = vendor_score_public_row($row, []);
+        }
     }
-    echo json_encode($out);
-    exit;
+    json_response(array_values($out));
 }
 
 if ($method === "GET" && ($view === "get" || $view === "one")) {
-    $id = trim((string)($_GET["id"] ?? ""));
-    if (!vendor_score_is_uuid($id)) {
-        vendor_scores_json_error(400, "A valid evaluation id is required.");
-    }
-    $eval = vendor_scores_load_eval($id);
-    if ($eval === null) {
-        vendor_scores_json_error(404, "Evaluation not found.");
-    }
-    if (vendor_score_is_vendor_role($role) && (int)$eval["vendor_id"] !== (int)$actorId) {
-        vendor_scores_json_error(403, "You can only view your own evaluations.");
-    } elseif (!vendor_score_is_staff_role($role) && !vendor_score_is_vendor_role($role)) {
-        vendor_scores_json_error(403, "Forbidden");
+    $eval = vendor_scores_require_eval(trim((string)($_GET["id"] ?? "")));
+    if ($isVendor && (int)$eval["vendor_id"] !== (int)$actorId) {
+        json_error("You can only view your own evaluations.", 403);
+    } elseif (!$isStaff && !$isVendor) {
+        json_error("Forbidden", 403);
     }
     vendor_scores_respond_eval($eval);
 }
 
 if ($method === "POST" && $view === "criteria") {
     require_roles(["admin"]);
-    $input = json_decode((string)file_get_contents("php://input"), true);
-    if (!is_array($input)) {
-        vendor_scores_json_error(400, "Invalid request body");
-    }
+    $input = json_body();
     $id = (int)($input["id"] ?? 0);
     if ($id <= 0) {
-        vendor_scores_json_error(400, "criterion id is required");
+        json_error("criterion id is required");
     }
     $patch = [];
     if (array_key_exists("weight", $input)) {
         if (!is_numeric($input["weight"])) {
-            vendor_scores_json_error(400, "Weight must be a number greater than 0 and at most 1.");
+            json_error("Weight must be a number greater than 0 and at most 1.");
         }
         $w = (float)$input["weight"];
         if ($w <= 0 || $w > 1) {
-            vendor_scores_json_error(400, "Weight must be greater than 0 and at most 1.");
+            json_error("Weight must be greater than 0 and at most 1.");
         }
         $patch["weight"] = round($w, 4);
     }
@@ -235,7 +192,7 @@ if ($method === "POST" && $view === "criteria") {
     if (array_key_exists("name", $input)) {
         $name = trim((string)$input["name"]);
         if ($name === "" || strlen($name) > 80) {
-            vendor_scores_json_error(400, "Criterion name must be 1–80 characters.");
+            json_error("Criterion name must be 1–80 characters.");
         }
         $patch["name"] = $name;
     }
@@ -243,50 +200,38 @@ if ($method === "POST" && $view === "criteria") {
         $patch["description"] = substr(trim((string)$input["description"]), 0, 400);
     }
     if ($patch === []) {
-        vendor_scores_json_error(400, "No criterion fields to update.");
+        json_error("No criterion fields to update.");
     }
     $patch["updated_at"] = gmdate("c");
     $result = supabase_request("PATCH", "vendor_score_criteria?id=eq.{$id}", $patch);
     if (!$result["ok"]) {
-        vendor_scores_json_error($result["status"] ?: 500, contrack_upstream_error($result, "Failed to update criterion."));
+        json_error(contrack_upstream_error($result, "Failed to update criterion."), $result["status"] ?: 500);
     }
     audit_log_event("vendor_score_criteria_updated", ["id" => $id, "fields" => array_keys($patch)], $actorId);
-    echo json_encode($result["data"][0] ?? ["ok" => true]);
-    exit;
+    json_response($result["data"][0] ?? ["ok" => true]);
+}
+
+// Every remaining POST view writes evaluations and is staff-only.
+if ($method === "POST" && in_array($view, ["create", "update", "delete"], true) && (!$isStaff || $actorId === null)) {
+    json_error([
+        "create" => "Only managers, the CEO, and admins can record vendor scores.",
+        "update" => "Only managers, the CEO, and admins can update vendor scores.",
+        "delete" => "Forbidden",
+    ][$view], 403);
 }
 
 if ($method === "POST" && $view === "create") {
-    if (!vendor_score_is_staff_role($role) || $actorId === null) {
-        vendor_scores_json_error(403, "Only managers, the CEO, and admins can record vendor scores.");
-    }
-    $input = json_decode((string)file_get_contents("php://input"), true);
-    if (!is_array($input)) {
-        vendor_scores_json_error(400, "Invalid request body");
-    }
+    $input = json_body();
     $vendorId = (int)($input["vendor_id"] ?? 0);
     if ($vendorId <= 0) {
-        vendor_scores_json_error(400, "Select an existing vendor.");
+        json_error("Select an existing vendor.");
     }
-    $vendor = vendor_scores_assert_vendor_user($vendorId);
-    $criteria = vendor_score_active_criteria();
-    $calc = vendor_score_calculate($criteria, vendor_score_parse_scores_input($input["scores"] ?? []));
+    vendor_scores_assert_vendor_user($vendorId);
+    $calc = vendor_score_calculate(vendor_score_active_criteria(), vendor_score_parse_scores_input($input["scores"] ?? []));
     if (!$calc["ok"]) {
-        vendor_scores_json_error(400, (string)$calc["error"]);
+        json_error((string)$calc["error"]);
     }
-    $remarks = trim((string)($input["remarks"] ?? ""));
-    if (strlen($remarks) > 2000) {
-        vendor_scores_json_error(400, "Remarks must be 2000 characters or fewer.");
-    }
-    $evaluatedAt = trim((string)($input["evaluated_at"] ?? ""));
-    if ($evaluatedAt === "") {
-        $evaluatedAt = gmdate("c");
-    } else {
-        $ts = strtotime($evaluatedAt);
-        if ($ts === false) {
-            vendor_scores_json_error(400, "Evaluation date is invalid.");
-        }
-        $evaluatedAt = gmdate("c", $ts);
-    }
+    [$remarks, $evaluatedAt] = vendor_scores_remarks_and_date(trim((string)($input["remarks"] ?? "")), trim((string)($input["evaluated_at"] ?? "")));
 
     $overall = $calc["overall"];
     $rating = vendor_score_rating($overall);
@@ -299,81 +244,50 @@ if ($method === "POST" && $view === "create") {
         "remarks" => $remarks === "" ? null : $remarks,
     ]]);
     if (!$insert["ok"] || !is_array($insert["data"][0] ?? null)) {
-        vendor_scores_json_error($insert["status"] ?: 500, contrack_upstream_error($insert, "Could not save the evaluation."));
+        json_error(contrack_upstream_error($insert, "Could not save the evaluation."), $insert["status"] ?: 500);
     }
     $eval = $insert["data"][0];
     if (!vendor_scores_persist_lines((string)$eval["id"], $calc["lines"])) {
         supabase_request("DELETE", "vendor_evaluations?id=eq." . urlencode((string)$eval["id"]));
-        vendor_scores_json_error(500, "Could not save criterion scores.");
+        json_error("Could not save criterion scores.", 500);
     }
 
-    audit_log_event(
-        "vendor_evaluation_created",
-        ["evaluation_id" => $eval["id"], "vendor_id" => $vendorId, "overall_score" => $overall],
-        $actorId
-    );
+    audit_log_event("vendor_evaluation_created", ["evaluation_id" => $eval["id"], "vendor_id" => $vendorId, "overall_score" => $overall], $actorId);
     create_user_alert(
         $vendorId,
         "Vendor score recorded",
         "Your performance rating is " . number_format(vendor_star_rating($overall), 1) . " out of 5 (" . vendor_score_rating_label($rating) . ").",
         "announcement"
     );
-
     vendor_scores_respond_eval($eval);
 }
 
 if ($method === "POST" && $view === "update") {
-    if (!vendor_score_is_staff_role($role) || $actorId === null) {
-        vendor_scores_json_error(403, "Only managers, the CEO, and admins can update vendor scores.");
-    }
-    $input = json_decode((string)file_get_contents("php://input"), true);
-    if (!is_array($input)) {
-        vendor_scores_json_error(400, "Invalid request body");
-    }
+    $input = json_body();
     $id = trim((string)($input["id"] ?? ""));
-    if (!vendor_score_is_uuid($id)) {
-        vendor_scores_json_error(400, "A valid evaluation id is required.");
-    }
-    $eval = vendor_scores_load_eval($id);
-    if ($eval === null) {
-        vendor_scores_json_error(404, "Evaluation not found.");
-    }
+    $eval = vendor_scores_require_eval($id);
     if (!vendor_scores_can_write($role, $eval, $actorId)) {
-        vendor_scores_json_error(403, "You can only edit evaluations you recorded.");
+        json_error("You can only edit evaluations you recorded.", 403);
     }
-
-    $criteria = vendor_score_active_criteria();
-    $calc = vendor_score_calculate($criteria, vendor_score_parse_scores_input($input["scores"] ?? []));
+    $calc = vendor_score_calculate(vendor_score_active_criteria(), vendor_score_parse_scores_input($input["scores"] ?? []));
     if (!$calc["ok"]) {
-        vendor_scores_json_error(400, (string)$calc["error"]);
+        json_error((string)$calc["error"]);
     }
-    $remarks = array_key_exists("remarks", $input) ? trim((string)$input["remarks"]) : (string)($eval["remarks"] ?? "");
-    if (strlen($remarks) > 2000) {
-        vendor_scores_json_error(400, "Remarks must be 2000 characters or fewer.");
-    }
-    $evaluatedAt = trim((string)($input["evaluated_at"] ?? $eval["evaluated_at"] ?? ""));
-    if ($evaluatedAt !== "") {
-        $ts = strtotime($evaluatedAt);
-        if ($ts === false) {
-            vendor_scores_json_error(400, "Evaluation date is invalid.");
-        }
-        $evaluatedAt = gmdate("c", $ts);
-    } else {
-        $evaluatedAt = gmdate("c");
-    }
+    [$remarks, $evaluatedAt] = vendor_scores_remarks_and_date(
+        array_key_exists("remarks", $input) ? trim((string)$input["remarks"]) : (string)($eval["remarks"] ?? ""),
+        trim((string)($input["evaluated_at"] ?? $eval["evaluated_at"] ?? ""))
+    );
 
     $overall = $calc["overall"];
     $rating = vendor_score_rating($overall);
+    $evalPath = "vendor_evaluations?id=eq." . urlencode($id);
     // Keep the saved version so a failed write can be rolled back instead of leaving a half-updated score.
     $previousLines = vendor_score_load_lines($id);
-    $previousHeader = [
-        "overall_score" => $eval["overall_score"] ?? null,
-        "rating" => $eval["rating"] ?? null,
-        "remarks" => $eval["remarks"] ?? null,
-        "evaluated_at" => $eval["evaluated_at"] ?? null,
-        "updated_at" => $eval["updated_at"] ?? null,
-    ];
-    $patch = supabase_request("PATCH", "vendor_evaluations?id=eq." . urlencode($id), [
+    $previousHeader = [];
+    foreach (["overall_score", "rating", "remarks", "evaluated_at", "updated_at"] as $key) {
+        $previousHeader[$key] = $eval[$key] ?? null;
+    }
+    $patch = supabase_request("PATCH", $evalPath, [
         "overall_score" => $overall,
         "rating" => $rating,
         "remarks" => $remarks === "" ? null : $remarks,
@@ -381,10 +295,10 @@ if ($method === "POST" && $view === "update") {
         "updated_at" => gmdate("c"),
     ]);
     if (!$patch["ok"] || !is_array($patch["data"][0] ?? null)) {
-        vendor_scores_json_error($patch["status"] ?: 500, contrack_upstream_error($patch, "Could not update the evaluation."));
+        json_error(contrack_upstream_error($patch, "Could not update the evaluation."), $patch["status"] ?: 500);
     }
     if (!vendor_scores_persist_lines($id, $calc["lines"])) {
-        supabase_request("PATCH", "vendor_evaluations?id=eq." . urlencode($id), $previousHeader);
+        supabase_request("PATCH", $evalPath, $previousHeader);
         $restored = vendor_scores_persist_lines($id, array_map(static fn(array $l): array => [
             "criterion_id" => $l["criterion_id"] ?? 0,
             "score" => $l["score"] ?? 0,
@@ -393,39 +307,24 @@ if ($method === "POST" && $view === "update") {
         if (!$restored) {
             error_log("vendor score update rollback failed for evaluation {$id}");
         }
-        vendor_scores_json_error(500, "Could not save criterion scores.");
+        json_error("Could not save criterion scores.", 500);
     }
-    audit_log_event(
-        "vendor_evaluation_updated",
-        ["evaluation_id" => $id, "overall_score" => $overall],
-        $actorId
-    );
+    audit_log_event("vendor_evaluation_updated", ["evaluation_id" => $id, "overall_score" => $overall], $actorId);
     vendor_scores_respond_eval($patch["data"][0]);
 }
 
 if ($method === "POST" && $view === "delete") {
-    if (!vendor_score_is_staff_role($role) || $actorId === null) {
-        vendor_scores_json_error(403, "Forbidden");
-    }
-    $input = json_decode((string)file_get_contents("php://input"), true);
-    $id = trim((string)($input["id"] ?? $_GET["id"] ?? ""));
-    if (!vendor_score_is_uuid($id)) {
-        vendor_scores_json_error(400, "A valid evaluation id is required.");
-    }
-    $eval = vendor_scores_load_eval($id);
-    if ($eval === null) {
-        vendor_scores_json_error(404, "Evaluation not found.");
-    }
+    $id = trim((string)(json_input()["id"] ?? $_GET["id"] ?? ""));
+    $eval = vendor_scores_require_eval($id);
     if (!vendor_scores_can_delete($role, $eval, $actorId)) {
-        vendor_scores_json_error(403, "You can only delete evaluations you recorded (admins may delete any).");
+        json_error("You can only delete evaluations you recorded (admins may delete any).", 403);
     }
     $del = supabase_request("DELETE", "vendor_evaluations?id=eq." . urlencode($id));
     if (!$del["ok"]) {
-        vendor_scores_json_error($del["status"] ?: 500, contrack_upstream_error($del, "Could not delete the evaluation."));
+        json_error(contrack_upstream_error($del, "Could not delete the evaluation."), $del["status"] ?: 500);
     }
     audit_log_event("vendor_evaluation_deleted", ["evaluation_id" => $id, "vendor_id" => $eval["vendor_id"] ?? null], $actorId);
-    echo json_encode(["ok" => true, "id" => $id]);
-    exit;
+    json_response(["ok" => true, "id" => $id]);
 }
 
-vendor_scores_json_error(405, "Method or view not allowed");
+json_error("Method or view not allowed", 405);

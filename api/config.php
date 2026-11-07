@@ -28,6 +28,16 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
         session_set_save_handler(new ContrackSessionStore($sessionLifetime), true);
     }
     session_start();
+    // Strict mode answers an unknown or stale cookie with a fresh empty session id. When that
+    // response lands after a parallel sign-in it overwrites the new login cookie and signs the
+    // user out, so an id that never held data is not sent back to the browser.
+    $incomingSessionId = (string)($_COOKIE[session_name()] ?? "");
+    header_register_callback(static function () use ($incomingSessionId): void {
+        $currentId = session_id();
+        if ($currentId !== "" && $currentId !== $incomingSessionId && empty($_SESSION)) {
+            header_remove("Set-Cookie");
+        }
+    });
 }
 
 if (!defined("CONTRACK_SKIP_JSON_HEADER") || CONTRACK_SKIP_JSON_HEADER !== true) {
@@ -45,23 +55,63 @@ function env_value(string $key, ?string $default = null): ?string
 
 function require_env(string $key): string
 {
-    $value = env_value($key);
-    if ($value === null) {
-        http_response_code(500);
-        echo json_encode(["error" => "Missing required environment variable: {$key}"]);
-        exit;
-    }
-    return $value;
+    return env_value($key) ?? json_error("Missing required environment variable: {$key}", 500);
 }
 
 function env_flag(string $key, bool $default = false): bool
 {
     $value = env_value($key);
-    if ($value === null) {
-        return $default;
+    return $value === null ? $default : in_array(strtolower(trim($value)), ["1", "true", "yes", "on"], true);
+}
+
+// ---------------------------------------------------------------------------
+// JSON responses: every endpoint answers through these.
+// ---------------------------------------------------------------------------
+
+function json_response($data, int $status = 200): never
+{
+    http_response_code($status);
+    echo json_encode($data);
+    exit;
+}
+
+function json_error(string $message, int $status = 400): never
+{
+    json_response(["error" => $message], $status);
+}
+
+/** Answer with a Supabase result: its data on success, a safe error message otherwise. */
+function json_result(array $result, string $fallback, $default = []): never
+{
+    json_response(
+        $result["ok"] ? ($result["data"] ?? $default) : ["error" => contrack_upstream_error($result, $fallback)],
+        (int)$result["status"]
+    );
+}
+
+function request_method(): string
+{
+    return strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
+}
+
+function require_method(string $method): void
+{
+    if (request_method() !== $method) {
+        json_error("Method not allowed", 405);
     }
-    $normalized = strtolower(trim($value));
-    return in_array($normalized, ["1", "true", "yes", "on"], true);
+}
+
+/** Decoded JSON object from the request body, or null when the body is not one. */
+function json_input(): ?array
+{
+    $input = json_decode((string)file_get_contents("php://input"), true);
+    return is_array($input) ? $input : null;
+}
+
+/** Like json_input(), but answers 400 "Invalid request body" when the body is not a JSON object. */
+function json_body(): array
+{
+    return json_input() ?? json_error("Invalid request body");
 }
 
 /**
@@ -138,9 +188,7 @@ function require_session(): array
 {
     $user = get_session_user();
     if ($user === null || !contrack_session_revalidate()) {
-        http_response_code(401);
-        echo json_encode(["error" => "Sign in required"]);
-        exit;
+        json_error("Sign in required", 401);
     }
     $user = get_session_user() ?? $user;
     // PHP holds an exclusive lock on the session file until the request ends, which makes every
@@ -170,11 +218,16 @@ function require_roles(array $roles): string
     require_session();
     $role = normalize_role(get_request_role());
     if (!in_array($role, $roles, true)) {
-        http_response_code(403);
-        echo json_encode(["error" => "Forbidden for role: {$role}"]);
-        exit;
+        json_error("Forbidden for role: {$role}", 403);
     }
     return $role;
+}
+
+/** Signed-in user id, answering 401 when the session carries none. */
+function require_user_id(): int
+{
+    require_session();
+    return get_request_user_id() ?? json_error("Sign in required", 401);
 }
 
 function get_request_user_id(): ?int
@@ -710,9 +763,7 @@ function contrack_enforce_same_origin(): void
             }
         }
     }
-    http_response_code(403);
-    echo json_encode(["error" => "Cross-site request blocked"]);
-    exit;
+    json_error("Cross-site request blocked", 403);
 }
 
 /**
@@ -734,52 +785,63 @@ function audit_log_event(string $event_type, array $details = [], ?int $actor_us
 }
 
 /**
- * In-app alerts stay on unless the user turned them off in Settings.
- * A lookup failure keeps alerts on so a schema miss does not silence the portal.
+ * Notification preference column (notify_alerts / notify_announcements), cached per request.
+ * Preferences stay on unless the user turned them off; a lookup failure keeps them on so a
+ * schema miss does not silence the portal. $remember stores a value already read elsewhere.
  */
-function user_wants_alerts(int $userId, ?bool $remember = null): bool
+function user_notify_pref(int $userId, string $column, ?bool $remember = null): bool
 {
     static $cache = [];
+    $key = "{$column}:{$userId}";
     if ($remember !== null) {
-        $cache[$userId] = $remember;
-        return $remember;
+        return $cache[$key] = $remember;
     }
-    if (array_key_exists($userId, $cache)) {
-        return $cache[$userId];
+    if (!array_key_exists($key, $cache)) {
+        $result = supabase_request("GET", "users?id=eq.{$userId}&select={$column}&limit=1");
+        $row = $result["ok"] ? ($result["data"][0] ?? null) : null;
+        $cache[$key] = !is_array($row) || ($row[$column] ?? true) !== false;
     }
-    $result = supabase_request("GET", "users?id=eq.{$userId}&select=notify_alerts&limit=1");
-    if (!$result["ok"] || !is_array($result["data"][0] ?? null)) {
-        $cache[$userId] = true;
-        return true;
-    }
-    $cache[$userId] = ($result["data"][0]["notify_alerts"] ?? true) !== false;
-    return $cache[$userId];
+    return $cache[$key];
+}
+
+/** Contract Updates preference (users.notify_alerts). */
+function user_wants_alerts(int $userId, ?bool $remember = null): bool
+{
+    return user_notify_pref($userId, "notify_alerts", $remember);
+}
+
+/** System Announcements preference (users.notify_announcements). */
+function user_wants_announcements(int $userId): bool
+{
+    return user_notify_pref($userId, "notify_announcements");
 }
 
 /**
- * "System Announcements" preference (users.notify_announcements), separate from contract alerts.
- * A lookup failure keeps announcements on, same as user_wants_alerts().
+ * Best-effort email copy of an alert. Failures are logged (and recorded in audit_logs) and ignored.
  */
-function user_wants_announcements(int $userId): bool
+function contrack_email_alert(string $to, string $title, string $message): void
 {
-    static $cache = [];
-    if (array_key_exists($userId, $cache)) {
-        return $cache[$userId];
+    if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+        return;
     }
-    $result = supabase_request("GET", "users?id=eq.{$userId}&select=notify_announcements&limit=1");
-    if (!$result["ok"] || !is_array($result["data"][0] ?? null)) {
-        $cache[$userId] = true;
-        return true;
+    require_once __DIR__ . "/lib_mail.php";
+    $base = contrack_public_base_url();
+    $body = trim($message) . "\r\n\r\n"
+        . ($base !== null ? "Sign in to ConTrack AI to view it: {$base}/" : "Sign in to ConTrack AI to view it.")
+        . "\r\n\r\nYou receive this email because Contract Updates notifications are turned on in Profile & Settings.";
+    $error = contrack_send_mail($to, "ConTrack AI: " . trim($title), $body);
+    if ($error !== null) {
+        error_log("notification email to {$to} failed: {$error}");
+        audit_log_event("notification_email_failed", ["to" => $to, "title" => $title, "error" => $error], null);
     }
-    $cache[$userId] = ($result["data"][0]["notify_announcements"] ?? true) !== false;
-    return $cache[$userId];
 }
 
 /**
  * Best-effort in-app alert. Failures are logged and ignored.
  * $kind "contract" follows Contract Updates; "announcement" follows System Announcements.
+ * With $email the same alert is also emailed to the user.
  */
-function create_user_alert(?int $userId, string $title, string $message, string $kind = "contract"): void
+function create_user_alert(?int $userId, string $title, string $message, string $kind = "contract", bool $email = false): void
 {
     if ($userId === null || $userId <= 0) {
         return;
@@ -787,6 +849,11 @@ function create_user_alert(?int $userId, string $title, string $message, string 
     $wanted = $kind === "announcement" ? user_wants_announcements($userId) : user_wants_alerts($userId);
     if (!$wanted) {
         return;
+    }
+    if ($email) {
+        $lookup = supabase_request("GET", "users?id=eq.{$userId}&is_disabled=eq.false&select=email&limit=1");
+        $address = ($lookup["ok"] && is_array($lookup["data"][0] ?? null)) ? (string)($lookup["data"][0]["email"] ?? "") : "";
+        contrack_email_alert($address, $title, $message);
     }
     $payload = [[
         "user_id" => $userId,
@@ -803,20 +870,15 @@ function create_user_alert(?int $userId, string $title, string $message, string 
 
 /**
  * Notify every active user with the given role (manager / ceo / admin / vendor).
+ * With $email each recipient also gets the alert by email.
  */
-function notify_role_users(string $role, string $title, string $message): void
+function notify_role_users(string $role, string $title, string $message, bool $email = false): void
 {
     $role = normalize_role($role);
-    $roles = [$role];
-    if ($role === "admin") {
-        $roles[] = "system_admin";
-    }
-    if ($role === "vendor") {
-        $roles[] = "client";
-        $roles[] = "vendor_client";
-    }
+    $aliases = ["admin" => ["system_admin"], "vendor" => ["client", "vendor_client"]];
+    $roles = array_merge([$role], $aliases[$role] ?? []);
     $ors = implode(",", array_map(static fn(string $r): string => "role.eq.{$r}", $roles));
-    $path = "users?select=id,notify_alerts&is_disabled=eq.false&or=({$ors})";
+    $path = "users?select=id,email,notify_alerts&is_disabled=eq.false&or=({$ors})";
     $result = supabase_request("GET", $path);
     if (!$result["ok"] || !is_array($result["data"])) {
         error_log("notify_role_users failed for {$role}: " . (string)($result["raw"] ?? $result["error"] ?? ""));
@@ -834,6 +896,9 @@ function notify_role_users(string $role, string $title, string $message): void
             user_wants_alerts($id, $wants);
         }
         if ($id > 0 && $wants) {
+            if ($email) {
+                contrack_email_alert((string)($row["email"] ?? ""), $title, $message);
+            }
             $rows[] = [
                 "user_id" => $id,
                 "title" => substr(trim($title), 0, 200),

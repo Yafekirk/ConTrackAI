@@ -1,9 +1,6 @@
-import { acceptTerms } from "/assets/js/api-client.js";
 import { initTermsLinks } from "/assets/js/terms-modal.js";
 
-const ROLE_TO_ROUTE = {
-  vendor: "/pages/VendorClient/VendorDashboard.html",
-};
+const LOGIN_ROUTE = "/index.html";
 
 const PH_MOBILE_RE = /^(09[0-9]{9}|\+639[0-9]{9}|639[0-9]{9})$/;
 const SUPPLIER_TYPES = ["Supply", "Lease", "Service", "Other"];
@@ -148,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const result = await signup({
+      await signup({
         name,
         company_name: name,
         email,
@@ -158,26 +155,9 @@ document.addEventListener("DOMContentLoaded", () => {
         confirm_password: confirmPassword,
         accepted_terms: true,
       });
-      const user = result.user || {};
-
-      // Fallback for older schemas that could not store terms on insert.
-      try {
-        await acceptTerms();
-      } catch (_) {
-        /* signup already required the checkbox; portal can still open */
-      }
-
-      localStorage.setItem(
-        "contrack_user",
-        JSON.stringify({
-          id: user.id ?? null,
-          role: user.role || "vendor",
-          name: user.company_name || user.name || name,
-          company_name: user.company_name || name,
-          email: user.email || "",
-        }),
-      );
-      window.location.href = ROLE_TO_ROUTE.vendor;
+      localStorage.removeItem("contrack_user");
+      sessionStorage.setItem("contrack_signup_pending", "1");
+      window.location.href = LOGIN_ROUTE;
     } catch (error) {
       errorEl.textContent = error.message;
       errorEl.style.display = "block";

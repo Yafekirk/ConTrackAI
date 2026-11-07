@@ -3,67 +3,31 @@ declare(strict_types=1);
 
 require_once __DIR__ . "/config.php";
 
-require_session();
-$userId = get_request_user_id();
-if ($userId === null) {
-    http_response_code(401);
-    echo json_encode(["error" => "Sign in required"]);
-    exit;
-}
-
-$method = strtoupper((string)($_SERVER["REQUEST_METHOD"] ?? "GET"));
+$userId = require_user_id();
+$method = request_method();
 
 if ($method === "GET") {
-    $limit = (int)($_GET["limit"] ?? 50);
-    if ($limit < 1) {
-        $limit = 1;
-    }
-    if ($limit > 100) {
-        $limit = 100;
-    }
-    $path = "alerts?user_id=eq.{$userId}&select=id,user_id,title,message,status,created_at&order=created_at.desc&limit={$limit}";
-    $result = supabase_request("GET", $path);
-    http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? []) : ["error" => contrack_upstream_error($result, "Failed to fetch alerts")]);
-    exit;
+    $limit = max(1, min(100, (int)($_GET["limit"] ?? 50)));
+    $result = supabase_request("GET", "alerts?user_id=eq.{$userId}&select=id,user_id,title,message,status,created_at&order=created_at.desc&limit={$limit}");
+    json_result($result, "Failed to fetch alerts");
 }
 
 if ($method === "PATCH") {
-    $input = json_decode(file_get_contents("php://input"), true);
-    if (!is_array($input)) {
-        http_response_code(400);
-        echo json_encode(["error" => "Invalid request body"]);
-        exit;
-    }
+    $input = json_body();
     $status = strtolower(trim((string)($input["status"] ?? "read")));
-    if (!in_array($status, ["read", "unread"], true)) {
-        $status = "read";
-    }
+    $status = in_array($status, ["read", "unread"], true) ? $status : "read";
+
     if (!empty($input["mark_all"])) {
-        $result = supabase_request(
-            "PATCH",
-            "alerts?user_id=eq.{$userId}&status=eq.unread",
-            ["status" => $status]
-        );
-        http_response_code($result["status"]);
-        echo json_encode($result["ok"] ? ["ok" => true] : ["error" => contrack_upstream_error($result, "Failed to update alerts")]);
-        exit;
+        $result = supabase_request("PATCH", "alerts?user_id=eq.{$userId}&status=eq.unread", ["status" => $status]);
+        json_response($result["ok"] ? ["ok" => true] : ["error" => contrack_upstream_error($result, "Failed to update alerts")], (int)$result["status"]);
     }
+
     $id = (int)($input["id"] ?? 0);
     if ($id <= 0) {
-        http_response_code(400);
-        echo json_encode(["error" => "id is required"]);
-        exit;
+        json_error("id is required");
     }
-    $result = supabase_request(
-        "PATCH",
-        "alerts?id=eq.{$id}&user_id=eq.{$userId}",
-        ["status" => $status]
-    );
-    http_response_code($result["status"]);
-    echo json_encode($result["ok"] ? ($result["data"] ?? ["ok" => true]) : ["error" => contrack_upstream_error($result, "Failed to update alert")]);
-    exit;
+    $result = supabase_request("PATCH", "alerts?id=eq.{$id}&user_id=eq.{$userId}", ["status" => $status]);
+    json_result($result, "Failed to update alert", ["ok" => true]);
 }
 
-http_response_code(405);
-echo json_encode(["error" => "Method not allowed"]);
+json_error("Method not allowed", 405);

@@ -45,17 +45,14 @@ function login_guard_server_wait(string $email): int
 function login_guard_reject_if_server_locked(string $email): void
 {
     $wait = login_guard_server_wait($email);
-    if ($wait <= 0) {
-        return;
+    if ($wait > 0) {
+        json_response([
+            "fails" => (int)($_SESSION["login_fail_count"] ?? 0),
+            "locked" => true,
+            "retry_after" => $wait,
+            "forgot" => false,
+        ], 429);
     }
-    http_response_code(429);
-    echo json_encode([
-        "fails" => (int)($_SESSION["login_fail_count"] ?? 0),
-        "locked" => true,
-        "retry_after" => $wait,
-        "forgot" => false,
-    ]);
-    exit;
 }
 
 function login_guard_payload(): array
@@ -82,12 +79,9 @@ function login_guard_payload(): array
 function login_guard_reject_if_locked(): void
 {
     $payload = login_guard_payload();
-    if (!$payload["locked"]) {
-        return;
+    if ($payload["locked"]) {
+        json_response($payload, 429);
     }
-    http_response_code(429);
-    echo json_encode($payload);
-    exit;
 }
 
 function login_guard_fail(): array
@@ -105,10 +99,8 @@ function login_guard_clear(): void
     unset($_SESSION["login_fail_count"], $_SESSION["login_lock_until"]);
 }
 
-function login_guard_reject_auth_failure(): void
+function login_guard_reject_auth_failure(): never
 {
     $payload = login_guard_fail();
-    http_response_code($payload["locked"] ? 429 : 401);
-    echo json_encode($payload);
-    exit;
+    json_response($payload, $payload["locked"] ? 429 : 401);
 }

@@ -327,6 +327,24 @@ COMMENT ON COLUMN public.users.position_title IS 'Self-service job title shown o
 COMMENT ON COLUMN public.users.department IS 'Self-service department shown on Profile & Settings.';
 COMMENT ON COLUMN public.users.theme_preference IS 'Portal appearance chosen on Profile & Settings: light or dark.';
 
+-- Vendor self-signup approval. Existing rows and admin-created staff default to 'approved';
+-- api/signup.php inserts 'pending' and the CEO approves from the emailed link or the Approvals page.
+ALTER TABLE public.users
+  ADD COLUMN IF NOT EXISTS approval_status text NOT NULL DEFAULT 'approved',
+  ADD COLUMN IF NOT EXISTS approval_token_hash text,
+  ADD COLUMN IF NOT EXISTS approval_decided_at timestamptz,
+  ADD COLUMN IF NOT EXISTS approval_decided_by bigint REFERENCES public.users (id) ON DELETE SET NULL;
+
+ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_approval_status_chk;
+ALTER TABLE public.users ADD CONSTRAINT users_approval_status_chk CHECK (
+  approval_status IN ('pending', 'approved', 'rejected')
+);
+
+CREATE INDEX IF NOT EXISTS idx_users_approval_pending ON public.users (created_at DESC) WHERE approval_status = 'pending';
+
+COMMENT ON COLUMN public.users.approval_status IS 'pending until the CEO approves a self-signed-up vendor; only approved accounts can sign in.';
+COMMENT ON COLUMN public.users.approval_token_hash IS 'SHA-256 of the one-time token in the CEO approval email. Cleared once a decision is made.';
+
 ALTER TABLE public.users DROP CONSTRAINT IF EXISTS users_password_hash_present_chk;
 ALTER TABLE public.users ADD CONSTRAINT users_password_hash_present_chk CHECK (
   char_length(btrim(password)) > 0
