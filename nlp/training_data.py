@@ -286,6 +286,7 @@ def generate_dataset() -> list[tuple[str, str]]:
     rows += [(t, "other") for t in other]
 
     rows += generate_unlabeled_clauses()
+    rows += generate_longform_clauses()
     extra = load_extra_examples()
     if extra:
         print(f"Loaded {len(extra)} extra labeled examples from extra_examples.jsonl")
@@ -530,4 +531,72 @@ def generate_unlabeled_clauses() -> list[tuple[str, str]]:
     )
     rows += [(t, "termination") for t in termination]
 
+    return rows
+
+
+def generate_longform_clauses() -> list[tuple[str, str]]:
+    """Formal multi-page contract wording (articles, recitals, notarial text)."""
+    rows: list[tuple[str, str]] = []
+    rows += [(t, "scope") for t in _many([
+        "The {vendor} shall render the services described in Annex A for the {client}, including all labor, supervision, tools, and consumables necessary for their complete and satisfactory performance.",
+        "The Lessor hereby lets and the Lessee hereby takes on lease the premises located at {addr}, together with all fixtures and parking spaces appurtenant thereto.",
+        "The Contractor undertakes to deliver, install, and commission the equipment enumerated in the bill of quantities at the site designated by the {client}.",
+        "The services shall consist of planning, deployment of qualified personnel, on-site supervision, and submission of completion reports after each engagement.",
+        "The Supplier shall furnish brand-new goods conforming to the technical specifications, delivered in batches according to the agreed schedule.",
+    ], 70)]
+    rows += [(t, "dates") for t in _many([
+        "This Contract shall be for a period of {n} months, commencing on {date} and ending on {date}, unless sooner terminated.",
+        "The term of this Agreement shall commence on {date} and shall expire on {date}.",
+        "This Agreement shall be effective from {date} to {date}, inclusive.",
+        "The lease shall run for a fixed period beginning {date} and ending {date}.",
+    ], 70)]
+    rows += [(t, "value") for t in _many([
+        "In consideration of the services, the Client shall pay the Contractor a total contract price of FOUR MILLION PESOS (PHP {amt}), inclusive of all taxes.",
+        "The total rental for the entire term amounts to PHP {amt}, payable as provided below.",
+        "The aggregate consideration for the goods is PHILIPPINE PESOS (PHP {amt}), which shall be fixed and not subject to escalation.",
+        "For and in consideration of the faithful performance hereof, the Buyer shall pay the sum of PHP {amt} (the Contract Price).",
+    ], 70)]
+    rows += [(t, "payment") for t in _many([
+        "The Lessee shall pay the monthly rental in advance on or before the {n}th day of each month by bank transfer.",
+        "The Client shall pay each undisputed invoice within thirty (30) calendar days from receipt of a valid invoice.",
+        "The Contract Price shall be paid in milestones: {pct}0% upon delivery, {pct}0% upon acceptance, and the balance upon final acceptance.",
+        "The Contractor shall bill monthly in arrears and the Client shall settle each billing before the end of the following month.",
+        "Payment shall be released within fifteen (15) business days after submission of the billing and acceptance report.",
+    ], 80)]
+    rows += [(t, "penalty") for t in _many([
+        "The Supplier shall pay liquidated damages equivalent to one-tenth of one percent (0.1%) of the contract price for every day of delay.",
+        "Any amount not paid when due shall bear a penalty of {pct}% per month until fully paid, without need of demand.",
+        "For every post left unmanned the Contractor shall be charged a penalty of {pct}% of the monthly fee per day.",
+        "Delay in delivery shall entitle the Buyer to liquidated damages of {pct}% of the value of the undelivered items per day, up to ten percent (10%) of the contract price.",
+    ], 70)]
+    rows += [(t, "renewal") for t in _many([
+        "This Contract may be renewed only upon mutual written agreement of the parties, and implied renewal shall not apply.",
+        "This Agreement shall be automatically renewed for successive periods of one (1) year unless either party gives written notice of non-renewal at least {days} days before expiry.",
+        "This Agreement shall not be renewed or extended; any further requirement shall be the subject of a new contract.",
+        "The Lessee shall give written notice of its intention to renew at least {days} days before the expiration of the term.",
+    ], 70)]
+    rows += [(t, "termination") for t in _many([
+        "Either party may terminate this Agreement for material breach that remains uncured {days} days after receipt of written notice.",
+        "The Client may pre-terminate this Contract for convenience upon {days} days prior written notice, paying only for services rendered.",
+        "The Buyer may terminate this Agreement by written notice if the Supplier fails to deliver within {days} days after the scheduled date.",
+    ], 60)]
+    rows += [(t, "other") for t in _many([
+        "WHEREAS, the {vendor} is a corporation duly registered with the Securities and Exchange Commission and is engaged in the business of providing similar services;",
+        "WHEREAS, the Board of Directors of the {client}, in a resolution adopted on {date}, approved the award of this engagement;",
+        "WHEREAS, the {client} conducted a competitive canvass and the proposal dated {date} was found to be the most advantageous;",
+        "WHEREAS, the parties desire to set forth in writing the terms and conditions governing their relationship;",
+        "NOW, THEREFORE, for and in consideration of the foregoing premises and the mutual covenants herein, the parties agree as follows:",
+        "\"Business Day\" means any day other than a Saturday, Sunday, or public holiday in Metro Manila.",
+        "\"Contract Price\" means the total amount payable under this Agreement.",
+        "\"Effective Date\" means the date on which the term commences as stated herein.",
+        "Headings are for convenience only and shall not affect interpretation; words in the singular include the plural.",
+        "BEFORE ME, a Notary Public, personally appeared the following persons exhibiting competent evidence of identity, known to me to be the same persons who executed the foregoing instrument.",
+        "The Contractor shall maintain comprehensive general liability insurance of not less than PHP {amt} per occurrence naming the Client as additional insured.",
+        "The Supplier shall post a performance security of PHP {amt} equivalent to ten percent (10%) of the contract price within ten (10) days from signing.",
+        "Each party represents that it is duly organized, validly existing, and has full corporate power to enter into this Agreement.",
+        "The Contractor is an independent contractor and nothing herein creates an employer-employee relationship.",
+        "This Agreement may be executed in counterparts, each of which shall be deemed an original.",
+        "Neither party may assign this Agreement without the prior written consent of the other party.",
+        "All notices shall be in writing and delivered personally, by registered mail, or by courier to the addresses stated above.",
+    ], 160)]
     return rows

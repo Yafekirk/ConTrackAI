@@ -9,7 +9,8 @@ MONTHS = (
     "September|October|November|December"
 )
 DATE_TOKEN = (
-    rf"(?:(?:{MONTHS})\s+\d{{1,2}},?\s+\d{{4}}"
+    rf"(?:\d{{1,2}}(?:st|nd|rd|th)\s+day\s+of\s+(?:{MONTHS}),?\s+\d{{4}}"
+    rf"|(?:{MONTHS})\s+\d{{1,2}},?\s+\d{{4}}"
     rf"|\d{{4}}-\d{{2}}-\d{{2}}"
     rf"|\d{{1,2}}/\d{{1,2}}/\d{{2,4}}"
     rf"|\d{{1,2}}\s+(?:{MONTHS})\s+\d{{4}}"
@@ -41,6 +42,7 @@ def normalize_date(raw: str | None) -> str | None:
     if not raw:
         return None
     raw = raw.strip().replace(",", "")
+    raw = re.sub(r"^(\d{1,2})(?:st|nd|rd|th)\s+day\s+of\s+", r"\1 ", raw, flags=re.I)
     for fmt in (
         "%Y-%m-%d",
         "%m/%d/%Y",
@@ -181,11 +183,11 @@ def extract_renewal(text: str) -> str | None:
 def extract_type(text: str) -> str | None:
     labeled_val = labeled(text, r"contract type|agreement type|type of contract")
     blob = (labeled_val or text).lower()
-    if re.search(r"supply agreement", blob):
+    if re.search(r"supply agreement|supply and delivery", blob):
         return "Supply Agreement"
-    if re.search(r"lease agreement|\blease of\b", blob):
+    if re.search(r"lease agreement|\blease of\b|contract of lease", blob):
         return "Lease Agreement"
-    if re.search(r"service agreement", blob):
+    if re.search(r"services? agreement", blob):
         return "Service Agreement"
     if "consult" in blob:
         return "Consulting Contract"

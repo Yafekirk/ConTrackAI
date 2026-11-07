@@ -1,0 +1,400 @@
+REPUBLIC OF THE PHILIPPINES
+
+CONTRACT OF LEASE FOR THE TAGUIG EVENT LOGISTICS WAREHOUSE
+
+by and between
+
+JBC Events Management
+
+(as LESSEE)
+
+and
+
+StowWell Logistics Corp.
+
+(as LESSOR)
+
+Contract Reference No. JBC-LSE-2026-0147
+
+CONFIDENTIAL. This document contains proprietary commercial terms. Unauthorized reproduction, distribution, or disclosure is strictly prohibited.
+
+TABLE OF CONTENTS
+
+Article | Heading
+I | DEFINITIONS AND INTERPRETATION
+II | OBJECT OF THE LEASE
+III | TERM OF THE AGREEMENT
+IV | RENEWAL
+V | RENTAL AND CONTRACT PRICE
+VI | PAYMENT TERMS
+VII | SECURITY DEPOSIT AND ADVANCE RENTAL
+VIII | OBLIGATIONS OF THE LESSOR
+IX | OBLIGATIONS OF THE LESSEE
+X | PENALTIES AND LIQUIDATED DAMAGES
+XI | WARRANTIES AND REPRESENTATIONS
+XII | INSURANCE
+XIII | CONFIDENTIALITY
+XIV | DATA PRIVACY
+XV | INDEMNIFICATION
+XVI | LIMITATION OF LIABILITY
+XVII | FORCE MAJEURE
+XVIII | TERMINATION
+XIX | EFFECTS OF TERMINATION
+XX | DISPUTE RESOLUTION
+XXI | GOVERNING LAW AND VENUE
+XXII | NOTICES
+XXIII | ASSIGNMENT AND SUBCONTRACTING
+XXIV | RELATIONSHIP OF THE PARTIES
+XXV | ANTI-CORRUPTION AND ETHICAL CONDUCT
+XXVI | MISCELLANEOUS PROVISIONS
+ | Signatures and Acknowledgment
+ | Annex A - Description Of The Leased Premises
+ | Annex B - Rental Schedule
+
+CONTRACT OF LEASE FOR THE TAGUIG EVENT LOGISTICS WAREHOUSE
+
+KNOW ALL MEN BY THESE PRESENTS:
+
+This Contract of Lease for the Taguig Event Logistics Warehouse (the "Agreement") is made and entered into this 20th day of July 2026 at Makati City, Philippines, by and between:
+
+JBC Events Management, a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, represented herein by its Managing Director, PATRICIA J. BERNAL, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex C, hereinafter referred to as the "LESSEE";
+
+- and -
+
+StowWell Logistics Corp., a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila, Philippines, represented herein by its General Manager, RAFAEL D. LIM, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex D, hereinafter referred to as the "LESSOR".
+
+The LESSEE and the LESSOR are hereinafter referred to individually as a "Party" and collectively as the "Parties".
+
+WITNESSETH:
+
+WHEREAS, the LESSEE is engaged in the business of event planning, management, and production, and organizes more than one hundred fifty (150) corporate, social, and public events every year in Metro Manila and nearby provinces;
+
+WHEREAS, the LESSEE requires a secure, climate-controlled warehouse near its southern Metro Manila venues where it can store, stage, and repair event furniture, staging decks, lighting trusses, and decorative props between engagements;
+
+WHEREAS, the LESSOR is a corporation duly registered with the Securities and Exchange Commission under Company Registration No. CS201108452 issued on March 3, 2011, and is engaged in the ownership, development, and leasing of warehouse, cold-chain, and light-industrial facilities in Metro Manila and Calabarzon;
+
+WHEREAS, the LESSOR represents that it possesses the technical capability, financial capacity, qualified personnel, licenses, and permits necessary to perform its obligations under this Agreement, including a valid Mayor's Permit and BIR Certificate of Registration;
+
+WHEREAS, on April 22, 2026, the LESSEE conducted a competitive canvass among no fewer than three (3) qualified suppliers, and the LESSOR submitted the lowest calculated and most responsive proposal dated May 4, 2026;
+
+WHEREAS, the Board of Directors of the LESSEE, in a resolution adopted on June 18, 2026, approved the award of this engagement to the LESSOR and authorized its representative to sign this Agreement;
+
+WHEREAS, the Board of Directors of the LESSOR, in a resolution adopted on June 25, 2026, likewise authorized its representative to sign this Agreement;
+
+WHEREAS, the LESSOR has examined the requirements of the LESSEE, has satisfied itself as to the conditions affecting the work, and confirms that the price stated herein is sufficient to cover all its obligations;
+
+WHEREAS, both Parties have conducted their own due diligence and confirm that no conflict of interest exists between them, their officers, and their employees with respect to this engagement;
+
+WHEREAS, the Parties desire to set forth in writing the terms and conditions governing their relationship;
+
+NOW, THEREFORE, for and in consideration of the foregoing premises and the mutual covenants and undertakings hereinafter set forth, the Parties hereby agree as follows:
+
+ARTICLE I
+DEFINITIONS AND INTERPRETATION
+
+1.1 In this Agreement, unless the context otherwise requires, the following words and expressions shall have the meanings hereby assigned to them:
+
+  - "Agreement" means this Contract of Lease for the Taguig Event Logistics Warehouse, including its Annexes, as may be amended from time to time in accordance with its terms.
+
+  - "Applicable Law" means all statutes, ordinances, regulations, orders, and issuances of any governmental authority of the Republic of the Philippines that apply to a Party or to the subject matter of this Agreement.
+
+  - "Business Day" means any day other than a Saturday, Sunday, or regular or special non-working holiday declared in Metro Manila.
+
+  - "Confidential Information" means all information disclosed by one Party to the other, whether orally, in writing, or electronically, that is marked as confidential or that a reasonable person would understand to be confidential, including client lists, pricing, event plans, and trade secrets.
+
+  - "Contract Price" means the total amount payable by the LESSEE to the LESSOR under Article V.
+
+  - "Effective Date" means the date on which the Term commences, as stated in Article III.
+
+  - "Force Majeure Event" has the meaning given in Article XVII.
+
+  - "Intellectual Property Rights" means patents, copyrights, trademarks, trade names, designs, know-how, and all similar rights, whether registered or not.
+
+  - "Personal Data" has the meaning given to it under Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, and its Implementing Rules and Regulations.
+
+  - "Personnel" means the officers, employees, agents, and subcontractors of a Party who are engaged in the performance of this Agreement.
+
+  - "Term" means the period described in Article III, as may be renewed or extended in accordance with Article IV.
+
+1.3 Headings are inserted for convenience only and shall not affect the interpretation of this Agreement. Words importing the singular include the plural and vice versa. The words "include" and "including" shall be read without limitation. References to a statute include that statute as amended or replaced.
+
+1.4 In case of conflict or inconsistency among the documents forming part of this Agreement, the following order of precedence shall apply: (a) this Agreement; (b) Annex A; (c) Annex B; and (d) the proposal of the LESSOR dated May 4, 2026, to the extent incorporated herein.
+
+ARTICLE II
+OBJECT OF THE LEASE
+
+2.1 The LESSOR hereby leases to the LESSEE, and the LESSEE hereby accepts in lease from the LESSOR, Warehouse Building No. 4 of the FTI Complex, Western Bicutan, Taguig City, with a gross floor area of approximately one thousand eight hundred (1,800) square meters, together with two (2) dock-level loading bays, a mezzanine office of one hundred twenty (120) square meters, and twelve (12) exclusive parking slots (collectively, the "Leased Premises"), for use as an event logistics warehouse, staging area, and repair workshop.
+
+2.2 The Leased Premises shall be delivered with a working fire-suppression and sprinkler system, closed-circuit television coverage of all entry points, 24-hour perimeter security provided by the LESSOR, three-phase electrical service of not less than 400 amperes, and air-conditioning in the mezzanine office. The LESSOR shall maintain the roof, structural elements, perimeter fence, common driveways, and building systems in good working order throughout the Term.
+
+2.3 The LESSEE may install, at its own cost, pallet racking, a paint booth with appropriate ventilation, workbenches, and temporary partitions, provided that plans are submitted to the LESSOR at least fifteen (15) Business Days before installation and no structural alteration is made. All such improvements that can be removed without damage shall remain the property of the LESSEE.
+
+2.4 The LESSEE shall use the Leased Premises solely for the storage, staging, assembly, and repair of event equipment and related office work, and shall not store flammable liquids in excess of the quantities permitted by the Bureau of Fire Protection, explosives, or any hazardous substance.
+
+ARTICLE III
+TERM OF THE AGREEMENT
+
+3.1 The term of this Contract shall be for a period of three (3) years, commencing on August 1, 2026 and ending on July 31, 2029 (the "Term"), unless sooner terminated in accordance with Article XVIII. The LESSOR shall turn over possession of the Leased Premises to the LESSEE not later than five (5) Business Days before the start of the Term, free from all occupants and debris.
+
+3.2 Obligations which by their nature are intended to survive the expiration or termination of this Agreement, including those relating to confidentiality, data privacy, indemnification, warranties, and payment of amounts already due, shall survive for the period stated in the relevant Article or, if none is stated, for the period allowed under Applicable Law.
+
+ARTICLE IV
+RENEWAL
+
+4.1 This Contract may be renewed only upon the mutual written agreement of the parties. The LESSEE shall signify in writing its intention to renew not later than ninety (90) days before the expiration of the Term, and the parties shall negotiate in good faith the rental rate and other terms of the renewal period. Failing such written agreement, this Contract shall expire at the end of the Term and implied renewal (tacita reconduccion) under Article 1670 of the Civil Code of the Philippines shall not apply.
+
+4.2 Any renewal or extension shall be documented in a written instrument signed by the authorized representatives of both Parties, and no course of dealing or acceptance of payment after expiration shall be construed as a renewal unless expressly provided in this Article.
+
+ARTICLE V
+RENTAL AND CONTRACT PRICE
+
+5.1 In consideration of the faithful performance by the LESSOR of its obligations under this Agreement, the LESSEE shall pay the LESSOR a total contract price of SEVEN MILLION FIVE HUNDRED SIXTY THOUSAND PESOS (PHP 7,560,000.00), representing the aggregate monthly rentals for thirty-six (36) months as detailed in the rental schedule in Annex B (the "Contract Price").
+
+5.2 The Contract Price is fixed and shall not be subject to escalation during the Term, except as expressly provided herein or as required by Applicable Law. The Contract Price includes all costs of labor, materials, equipment, transportation, overhead, profit, and taxes, other than taxes that are by law for the account of the LESSEE.
+
+5.3 The LESSOR acknowledges that it has satisfied itself as to the sufficiency of the Contract Price and shall not be entitled to any additional payment by reason of any error or omission in its own estimates.
+
+ARTICLE VI
+PAYMENT TERMS
+
+6.1 The LESSEE shall pay the monthly rental in advance, on or before the fifth (5th) day of each calendar month, by direct bank transfer to the account designated in writing by the LESSOR. Rental for any partial month at the start or end of the Term shall be prorated on a daily basis.
+
+6.2 The LESSEE shall issue post-dated checks or standing bank instructions covering the rentals for each lease year not later than ten (10) Business Days before the start of that lease year. The LESSOR shall issue an official receipt for every payment received.
+
+6.3 Utility charges for electricity, water, and telecommunications consumed in the Leased Premises are not included in the monthly rental and shall be paid by the LESSEE directly to the utility providers based on separate sub-meters.
+
+6.4 The monthly rental shall be TWO HUNDRED FIVE THOUSAND PESOS (PHP 205,000.00) for the first two (2) lease years and shall escalate to TWO HUNDRED TWENTY THOUSAND PESOS (PHP 220,000.00) at the start of the third lease year. The escalated rental is already reflected in the Contract Price stated in Article V.
+
+ARTICLE VII
+SECURITY DEPOSIT AND ADVANCE RENTAL
+
+7.1 Upon signing of this Contract, the LESSEE shall pay the LESSOR a security deposit equivalent to three (3) months' rental, or SIX HUNDRED FIFTEEN THOUSAND PESOS (PHP 615,000.00), and an advance rental equivalent to two (2) months' rental, or FOUR HUNDRED TEN THOUSAND PESOS (PHP 410,000.00), to be applied to the first two (2) months of the Term. The security deposit shall answer for unpaid utilities and damage to the Leased Premises beyond ordinary wear and tear, and shall be returned without interest within sixty (60) days after the LESSEE vacates the Leased Premises.
+
+7.2 The LESSEE may draw on the security to recover any amount due from the LESSOR under this Agreement, including liquidated damages, penalties, and the cost of remedying any default, without prejudice to any other remedy available to the LESSEE.
+
+ARTICLE VIII
+OBLIGATIONS OF THE LESSOR
+
+8.1 In addition to its other obligations under this Agreement, the LESSOR shall:
+
+  - Deliver the Leased Premises in good, clean, and tenantable condition, with all building systems in working order, on or before the turnover date.
+
+  - Undertake all major and structural repairs, including the roof, load-bearing walls, floor slab, drainage, and main electrical and plumbing lines, at its own cost.
+
+  - Maintain fire-protection equipment and secure the annual Fire Safety Inspection Certificate for the building.
+
+  - Pay real property taxes and assessments on the land and building.
+
+  - Respect the LESSEE's peaceful and adequate enjoyment of the Leased Premises for the entire Term.
+
+8.3 The LESSOR shall perform its obligations with the degree of skill, care, and diligence reasonably expected of an experienced and reputable provider of similar goods or services in the Philippines.
+
+ARTICLE IX
+OBLIGATIONS OF THE LESSEE
+
+9.1 The LESSEE shall pay the Contract Price in accordance with Article VI, provide the LESSOR with timely access to its premises and venues as reasonably necessary, and designate a representative who shall coordinate with the LESSOR on all matters relating to this Agreement.
+
+9.2 The LESSEE shall give the LESSOR reasonable advance notice of any change in its schedule, venue, or requirements that may affect the performance of this Agreement, and the Parties shall agree in writing on any resulting adjustment.
+
+ARTICLE X
+PENALTIES AND LIQUIDATED DAMAGES
+
+10.1 Any rental not paid on its due date shall bear a penalty of three percent (3%) per month on the unpaid amount, computed from the due date until fully paid, without need of demand.
+
+10.2 Should the LESSEE fail to vacate the Leased Premises upon the expiration or termination of this Contract, the LESSEE shall pay the LESSOR a holdover fee equal to two hundred percent (200%) of the last monthly rental for each month or fraction thereof of continued occupancy.
+
+10.3 Should the LESSOR fail to restore electrical service, fire-protection systems, or roof integrity within seventy-two (72) hours after written notice from the LESSEE, the LESSEE shall be entitled to a rental abatement of one-thirtieth (1/30) of the monthly rental for each day of continued failure.
+
+10.4 The Parties agree that the liquidated damages and penalties provided in this Article are a genuine pre-estimate of the loss likely to be suffered and are not a penalty in the sense of Article 1229 of the Civil Code of the Philippines.
+
+ARTICLE XI
+WARRANTIES AND REPRESENTATIONS
+
+11.1 Each Party represents and warrants that: (a) it is duly organized, validly existing, and in good standing under the laws of the Philippines; (b) it has full corporate power and authority to enter into and perform this Agreement; (c) the execution of this Agreement does not violate its articles of incorporation, by-laws, or any agreement to which it is a party; and (d) there is no pending or threatened litigation that would materially affect its ability to perform this Agreement.
+
+11.2 The LESSOR further warrants that all goods, premises, or services furnished under this Agreement shall conform to the specifications in the Annexes, shall be fit for the purpose for which they are intended, and shall comply with all Applicable Law, including laws on labor, safety, health, and the environment.
+
+11.3 The LESSOR warrants that it has not given or promised any commission, gift, or other benefit to any officer or employee of the LESSEE in connection with the award or performance of this Agreement.
+
+ARTICLE XII
+INSURANCE
+
+12.1 The LESSOR shall, at its own cost, obtain and maintain throughout the Term comprehensive general liability insurance with a limit of not less than TWENTY MILLION PESOS (PHP 20,000,000.00) per occurrence, and such other insurance as may be required by Applicable Law, naming the LESSEE as an additional insured.
+
+12.2 The LESSOR shall likewise maintain property or all-risk insurance in an amount of not less than FIVE MILLION PESOS (PHP 5,000,000.00), and shall deliver certificates of insurance to the LESSEE within fifteen (15) days from signing and upon each renewal of the policies.
+
+12.3 Failure to maintain the required insurance shall entitle the LESSEE to procure the same and deduct the premiums from any amount due to the LESSOR.
+
+ARTICLE XIII
+CONFIDENTIALITY
+
+13.1 Each Party shall hold the Confidential Information of the other Party in strict confidence, shall use it only for the purposes of this Agreement, and shall not disclose it to any third party without the prior written consent of the disclosing Party, except to its Personnel and professional advisers who need to know it and are bound by equivalent obligations.
+
+13.2 The obligations in this Article shall not apply to information that: (a) is or becomes publicly available through no fault of the receiving Party; (b) was lawfully known to the receiving Party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or by order of a competent court, provided that prompt notice is given to the disclosing Party.
+
+13.3 The obligations of confidentiality shall survive for a period of three (3) years after the expiration or termination of this Agreement.
+
+ARTICLE XIV
+DATA PRIVACY
+
+14.1 To the extent that the LESSOR processes Personal Data on behalf of the LESSEE, the LESSOR shall act as a personal information processor and shall process such Personal Data only on the documented instructions of the LESSEE and in compliance with the Data Privacy Act of 2012, its Implementing Rules and Regulations, and the issuances of the National Privacy Commission.
+
+14.2 The LESSOR shall implement reasonable and appropriate organizational, physical, and technical security measures to protect Personal Data, shall notify the LESSEE of any personal data breach within twenty-four (24) hours from discovery, and shall return or securely destroy all Personal Data upon termination of this Agreement.
+
+ARTICLE XV
+INDEMNIFICATION
+
+15.1 The LESSOR shall defend, indemnify, and hold harmless the LESSEE, its directors, officers, employees, and clients from and against all claims, losses, damages, liabilities, fines, costs, and expenses, including reasonable attorney's fees, arising from: (a) any breach of this Agreement by the LESSOR; (b) the negligence or willful misconduct of the LESSOR or its Personnel; (c) any claim by the LESSOR's Personnel for wages, benefits, or injuries; and (d) any infringement of Intellectual Property Rights by goods or materials supplied by the LESSOR.
+
+15.2 The indemnified Party shall give prompt written notice of any claim, allow the indemnifying Party to control the defense, and provide reasonable assistance at the indemnifying Party's expense.
+
+ARTICLE XVI
+LIMITATION OF LIABILITY
+
+16.1 Except for liability arising from fraud, gross negligence, willful misconduct, breach of confidentiality, data privacy violations, or the indemnities in Article XV, the aggregate liability of each Party under this Agreement shall not exceed the total rentals paid by the LESSEE during the twelve (12) months immediately preceding the event giving rise to the claim.
+
+16.2 Neither Party shall be liable to the other for indirect, special, or consequential damages, including loss of profit, revenue, or goodwill, even if advised of the possibility of such damages.
+
+ARTICLE XVII
+FORCE MAJEURE
+
+17.1 Neither Party shall be liable for any delay or failure to perform its obligations, other than obligations to pay money, to the extent caused by a Force Majeure Event, meaning an event beyond the reasonable control of the affected Party, including typhoons, earthquakes, floods, fire, epidemics, war, civil disturbance, and acts of government, that could not have been prevented by reasonable diligence.
+
+17.2 The affected Party shall notify the other Party in writing within three (3) Business Days after the occurrence of the Force Majeure Event, shall use reasonable efforts to mitigate its effects, and shall resume performance as soon as practicable. If a Force Majeure Event continues for more than sixty (60) consecutive days, either Party may terminate this Agreement by written notice without liability.
+
+ARTICLE XVIII
+TERMINATION
+
+18.1 Either party may terminate this Contract for a material breach by the other party that remains uncured thirty (30) days after receipt of written notice specifying the breach. The LESSEE may pre-terminate this Contract for convenience after the first lease year by giving the LESSOR not less than sixty (60) days prior written notice, in which case the advance rental shall be forfeited in favor of the LESSOR.
+
+18.2 Either Party may terminate this Agreement immediately by written notice if the other Party becomes insolvent, makes an assignment for the benefit of creditors, is placed under receivership or rehabilitation, or ceases to carry on business in the ordinary course.
+
+18.3 Termination shall be effected by written notice delivered in accordance with Article XXII, stating the grounds for termination and the effective date thereof.
+
+ARTICLE XIX
+EFFECTS OF TERMINATION
+
+19.1 Upon expiration or termination of this Agreement for any reason, the LESSOR shall promptly return all property, documents, and Confidential Information of the LESSEE in its possession, and the LESSEE shall pay all undisputed amounts due for obligations performed up to the effective date of termination.
+
+19.2 Termination shall be without prejudice to any rights or remedies accrued to either Party before the effective date of termination, including the right to claim damages for any breach.
+
+ARTICLE XX
+DISPUTE RESOLUTION
+
+20.1 The Parties shall endeavor to settle amicably any dispute, controversy, or claim arising out of or relating to this Agreement through good-faith negotiations between their senior officers within thirty (30) days from written notice of the dispute.
+
+20.2 Any dispute not settled by negotiation shall be referred to mediation under the rules of the Philippine Mediation Center, and failing settlement within sixty (60) days, to arbitration in Metro Manila in accordance with Republic Act No. 9285, the Alternative Dispute Resolution Act of 2004. The arbitral award shall be final and binding on the Parties.
+
+ARTICLE XXI
+GOVERNING LAW AND VENUE
+
+21.1 This Agreement shall be governed by and construed in accordance with the laws of the Republic of the Philippines.
+
+21.2 Subject to Article XX, any action to enforce an arbitral award or to obtain interim relief shall be filed exclusively in the proper courts of Pasig City, to the exclusion of all other venues.
+
+ARTICLE XXII
+NOTICES
+
+22.1 All notices under this Agreement shall be in writing and delivered personally, by registered mail, by reputable courier, or by electronic mail with confirmation of receipt, to the addresses below or to such other address as a Party may designate by written notice:
+
+  - To the LESSEE: JBC Events Management, Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, Attention: Patricia J. Bernal, Managing Director; e-mail: legal@jbcevents.example.ph
+
+  - To the LESSOR: StowWell Logistics Corp., Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila, Philippines, Attention: Rafael D. Lim, General Manager; e-mail: contracts@stowwell.example.ph
+
+22.3 Notices shall be deemed received upon personal delivery, three (3) Business Days after mailing by registered mail or courier, or upon confirmation of receipt in the case of electronic mail.
+
+ARTICLE XXIII
+ASSIGNMENT AND SUBCONTRACTING
+
+23.1 Neither Party shall assign or transfer this Agreement or any of its rights or obligations hereunder without the prior written consent of the other Party. The LESSOR shall not subcontract any part of its obligations without the prior written consent of the LESSEE, and shall remain fully responsible for the acts and omissions of its subcontractors.
+
+ARTICLE XXIV
+RELATIONSHIP OF THE PARTIES
+
+24.1 The LESSOR is an independent contractor. Nothing in this Agreement shall be construed to create a partnership, joint venture, agency, or employer-employee relationship between the LESSEE and the LESSOR or its Personnel. The LESSOR shall have exclusive control over the means and methods of performing its obligations and shall be solely responsible for the wages, benefits, and statutory contributions of its Personnel.
+
+ARTICLE XXV
+ANTI-CORRUPTION AND ETHICAL CONDUCT
+
+25.1 Each Party shall comply with Republic Act No. 3019, the Anti-Graft and Corrupt Practices Act, and all other applicable anti-bribery laws, and shall not offer, give, solicit, or accept any improper payment or advantage in connection with this Agreement.
+
+25.2 The LESSOR shall promptly report to the LESSEE any request for an improper payment made by any Personnel of the LESSEE. Any breach of this Article shall be a material breach entitling the non-breaching Party to terminate this Agreement immediately.
+
+ARTICLE XXVI
+MISCELLANEOUS PROVISIONS
+
+26.1 No amendment or modification of this Agreement shall be valid unless made in writing and signed by the authorized representatives of both Parties.
+
+26.2 The failure of a Party to insist on strict performance of any provision of this Agreement shall not be construed as a waiver of that provision or of any other provision.
+
+26.3 If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall continue in full force and effect, and the invalid provision shall be replaced by a valid provision that most closely reflects the intention of the Parties.
+
+26.4 This Agreement, together with its Annexes, constitutes the entire agreement between the Parties on its subject matter and supersedes all prior negotiations, proposals, understandings, and agreements, whether written or oral.
+
+26.5 This Agreement may be executed in several counterparts, each of which shall be deemed an original, and all of which together shall constitute one and the same instrument. Documentary stamp tax on this Agreement, if any, shall be for the account of the LESSOR.
+
+IN WITNESS WHEREOF, the Parties have hereunto set their hands on the date and at the place first above written.
+
+For the LESSEE:
+JBC EVENTS MANAGEMENT
+
+By:  ______________________________
+PATRICIA J. BERNAL
+Managing Director
+
+For the LESSOR:
+STOWWELL LOGISTICS CORP.
+
+By:  ______________________________
+RAFAEL D. LIM
+General Manager
+
+SIGNED IN THE PRESENCE OF:
+
+______________________________          ______________________________
+Carlo M. Reyes                            Andrea S. Villareal
+
+ACKNOWLEDGMENT
+
+REPUBLIC OF THE PHILIPPINES )
+MAKATI CITY ) S.S.
+
+BEFORE ME, a Notary Public for and in Makati City, personally appeared the following persons, exhibiting to me their competent evidence of identity as indicated below:
+
+Name | Competent Evidence of Identity | Date / Place Issued
+Patricia J. Bernal | Passport No. P4471209B | 11 January 2024 / DFA Manila
+Rafael D. Lim | Driver's License No. N02-15-338471 | 02 March 2025 / LTO Quezon City
+
+known to me and to me known to be the same persons who executed the foregoing Contract of Lease for the Taguig Event Logistics Warehouse, consisting of the pages hereof including the page on which this Acknowledgment is written, and who acknowledged to me that the same is their free and voluntary act and deed as well as that of the corporations they respectively represent.
+
+WITNESS MY HAND AND SEAL on the date and at the place first above written.
+
+Doc. No. ____;
+Page No. ____;
+Book No. ____;
+Series of 2026.
+
+NOTARY PUBLIC
+Until December 31, 2027
+Roll of Attorneys No. 71234
+
+ANNEX A - DESCRIPTION OF THE LEASED PREMISES
+
+Item | Description
+Building | Warehouse Building No. 4, FTI Complex, Western Bicutan, Taguig City
+Gross floor area | Approx. 1,800 sq. m. ground floor + 120 sq. m. mezzanine office
+Clear height | 9.0 meters to the underside of roof trusses
+Loading | Two (2) dock-level bays with hydraulic levelers
+Power | Three-phase, 400A; separate sub-meter
+Security | 24-hour guard, CCTV at all entry points, access logs
+Parking | Twelve (12) exclusive slots in front of Building No. 4
+
+ANNEX B - RENTAL SCHEDULE
+
+Lease Year | Period | Monthly Rental | Annual Rental
+Year 1 | Aug 2026 - Jul 2027 | PHP 205,000.00 | PHP 2,460,000.00
+Year 2 | Aug 2027 - Jul 2028 | PHP 205,000.00 | PHP 2,460,000.00
+Year 3 | Aug 2028 - Jul 2029 | PHP 220,000.00 | PHP 2,640,000.00
+Total | 36 months |  | PHP 7,560,000.00
+
+Annexes C and D (Secretary's Certificates) are on file with the Parties and are incorporated herein by reference.

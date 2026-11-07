@@ -1,18 +1,18 @@
               precision    recall  f1-score   support
 
-       dates       1.00      1.00      1.00        46
-       other       1.00      1.00      1.00        22
+       dates       1.00      1.00      1.00        60
+       other       1.00      1.00      1.00        54
      parties       1.00      1.00      1.00        60
-     payment       1.00      1.00      1.00        38
-     penalty       1.00      1.00      1.00        44
-     renewal       1.00      1.00      1.00        42
-       scope       1.00      1.00      1.00        42
+     payment       1.00      1.00      1.00        54
+     penalty       1.00      1.00      1.00        58
+     renewal       1.00      1.00      1.00        56
+       scope       1.00      1.00      1.00        56
   signatures       1.00      1.00      1.00        36
- termination       1.00      1.00      1.00        39
+ termination       1.00      1.00      1.00        51
        title       1.00      1.00      1.00        38
         type       1.00      1.00      1.00        30
-       value       1.00      1.00      1.00        40
+       value       1.00      1.00      1.00        54
 
-    accuracy                           1.00       477
-   macro avg       1.00      1.00      1.00       477
-weighted avg       1.00      1.00      1.00       477
+    accuracy                           1.00       607
+   macro avg       1.00      1.00      1.00       607
+weighted avg       1.00      1.00      1.00       607

@@ -1,0 +1,79 @@
+{
+  "contract_title": "Supply and Delivery Agreement for Audio-Visual, Lighting and Staging Equipment",
+  "contract_type": "Supply Agreement",
+  "client_name": "JBC Events Management",
+  "vendor_name": "LumenStage AV Trading Corp.",
+  "vendor_address": "Unit 5, Northgate Cyberzone, Filinvest City, Alabang, Muntinlupa City, Philippines",
+  "start_date": "2026-09-15",
+  "end_date": "2027-03-31",
+  "signed_date": "2026-08-28",
+  "contract_value": 9875500.0,
+  "currency": "PHP",
+  "payment_terms": "Milestone-based",
+  "scope": "The SUPPLIER shall supply, deliver, install, test, and commission at the BUYER's Pasig warehouse the professional audio-visual, lighting, and staging equipment listed in Annex A (the \"Goods\"), brand-new and in original packaging, together with operator training for up to ten (10) BUYER personnel and all manuals, software licenses, and warranty certificates.",
+  "penalty_clause": "Should the SUPPLIER fail to deliver any batch on the date stated in Annex B, the SUPPLIER shall pay the BUYER liquidated damages equivalent to one percent (1%) of the value of the undelivered Goods for each day of delay, up to a maximum of ten percent (10%) of the Contract Price, after which the BUYER may terminate this Agreement and forfeit the performance security.",
+  "renewal_terms": "No renewal",
+  "termination_clause": "The BUYER may terminate this Agreement by written notice if the SUPPLIER fails to deliver any batch within thirty (30) days after its scheduled delivery date, or commits any other material breach that remains uncured fifteen (15) days after written notice. Either party may terminate this Agreement upon the insolvency, receivership, or cessation of business of the other party.",
+  "client_signatory": "Patricia J. Bernal, Managing Director",
+  "vendor_signatory": "Isabelle G. Tan, Vice President for Sales",
+  "financial_obligations": "Contract value ₱9,875,500.00; Payment: Milestone-based; Penalties: Should the SUPPLIER fail to deliver any batch on the date stated in Annex B, the SUPPLIER shall pay the BUYER liquidated damages equivalent to one percent (1%) of the value of the undelivered Goods for each day of delay, up to a maximum of ten percent (10%) of the Contract Price, after which the BUYER may terminate this Agreement and forfeit the performance security.",
+  "extraction_mode": "long-form",
+  "document_stats": {
+    "articles": 26,
+    "whereas_clauses": 10,
+    "paragraphs_total": 202,
+    "paragraphs_scanned": 68,
+    "paragraphs_used": 7,
+    "ignored_sections": [
+      "acknowledgment",
+      "annex",
+      "cover",
+      "recitals",
+      "toc"
+    ]
+  },
+  "evidence_clauses": [
+    {
+      "label": "dates",
+      "confidence": 0.8,
+      "section": "TERM OF THE AGREEMENT",
+      "text": "This Agreement shall be effective from September 15, 2026 to March 31, 2027, inclusive (the \"Term\"), which period covers the delivery of all batches, acceptance testing, and operator training. The warranty obligations in Article XI shall survive the expiration of the Term."
+    },
+    {
+      "label": "value",
+      "confidence": 0.529,
+      "section": "CONTRACT PRICE",
+      "text": "In consideration of the faithful performance by the SUPPLIER of its obligations under this Agreement, the BUYER shall pay the SUPPLIER a total contract price of NINE MILLION EIGHT HUNDRED SEVENTY-FIVE THOUSAND FIVE HUNDRED PESOS (PHP 9,875,500.00), inclusive of delivery, installation, testing, commissioning, operator training, and twelve percent (12%) value-added tax (the \"Contract Price\")."
+    },
+    {
+      "label": "payment",
+      "confidence": 0.632,
+      "section": "PAYMENT TERMS",
+      "text": "The Contract Price shall be paid in three (3) milestones: thirty percent (30%) upon delivery and acceptance of Batch 1, sixty percent (60%) upon delivery and acceptance of Batches 2 and 3, and the remaining ten percent (10%) as retention money upon completion of operator training and issuance of the final certificate of acceptance."
+    },
+    {
+      "label": "renewal",
+      "confidence": 0.664,
+      "section": "RENEWAL",
+      "text": "This Agreement shall not be renewed or extended. Any additional requirement of the BUYER for goods or services beyond those listed in Annex A shall be the subject of a separate procurement and a new written agreement."
+    },
+    {
+      "label": "scope",
+      "confidence": 0.584,
+      "section": "SCOPE OF SUPPLY",
+      "text": "The SUPPLIER shall supply, deliver, install, test, and commission at the BUYER's Pasig warehouse the professional audio-visual, lighting, and staging equipment listed in Annex A (the \"Goods\"), brand-new and in original packaging, together with operator training for up to ten (10) BUYER personnel and all manuals, software licenses, and warranty certificates."
+    },
+    {
+      "label": "penalty",
+      "confidence": 0.576,
+      "section": "PENALTIES AND LIQUIDATED DAMAGES",
+      "text": "Should the SUPPLIER fail to deliver any batch on the date stated in Annex B, the SUPPLIER shall pay the BUYER liquidated damages equivalent to one percent (1%) of the value of the undelivered Goods for each day of delay, up to a maximum of ten percent (10%) of the Contract Price, after which the BUYER may terminate this Agreement and forfeit the performance security."
+    },
+    {
+      "label": "termination",
+      "confidence": 0.94,
+      "section": "TERMINATION",
+      "text": "The BUYER may terminate this Agreement by written notice if the SUPPLIER fails to deliver any batch within thirty (30) days after its scheduled delivery date, or commits any other material breach that remains uncured fifteen (15) days after written notice. Either party may terminate this Agreement upon the insolvency, receivership, or cessation of business of the other party."
+    }
+  ]
+}

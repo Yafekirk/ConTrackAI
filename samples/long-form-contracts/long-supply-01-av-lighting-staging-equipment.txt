@@ -1,0 +1,400 @@
+REPUBLIC OF THE PHILIPPINES
+
+SUPPLY AND DELIVERY AGREEMENT FOR AUDIO-VISUAL, LIGHTING AND STAGING EQUIPMENT
+
+by and between
+
+JBC Events Management
+
+(as BUYER)
+
+and
+
+LumenStage AV Trading Corp.
+
+(as SUPPLIER)
+
+Contract Reference No. JBC-SUP-2026-0208
+
+CONFIDENTIAL. This document contains proprietary commercial terms. Unauthorized reproduction, distribution, or disclosure is strictly prohibited.
+
+TABLE OF CONTENTS
+
+Article | Heading
+I | DEFINITIONS AND INTERPRETATION
+II | SCOPE OF SUPPLY
+III | TERM OF THE AGREEMENT
+IV | RENEWAL
+V | CONTRACT PRICE
+VI | PAYMENT TERMS
+VII | PERFORMANCE SECURITY
+VIII | OBLIGATIONS OF THE SUPPLIER
+IX | OBLIGATIONS OF THE BUYER
+X | PENALTIES AND LIQUIDATED DAMAGES
+XI | WARRANTIES AND REPRESENTATIONS
+XII | INSURANCE
+XIII | CONFIDENTIALITY
+XIV | DATA PRIVACY
+XV | INDEMNIFICATION
+XVI | LIMITATION OF LIABILITY
+XVII | FORCE MAJEURE
+XVIII | TERMINATION
+XIX | EFFECTS OF TERMINATION
+XX | DISPUTE RESOLUTION
+XXI | GOVERNING LAW AND VENUE
+XXII | NOTICES
+XXIII | ASSIGNMENT AND SUBCONTRACTING
+XXIV | RELATIONSHIP OF THE PARTIES
+XXV | ANTI-CORRUPTION AND ETHICAL CONDUCT
+XXVI | MISCELLANEOUS PROVISIONS
+ | Signatures and Acknowledgment
+ | Annex A - Technical Specifications And Bill Of Quantities
+ | Annex B - Delivery Schedule
+
+SUPPLY AND DELIVERY AGREEMENT FOR AUDIO-VISUAL, LIGHTING AND STAGING EQUIPMENT
+
+KNOW ALL MEN BY THESE PRESENTS:
+
+This Supply and Delivery Agreement for Audio-Visual, Lighting and Staging Equipment (the "Agreement") is made and entered into this 28th day of August 2026 at Pasig City, Philippines, by and between:
+
+JBC Events Management, a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, represented herein by its Managing Director, PATRICIA J. BERNAL, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex C, hereinafter referred to as the "BUYER";
+
+- and -
+
+LumenStage AV Trading Corp., a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at Unit 5, Northgate Cyberzone, Filinvest City, Alabang, Muntinlupa City, Philippines, represented herein by its Vice President for Sales, ISABELLE G. TAN, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex D, hereinafter referred to as the "SUPPLIER".
+
+The BUYER and the SUPPLIER are hereinafter referred to individually as a "Party" and collectively as the "Parties".
+
+WITNESSETH:
+
+WHEREAS, the BUYER is engaged in the business of event planning, management, and production, and organizes more than one hundred fifty (150) corporate, social, and public events every year in Metro Manila and nearby provinces;
+
+WHEREAS, the BUYER requires to acquire its own inventory of professional audio-visual, lighting, and staging equipment in order to reduce rental costs and improve control over the quality of its productions;
+
+WHEREAS, the SUPPLIER is a corporation duly registered with the Securities and Exchange Commission under Company Registration No. CS201804116 issued on February 9, 2018, and is engaged in the importation, distribution, installation, and servicing of professional audio-visual, lighting, and staging equipment;
+
+WHEREAS, the SUPPLIER represents that it possesses the technical capability, financial capacity, qualified personnel, licenses, and permits necessary to perform its obligations under this Agreement, including a valid Mayor's Permit and BIR Certificate of Registration;
+
+WHEREAS, on July 6, 2026, the BUYER conducted a competitive canvass among no fewer than three (3) qualified suppliers, and the SUPPLIER submitted the lowest calculated and most responsive proposal dated July 20, 2026;
+
+WHEREAS, the Board of Directors of the BUYER, in a resolution adopted on August 13, 2026, approved the award of this engagement to the SUPPLIER and authorized its representative to sign this Agreement;
+
+WHEREAS, the Board of Directors of the SUPPLIER, in a resolution adopted on August 20, 2026, likewise authorized its representative to sign this Agreement;
+
+WHEREAS, the SUPPLIER has examined the requirements of the BUYER, has satisfied itself as to the conditions affecting the work, and confirms that the price stated herein is sufficient to cover all its obligations;
+
+WHEREAS, both Parties have conducted their own due diligence and confirm that no conflict of interest exists between them, their officers, and their employees with respect to this engagement;
+
+WHEREAS, the Parties desire to set forth in writing the terms and conditions governing their relationship;
+
+NOW, THEREFORE, for and in consideration of the foregoing premises and the mutual covenants and undertakings hereinafter set forth, the Parties hereby agree as follows:
+
+ARTICLE I
+DEFINITIONS AND INTERPRETATION
+
+1.1 In this Agreement, unless the context otherwise requires, the following words and expressions shall have the meanings hereby assigned to them:
+
+  - "Agreement" means this Supply and Delivery Agreement for Audio-Visual, Lighting and Staging Equipment, including its Annexes, as may be amended from time to time in accordance with its terms.
+
+  - "Applicable Law" means all statutes, ordinances, regulations, orders, and issuances of any governmental authority of the Republic of the Philippines that apply to a Party or to the subject matter of this Agreement.
+
+  - "Business Day" means any day other than a Saturday, Sunday, or regular or special non-working holiday declared in Metro Manila.
+
+  - "Confidential Information" means all information disclosed by one Party to the other, whether orally, in writing, or electronically, that is marked as confidential or that a reasonable person would understand to be confidential, including client lists, pricing, event plans, and trade secrets.
+
+  - "Contract Price" means the total amount payable by the BUYER to the SUPPLIER under Article V.
+
+  - "Effective Date" means the date on which the Term commences, as stated in Article III.
+
+  - "Force Majeure Event" has the meaning given in Article XVII.
+
+  - "Intellectual Property Rights" means patents, copyrights, trademarks, trade names, designs, know-how, and all similar rights, whether registered or not.
+
+  - "Personal Data" has the meaning given to it under Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, and its Implementing Rules and Regulations.
+
+  - "Personnel" means the officers, employees, agents, and subcontractors of a Party who are engaged in the performance of this Agreement.
+
+  - "Term" means the period described in Article III, as may be renewed or extended in accordance with Article IV.
+
+1.3 Headings are inserted for convenience only and shall not affect the interpretation of this Agreement. Words importing the singular include the plural and vice versa. The words "include" and "including" shall be read without limitation. References to a statute include that statute as amended or replaced.
+
+1.4 In case of conflict or inconsistency among the documents forming part of this Agreement, the following order of precedence shall apply: (a) this Agreement; (b) Annex A; (c) Annex B; and (d) the proposal of the SUPPLIER dated July 20, 2026, to the extent incorporated herein.
+
+ARTICLE II
+SCOPE OF SUPPLY
+
+2.1 The SUPPLIER shall supply, deliver, install, test, and commission at the BUYER's Pasig warehouse the professional audio-visual, lighting, and staging equipment listed in Annex A (the "Goods"), brand-new and in original packaging, together with operator training for up to ten (10) BUYER personnel and all manuals, software licenses, and warranty certificates.
+
+2.2 Delivery shall be made in three (3) batches in accordance with the delivery schedule in Annex B. Each batch shall be accompanied by a delivery receipt, packing list, serial-number inventory, and certificate of origin. Title to and risk of loss of the Goods shall pass to the BUYER only upon signed acceptance of each batch.
+
+2.3 Within five (5) Business Days after delivery of each batch, the parties shall jointly conduct acceptance testing. Goods that fail testing or do not conform to the specifications in Annex A shall be replaced by the SUPPLIER at its own cost within fifteen (15) days.
+
+2.4 The SUPPLIER shall conduct at least eighteen (18) hours of hands-on operator training on the lighting console, digital audio mixer, and LED wall processor, and shall provide a training completion certificate for each participant.
+
+ARTICLE III
+TERM OF THE AGREEMENT
+
+3.1 This Agreement shall be effective from September 15, 2026 to March 31, 2027, inclusive (the "Term"), which period covers the delivery of all batches, acceptance testing, and operator training. The warranty obligations in Article XI shall survive the expiration of the Term.
+
+3.2 Obligations which by their nature are intended to survive the expiration or termination of this Agreement, including those relating to confidentiality, data privacy, indemnification, warranties, and payment of amounts already due, shall survive for the period stated in the relevant Article or, if none is stated, for the period allowed under Applicable Law.
+
+ARTICLE IV
+RENEWAL
+
+4.1 This Agreement shall not be renewed or extended. Any additional requirement of the BUYER for goods or services beyond those listed in Annex A shall be the subject of a separate procurement and a new written agreement.
+
+4.2 Any renewal or extension shall be documented in a written instrument signed by the authorized representatives of both Parties, and no course of dealing or acceptance of payment after expiration shall be construed as a renewal unless expressly provided in this Article.
+
+ARTICLE V
+CONTRACT PRICE
+
+5.1 In consideration of the faithful performance by the SUPPLIER of its obligations under this Agreement, the BUYER shall pay the SUPPLIER a total contract price of NINE MILLION EIGHT HUNDRED SEVENTY-FIVE THOUSAND FIVE HUNDRED PESOS (PHP 9,875,500.00), inclusive of delivery, installation, testing, commissioning, operator training, and twelve percent (12%) value-added tax (the "Contract Price").
+
+5.2 The Contract Price is fixed and shall not be subject to escalation during the Term, except as expressly provided herein or as required by Applicable Law. The Contract Price includes all costs of labor, materials, equipment, transportation, overhead, profit, and taxes, other than taxes that are by law for the account of the BUYER.
+
+5.3 The SUPPLIER acknowledges that it has satisfied itself as to the sufficiency of the Contract Price and shall not be entitled to any additional payment by reason of any error or omission in its own estimates.
+
+ARTICLE VI
+PAYMENT TERMS
+
+6.1 The Contract Price shall be paid in three (3) milestones: thirty percent (30%) upon delivery and acceptance of Batch 1, sixty percent (60%) upon delivery and acceptance of Batches 2 and 3, and the remaining ten percent (10%) as retention money upon completion of operator training and issuance of the final certificate of acceptance.
+
+6.2 Each milestone payment shall be released within fifteen (15) Business Days after receipt of the SUPPLIER's billing, the signed acceptance report, and the official receipt.
+
+6.3 In lieu of the retention money, the SUPPLIER may submit a special bank guarantee of equal amount, valid until the end of the warranty period.
+
+6.4 No payment shall be made for Goods that have not been delivered and accepted.
+
+ARTICLE VII
+PERFORMANCE SECURITY
+
+7.1 Within five (5) days from signing of this Agreement, the SUPPLIER shall post a performance security in the amount of NINE HUNDRED EIGHTY-SEVEN THOUSAND FIVE HUNDRED FIFTY PESOS (PHP 987,550.00), equivalent to ten percent (10%) of the Contract Price, in the form of a callable surety bond issued by an insurance company accredited by the Insurance Commission.
+
+7.2 The BUYER may draw on the security to recover any amount due from the SUPPLIER under this Agreement, including liquidated damages, penalties, and the cost of remedying any default, without prejudice to any other remedy available to the BUYER.
+
+ARTICLE VIII
+OBLIGATIONS OF THE SUPPLIER
+
+8.1 In addition to its other obligations under this Agreement, the SUPPLIER shall:
+
+  - Deliver Goods that are brand-new, of merchantable quality, free from defects in design, materials, and workmanship, and fully compliant with Annex A.
+
+  - Secure all import permits and pay all customs duties, taxes, and charges up to delivery at the BUYER's warehouse.
+
+  - Provide a warranty of not less than twelve (12) months from final acceptance, with on-site response within forty-eight (48) hours for reported defects.
+
+  - Maintain a local stock of critical spare parts for at least five (5) years after final acceptance.
+
+  - Remove all packaging materials and debris from the BUYER's premises after installation.
+
+8.3 The SUPPLIER shall perform its obligations with the degree of skill, care, and diligence reasonably expected of an experienced and reputable provider of similar goods or services in the Philippines.
+
+ARTICLE IX
+OBLIGATIONS OF THE BUYER
+
+9.1 The BUYER shall pay the Contract Price in accordance with Article VI, provide the SUPPLIER with timely access to its premises and venues as reasonably necessary, and designate a representative who shall coordinate with the SUPPLIER on all matters relating to this Agreement.
+
+9.2 The BUYER shall give the SUPPLIER reasonable advance notice of any change in its schedule, venue, or requirements that may affect the performance of this Agreement, and the Parties shall agree in writing on any resulting adjustment.
+
+ARTICLE X
+PENALTIES AND LIQUIDATED DAMAGES
+
+10.1 Should the SUPPLIER fail to deliver any batch on the date stated in Annex B, the SUPPLIER shall pay the BUYER liquidated damages equivalent to one percent (1%) of the value of the undelivered Goods for each day of delay, up to a maximum of ten percent (10%) of the Contract Price, after which the BUYER may terminate this Agreement and forfeit the performance security.
+
+10.2 Goods that remain non-conforming after the fifteen-day replacement period shall be deducted from the Contract Price at their unit price in Annex A, without prejudice to the BUYER's other remedies.
+
+10.3 Liquidated damages may be deducted from any payment due to the SUPPLIER.
+
+10.4 The Parties agree that the liquidated damages and penalties provided in this Article are a genuine pre-estimate of the loss likely to be suffered and are not a penalty in the sense of Article 1229 of the Civil Code of the Philippines.
+
+ARTICLE XI
+WARRANTIES AND REPRESENTATIONS
+
+11.1 Each Party represents and warrants that: (a) it is duly organized, validly existing, and in good standing under the laws of the Philippines; (b) it has full corporate power and authority to enter into and perform this Agreement; (c) the execution of this Agreement does not violate its articles of incorporation, by-laws, or any agreement to which it is a party; and (d) there is no pending or threatened litigation that would materially affect its ability to perform this Agreement.
+
+11.2 The SUPPLIER further warrants that all goods, premises, or services furnished under this Agreement shall conform to the specifications in the Annexes, shall be fit for the purpose for which they are intended, and shall comply with all Applicable Law, including laws on labor, safety, health, and the environment.
+
+11.3 The SUPPLIER warrants that it has not given or promised any commission, gift, or other benefit to any officer or employee of the BUYER in connection with the award or performance of this Agreement.
+
+ARTICLE XII
+INSURANCE
+
+12.1 The SUPPLIER shall, at its own cost, obtain and maintain throughout the Term comprehensive general liability insurance with a limit of not less than TEN MILLION PESOS (PHP 10,000,000.00) per occurrence, and such other insurance as may be required by Applicable Law, naming the BUYER as an additional insured.
+
+12.2 The SUPPLIER shall likewise maintain property or all-risk insurance in an amount of not less than THREE MILLION PESOS (PHP 3,000,000.00), and shall deliver certificates of insurance to the BUYER within fifteen (15) days from signing and upon each renewal of the policies.
+
+12.3 Failure to maintain the required insurance shall entitle the BUYER to procure the same and deduct the premiums from any amount due to the SUPPLIER.
+
+ARTICLE XIII
+CONFIDENTIALITY
+
+13.1 Each Party shall hold the Confidential Information of the other Party in strict confidence, shall use it only for the purposes of this Agreement, and shall not disclose it to any third party without the prior written consent of the disclosing Party, except to its Personnel and professional advisers who need to know it and are bound by equivalent obligations.
+
+13.2 The obligations in this Article shall not apply to information that: (a) is or becomes publicly available through no fault of the receiving Party; (b) was lawfully known to the receiving Party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or by order of a competent court, provided that prompt notice is given to the disclosing Party.
+
+13.3 The obligations of confidentiality shall survive for a period of three (3) years after the expiration or termination of this Agreement.
+
+ARTICLE XIV
+DATA PRIVACY
+
+14.1 To the extent that the SUPPLIER processes Personal Data on behalf of the BUYER, the SUPPLIER shall act as a personal information processor and shall process such Personal Data only on the documented instructions of the BUYER and in compliance with the Data Privacy Act of 2012, its Implementing Rules and Regulations, and the issuances of the National Privacy Commission.
+
+14.2 The SUPPLIER shall implement reasonable and appropriate organizational, physical, and technical security measures to protect Personal Data, shall notify the BUYER of any personal data breach within twenty-four (24) hours from discovery, and shall return or securely destroy all Personal Data upon termination of this Agreement.
+
+ARTICLE XV
+INDEMNIFICATION
+
+15.1 The SUPPLIER shall defend, indemnify, and hold harmless the BUYER, its directors, officers, employees, and clients from and against all claims, losses, damages, liabilities, fines, costs, and expenses, including reasonable attorney's fees, arising from: (a) any breach of this Agreement by the SUPPLIER; (b) the negligence or willful misconduct of the SUPPLIER or its Personnel; (c) any claim by the SUPPLIER's Personnel for wages, benefits, or injuries; and (d) any infringement of Intellectual Property Rights by goods or materials supplied by the SUPPLIER.
+
+15.2 The indemnified Party shall give prompt written notice of any claim, allow the indemnifying Party to control the defense, and provide reasonable assistance at the indemnifying Party's expense.
+
+ARTICLE XVI
+LIMITATION OF LIABILITY
+
+16.1 Except for liability arising from fraud, gross negligence, willful misconduct, breach of confidentiality, data privacy violations, or the indemnities in Article XV, the aggregate liability of each Party under this Agreement shall not exceed the Contract Price.
+
+16.2 Neither Party shall be liable to the other for indirect, special, or consequential damages, including loss of profit, revenue, or goodwill, even if advised of the possibility of such damages.
+
+ARTICLE XVII
+FORCE MAJEURE
+
+17.1 Neither Party shall be liable for any delay or failure to perform its obligations, other than obligations to pay money, to the extent caused by a Force Majeure Event, meaning an event beyond the reasonable control of the affected Party, including typhoons, earthquakes, floods, fire, epidemics, war, civil disturbance, and acts of government, that could not have been prevented by reasonable diligence.
+
+17.2 The affected Party shall notify the other Party in writing within three (3) Business Days after the occurrence of the Force Majeure Event, shall use reasonable efforts to mitigate its effects, and shall resume performance as soon as practicable. If a Force Majeure Event continues for more than sixty (60) consecutive days, either Party may terminate this Agreement by written notice without liability.
+
+ARTICLE XVIII
+TERMINATION
+
+18.1 The BUYER may terminate this Agreement by written notice if the SUPPLIER fails to deliver any batch within thirty (30) days after its scheduled delivery date, or commits any other material breach that remains uncured fifteen (15) days after written notice. Either party may terminate this Agreement upon the insolvency, receivership, or cessation of business of the other party.
+
+18.2 Either Party may terminate this Agreement immediately by written notice if the other Party becomes insolvent, makes an assignment for the benefit of creditors, is placed under receivership or rehabilitation, or ceases to carry on business in the ordinary course.
+
+18.3 Termination shall be effected by written notice delivered in accordance with Article XXII, stating the grounds for termination and the effective date thereof.
+
+ARTICLE XIX
+EFFECTS OF TERMINATION
+
+19.1 Upon expiration or termination of this Agreement for any reason, the SUPPLIER shall promptly return all property, documents, and Confidential Information of the BUYER in its possession, and the BUYER shall pay all undisputed amounts due for obligations performed up to the effective date of termination.
+
+19.2 Termination shall be without prejudice to any rights or remedies accrued to either Party before the effective date of termination, including the right to claim damages for any breach.
+
+ARTICLE XX
+DISPUTE RESOLUTION
+
+20.1 The Parties shall endeavor to settle amicably any dispute, controversy, or claim arising out of or relating to this Agreement through good-faith negotiations between their senior officers within thirty (30) days from written notice of the dispute.
+
+20.2 Any dispute not settled by negotiation shall be referred to mediation under the rules of the Philippine Mediation Center, and failing settlement within sixty (60) days, to arbitration in Metro Manila in accordance with Republic Act No. 9285, the Alternative Dispute Resolution Act of 2004. The arbitral award shall be final and binding on the Parties.
+
+ARTICLE XXI
+GOVERNING LAW AND VENUE
+
+21.1 This Agreement shall be governed by and construed in accordance with the laws of the Republic of the Philippines.
+
+21.2 Subject to Article XX, any action to enforce an arbitral award or to obtain interim relief shall be filed exclusively in the proper courts of Pasig City, to the exclusion of all other venues.
+
+ARTICLE XXII
+NOTICES
+
+22.1 All notices under this Agreement shall be in writing and delivered personally, by registered mail, by reputable courier, or by electronic mail with confirmation of receipt, to the addresses below or to such other address as a Party may designate by written notice:
+
+  - To the BUYER: JBC Events Management, Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, Attention: Patricia J. Bernal, Managing Director; e-mail: legal@jbcevents.example.ph
+
+  - To the SUPPLIER: LumenStage AV Trading Corp., Unit 5, Northgate Cyberzone, Filinvest City, Alabang, Muntinlupa City, Philippines, Attention: Isabelle G. Tan, Vice President for Sales; e-mail: contracts@lumenstage.example.ph
+
+22.3 Notices shall be deemed received upon personal delivery, three (3) Business Days after mailing by registered mail or courier, or upon confirmation of receipt in the case of electronic mail.
+
+ARTICLE XXIII
+ASSIGNMENT AND SUBCONTRACTING
+
+23.1 Neither Party shall assign or transfer this Agreement or any of its rights or obligations hereunder without the prior written consent of the other Party. The SUPPLIER shall not subcontract any part of its obligations without the prior written consent of the BUYER, and shall remain fully responsible for the acts and omissions of its subcontractors.
+
+ARTICLE XXIV
+RELATIONSHIP OF THE PARTIES
+
+24.1 The SUPPLIER is an independent contractor. Nothing in this Agreement shall be construed to create a partnership, joint venture, agency, or employer-employee relationship between the BUYER and the SUPPLIER or its Personnel. The SUPPLIER shall have exclusive control over the means and methods of performing its obligations and shall be solely responsible for the wages, benefits, and statutory contributions of its Personnel.
+
+ARTICLE XXV
+ANTI-CORRUPTION AND ETHICAL CONDUCT
+
+25.1 Each Party shall comply with Republic Act No. 3019, the Anti-Graft and Corrupt Practices Act, and all other applicable anti-bribery laws, and shall not offer, give, solicit, or accept any improper payment or advantage in connection with this Agreement.
+
+25.2 The SUPPLIER shall promptly report to the BUYER any request for an improper payment made by any Personnel of the BUYER. Any breach of this Article shall be a material breach entitling the non-breaching Party to terminate this Agreement immediately.
+
+ARTICLE XXVI
+MISCELLANEOUS PROVISIONS
+
+26.1 No amendment or modification of this Agreement shall be valid unless made in writing and signed by the authorized representatives of both Parties.
+
+26.2 The failure of a Party to insist on strict performance of any provision of this Agreement shall not be construed as a waiver of that provision or of any other provision.
+
+26.3 If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall continue in full force and effect, and the invalid provision shall be replaced by a valid provision that most closely reflects the intention of the Parties.
+
+26.4 This Agreement, together with its Annexes, constitutes the entire agreement between the Parties on its subject matter and supersedes all prior negotiations, proposals, understandings, and agreements, whether written or oral.
+
+26.5 This Agreement may be executed in several counterparts, each of which shall be deemed an original, and all of which together shall constitute one and the same instrument. Documentary stamp tax on this Agreement, if any, shall be for the account of the SUPPLIER.
+
+IN WITNESS WHEREOF, the Parties have hereunto set their hands on the date and at the place first above written.
+
+For the BUYER:
+JBC EVENTS MANAGEMENT
+
+By:  ______________________________
+PATRICIA J. BERNAL
+Managing Director
+
+For the SUPPLIER:
+LUMENSTAGE AV TRADING CORP.
+
+By:  ______________________________
+ISABELLE G. TAN
+Vice President for Sales
+
+SIGNED IN THE PRESENCE OF:
+
+______________________________          ______________________________
+Carlo M. Reyes                            Miguel R. Bautista
+
+ACKNOWLEDGMENT
+
+REPUBLIC OF THE PHILIPPINES )
+PASIG CITY ) S.S.
+
+BEFORE ME, a Notary Public for and in Pasig City, personally appeared the following persons, exhibiting to me their competent evidence of identity as indicated below:
+
+Name | Competent Evidence of Identity | Date / Place Issued
+Patricia J. Bernal | Passport No. P4471209B | 11 January 2024 / DFA Manila
+Isabelle G. Tan | Driver's License No. N02-15-338471 | 02 March 2025 / LTO Quezon City
+
+known to me and to me known to be the same persons who executed the foregoing Supply and Delivery Agreement for Audio-Visual, Lighting and Staging Equipment, consisting of the pages hereof including the page on which this Acknowledgment is written, and who acknowledged to me that the same is their free and voluntary act and deed as well as that of the corporations they respectively represent.
+
+WITNESS MY HAND AND SEAL on the date and at the place first above written.
+
+Doc. No. ____;
+Page No. ____;
+Book No. ____;
+Series of 2026.
+
+NOTARY PUBLIC
+Until December 31, 2027
+Roll of Attorneys No. 71234
+
+ANNEX A - TECHNICAL SPECIFICATIONS AND BILL OF QUANTITIES
+
+Item | Description | Qty | Unit Price | Amount
+1 | Digital audio mixer, 48-channel, with stage box | 2 | PHP 685,000.00 | PHP 1,370,000.00
+2 | Line-array speaker system (per side, 8 boxes) | 2 | PHP 1,450,000.00 | PHP 2,900,000.00
+3 | Moving-head wash luminaire, LED | 24 | PHP 72,500.00 | PHP 1,740,000.00
+4 | Lighting console with wing | 1 | PHP 895,500.00 | PHP 895,500.00
+5 | Indoor LED wall, P2.9, 24 sq. m., with processor | 1 | PHP 2,150,000.00 | PHP 2,150,000.00
+6 | Modular staging decks, 1.22m x 2.44m | 40 | PHP 20,500.00 | PHP 820,000.00
+ | Total (VAT inclusive) |  |  | PHP 9,875,500.00
+
+ANNEX B - DELIVERY SCHEDULE
+
+Batch | Items | Delivery Date
+Batch 1 | Items 1 and 2 (audio) | October 15, 2026
+Batch 2 | Items 3 and 4 (lighting) | November 30, 2026
+Batch 3 | Items 5 and 6 (LED wall and staging) | January 29, 2027
+Training | Operator training, 18 hours | February 2027
+
+Annexes C and D (Secretary's Certificates) are on file with the Parties and are incorporated herein by reference.

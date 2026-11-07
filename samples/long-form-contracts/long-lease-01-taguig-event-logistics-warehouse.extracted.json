@@ -1,0 +1,79 @@
+{
+  "contract_title": "Contract of Lease for the Taguig Event Logistics Warehouse",
+  "contract_type": "Lease Agreement",
+  "client_name": "JBC Events Management",
+  "vendor_name": "StowWell Logistics Corp.",
+  "vendor_address": "Lot 9, FTI Complex, Western Bicutan, Taguig City, Metro Manila, Philippines",
+  "start_date": "2026-08-01",
+  "end_date": "2029-07-31",
+  "signed_date": "2026-07-20",
+  "contract_value": 7560000.0,
+  "currency": "PHP",
+  "payment_terms": "Monthly",
+  "scope": "The LESSOR hereby leases to the LESSEE, and the LESSEE hereby accepts in lease from the LESSOR, Warehouse Building No. 4 of the FTI Complex, Western Bicutan, Taguig City, with a gross floor area of approximately one thousand eight hundred (1,800) square meters, together with two (2) dock-level loading bays, a mezzanine office of one hundred twenty (120) square meters, and twelve (12) exclusive parking slots (collectively, the \"Leased Premises\"), for use as an event logistics warehouse, staging area, and repair workshop.",
+  "penalty_clause": "Any rental not paid on its due date shall bear a penalty of three percent (3%) per month on the unpaid amount, computed from the due date until fully paid, without need of demand.",
+  "renewal_terms": "Manual renewal only",
+  "termination_clause": "Either party may terminate this Contract for a material breach by the other party that remains uncured thirty (30) days after receipt of written notice specifying the breach. The LESSEE may pre-terminate this Contract for convenience after the first lease year by giving the LESSOR not less than sixty (60) days prior written notice, in which case the advance rental shall be forfeited in favor of the LESSOR.",
+  "client_signatory": "Patricia J. Bernal, Managing Director",
+  "vendor_signatory": "Rafael D. Lim, General Manager",
+  "financial_obligations": "Contract value ₱7,560,000.00; Payment: Monthly; Penalties: Any rental not paid on its due date shall bear a penalty of three percent (3%) per month on the unpaid amount, computed from the due date until fully paid, without need of demand.",
+  "extraction_mode": "long-form",
+  "document_stats": {
+    "articles": 26,
+    "whereas_clauses": 10,
+    "paragraphs_total": 197,
+    "paragraphs_scanned": 69,
+    "paragraphs_used": 7,
+    "ignored_sections": [
+      "acknowledgment",
+      "annex",
+      "cover",
+      "recitals",
+      "toc"
+    ]
+  },
+  "evidence_clauses": [
+    {
+      "label": "dates",
+      "confidence": 0.677,
+      "section": "TERM OF THE AGREEMENT",
+      "text": "The term of this Contract shall be for a period of three (3) years, commencing on August 1, 2026 and ending on July 31, 2029 (the \"Term\"), unless sooner terminated in accordance with Article XVIII. The LESSOR shall turn over possession of the Leased Premises to the LESSEE not later than five (5) Business Days before the start of the Term, free from all occupants and debris."
+    },
+    {
+      "label": "value",
+      "confidence": 0.596,
+      "section": "RENTAL AND CONTRACT PRICE",
+      "text": "In consideration of the faithful performance by the LESSOR of its obligations under this Agreement, the LESSEE shall pay the LESSOR a total contract price of SEVEN MILLION FIVE HUNDRED SIXTY THOUSAND PESOS (PHP 7,560,000.00), representing the aggregate monthly rentals for thirty-six (36) months as detailed in the rental schedule in Annex B (the \"Contract Price\")."
+    },
+    {
+      "label": "payment",
+      "confidence": 0.632,
+      "section": "PAYMENT TERMS",
+      "text": "The LESSEE shall pay the monthly rental in advance, on or before the fifth (5th) day of each calendar month, by direct bank transfer to the account designated in writing by the LESSOR. Rental for any partial month at the start or end of the Term shall be prorated on a daily basis."
+    },
+    {
+      "label": "renewal",
+      "confidence": 0.861,
+      "section": "RENEWAL",
+      "text": "This Contract may be renewed only upon the mutual written agreement of the parties. The LESSEE shall signify in writing its intention to renew not later than ninety (90) days before the expiration of the Term, and the parties shall negotiate in good faith the rental rate and other terms of the renewal period."
+    },
+    {
+      "label": "scope",
+      "confidence": 0.488,
+      "section": "OBJECT OF THE LEASE",
+      "text": "The LESSOR hereby leases to the LESSEE, and the LESSEE hereby accepts in lease from the LESSOR, Warehouse Building No. 4 of the FTI Complex, Western Bicutan, Taguig City, with a gross floor area of approximately one thousand eight hundred (1,800) square meters, together with two (2) dock-level loading bays, a mezzanine office of one hundred twenty (120) square meters, and twelve (12) exclusive par..."
+    },
+    {
+      "label": "penalty",
+      "confidence": 0.762,
+      "section": "PENALTIES AND LIQUIDATED DAMAGES",
+      "text": "Any rental not paid on its due date shall bear a penalty of three percent (3%) per month on the unpaid amount, computed from the due date until fully paid, without need of demand."
+    },
+    {
+      "label": "termination",
+      "confidence": 0.891,
+      "section": "TERMINATION",
+      "text": "Either party may terminate this Contract for a material breach by the other party that remains uncured thirty (30) days after receipt of written notice specifying the breach."
+    }
+  ]
+}

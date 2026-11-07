@@ -1,0 +1,79 @@
+{
+  "contract_title": "Security and Crowd Control Services Agreement",
+  "contract_type": "Service Agreement",
+  "client_name": "JBC Events Management",
+  "vendor_name": "Nightwatch Event Security Inc.",
+  "vendor_address": "88 Katipunan Avenue, Loyola Heights, Quezon City, Metro Manila, Philippines",
+  "start_date": "2026-06-01",
+  "end_date": "2027-05-31",
+  "signed_date": "2026-05-25",
+  "contract_value": 4320000.0,
+  "currency": "PHP",
+  "payment_terms": "Monthly",
+  "scope": "The CONTRACTOR shall provide licensed, uniformed, and armed or unarmed security guards, as specified in Annex A, for twenty-four (24) hour protection of the CLIENT's corporate office and warehouse, and trained crowd-control marshals, bag-check personnel, and VIP lane officers for events organized by the CLIENT, together with post-event incident reports.",
+  "penalty_clause": "For every post left unmanned, or every marshal not deployed as ordered, the CONTRACTOR shall pay a penalty equivalent to two percent (2%) of the monthly fee for each post per day, which the CLIENT may deduct from the next billing.",
+  "renewal_terms": "Auto-renew (6 months)",
+  "termination_clause": "Either party may terminate this Agreement with thirty (30) days prior written notice for material breach not cured within fifteen (15) days from receipt of notice. The CLIENT may terminate immediately upon revocation or suspension of the CONTRACTOR's License to Operate.",
+  "client_signatory": "Nina S. Domingo, Procurement Director",
+  "vendor_signatory": "Ramon T. Aquino, President",
+  "financial_obligations": "Contract value ₱4,320,000.00; Payment: Monthly; Penalties: For every post left unmanned, or every marshal not deployed as ordered, the CONTRACTOR shall pay a penalty equivalent to two percent (2%) of the monthly fee for each post per day, which the CLIENT may deduct from the next billing.",
+  "extraction_mode": "long-form",
+  "document_stats": {
+    "articles": 26,
+    "whereas_clauses": 10,
+    "paragraphs_total": 188,
+    "paragraphs_scanned": 68,
+    "paragraphs_used": 7,
+    "ignored_sections": [
+      "acknowledgment",
+      "annex",
+      "cover",
+      "recitals",
+      "toc"
+    ]
+  },
+  "evidence_clauses": [
+    {
+      "label": "dates",
+      "confidence": 0.874,
+      "section": "TERM OF THE AGREEMENT",
+      "text": "The term of this Agreement shall commence on June 1, 2026 and shall expire on May 31, 2027 (the \"Term\"), unless sooner terminated in accordance with Article XVIII or renewed in accordance with Article IV."
+    },
+    {
+      "label": "value",
+      "confidence": 0.843,
+      "section": "CONTRACT PRICE",
+      "text": "In consideration of the faithful performance by the CONTRACTOR of its obligations under this Agreement, the CLIENT shall pay the CONTRACTOR a total contract price of FOUR MILLION THREE HUNDRED TWENTY THOUSAND PESOS (PHP 4,320,000.00), computed at a fixed monthly fee of THREE HUNDRED SIXTY THOUSAND PESOS (PHP 360,000.00) for twelve (12) months (the \"Contract Price\")."
+    },
+    {
+      "label": "payment",
+      "confidence": 0.738,
+      "section": "PAYMENT TERMS",
+      "text": "The CONTRACTOR shall bill the CLIENT monthly in arrears for the fixed monthly fee and any approved event deployments for the preceding month, and the CLIENT shall pay each correct billing on or before the last Business Day of the month in which it is received."
+    },
+    {
+      "label": "renewal",
+      "confidence": 0.829,
+      "section": "RENEWAL",
+      "text": "This Agreement shall be automatically renewed for successive periods of six (6) months each, on the same terms and conditions, unless either party notifies the other in writing of its intention not to renew at least thirty (30) days before the expiration of the then-current Term."
+    },
+    {
+      "label": "scope",
+      "confidence": 0.598,
+      "section": "SCOPE OF SERVICES",
+      "text": "The CONTRACTOR shall provide licensed, uniformed, and armed or unarmed security guards, as specified in Annex A, for twenty-four (24) hour protection of the CLIENT's corporate office and warehouse, and trained crowd-control marshals, bag-check personnel, and VIP lane officers for events organized by the CLIENT, together with post-event incident reports."
+    },
+    {
+      "label": "penalty",
+      "confidence": 0.724,
+      "section": "PENALTIES AND LIQUIDATED DAMAGES",
+      "text": "For every post left unmanned, or every marshal not deployed as ordered, the CONTRACTOR shall pay a penalty equivalent to two percent (2%) of the monthly fee for each post per day, which the CLIENT may deduct from the next billing."
+    },
+    {
+      "label": "termination",
+      "confidence": 0.943,
+      "section": "TERMINATION",
+      "text": "Either party may terminate this Agreement with thirty (30) days prior written notice for material breach not cured within fifteen (15) days from receipt of notice. The CLIENT may terminate immediately upon revocation or suspension of the CONTRACTOR's License to Operate."
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "contract_title": "Master Services Agreement for Event Production and Technical Crew Services",
+  "contract_type": "Service Agreement",
+  "client_name": "JBC Events Management",
+  "vendor_name": "Apex Production Crew Inc.",
+  "vendor_address": "3rd Floor, Sagittarius Building, 111 H.V. Dela Costa Street, Salcedo Village, Makati City, Philippines",
+  "start_date": "2027-01-01",
+  "end_date": "2027-12-31",
+  "signed_date": "2026-12-15",
+  "contract_value": 12480000.0,
+  "currency": "PHP",
+  "payment_terms": "30 Days",
+  "scope": "The SERVICE PROVIDER shall furnish qualified stage managers, riggers, lighting and sound technicians, and backstage crew for events produced by the CLIENT, including technical rehearsals, ingress and set-up, show operation, and egress and strike within eight (8) hours after the end of each event, in accordance with the crew call sheets issued by the CLIENT.",
+  "penalty_clause": "For every day of delay in the arrival of the full crew complement at the call time stated in the crew call sheet, or for any event at which the SERVICE PROVIDER fails to deploy the full crew complement, the SERVICE PROVIDER shall pay the CLIENT liquidated damages equivalent to one-tenth of one percent (0.1%) of the Contract Price per day of delay, provided that the total liquidated damages shall not exceed ten percent (10%) of the Contract Price.",
+  "renewal_terms": "Auto-renew (12 months)",
+  "termination_clause": "Either party may terminate this Agreement for a material breach by the other party that remains uncured fifteen (15) days after receipt of written notice. The CLIENT may also terminate this Agreement for convenience by giving the SERVICE PROVIDER at least thirty (30) days prior written notice, in which case the CLIENT shall pay only for services actually rendered up to the effective date of termination.",
+  "client_signatory": "Carlo M. Reyes, Chief Operating Officer",
+  "vendor_signatory": "Jerome A. Santos, President and Chief Executive Officer",
+  "financial_obligations": "Contract value ₱12,480,000.00; Payment: 30 Days; Penalties: For every day of delay in the arrival of the full crew complement at the call time stated in the crew call sheet, or for any event at which the SERVICE PROVIDER fails to deploy the full crew complement, the SERVICE PROVIDER shall pay the CLIENT liquidated damages equivalent to one-tenth of one percent (0.1%) of the Contract Price per day of delay, provided that the total liquidated damages shall not exceed ten percent (10%) of the Contract Price.",
+  "extraction_mode": "long-form",
+  "document_stats": {
+    "articles": 26,
+    "whereas_clauses": 10,
+    "paragraphs_total": 196,
+    "paragraphs_scanned": 68,
+    "paragraphs_used": 7,
+    "ignored_sections": [
+      "acknowledgment",
+      "annex",
+      "cover",
+      "recitals",
+      "toc"
+    ]
+  },
+  "evidence_clauses": [
+    {
+      "label": "dates",
+      "confidence": 0.867,
+      "section": "TERM OF THE AGREEMENT",
+      "text": "This Agreement shall take effect on 1 January 2027 and shall remain in force until 31 December 2027 (the \"Term\"), unless sooner terminated in accordance with Article XVIII or extended in accordance with Article IV."
+    },
+    {
+      "label": "value",
+      "confidence": 0.633,
+      "section": "CONTRACT PRICE",
+      "text": "In consideration of the faithful performance by the SERVICE PROVIDER of its obligations under this Agreement, the CLIENT shall pay the SERVICE PROVIDER a total contract price of TWELVE MILLION FOUR HUNDRED EIGHTY THOUSAND PESOS (PHP 12,480,000.00), covering an estimated forty-eight (48) event days as detailed in Annex B (the \"Contract Price\")."
+    },
+    {
+      "label": "payment",
+      "confidence": 0.865,
+      "section": "PAYMENT TERMS",
+      "text": "The SERVICE PROVIDER shall invoice the CLIENT after each completed event, attaching the signed event completion report, and the CLIENT shall pay each undisputed invoice within thirty (30) calendar days from receipt of a valid invoice and official receipt."
+    },
+    {
+      "label": "renewal",
+      "confidence": 0.967,
+      "section": "RENEWAL",
+      "text": "Upon expiration of the Term, this Agreement shall automatically renew for successive twelve (12) month periods on the same terms and conditions, unless either party gives the other written notice of non-renewal at least sixty (60) days before the end of the then-current Term. Rates for any renewal period may be adjusted only by a written amendment signed by both parties."
+    },
+    {
+      "label": "scope",
+      "confidence": 0.564,
+      "section": "SCOPE OF SERVICES",
+      "text": "The SERVICE PROVIDER shall furnish qualified stage managers, riggers, lighting and sound technicians, and backstage crew for events produced by the CLIENT, including technical rehearsals, ingress and set-up, show operation, and egress and strike within eight (8) hours after the end of each event, in accordance with the crew call sheets issued by the CLIENT."
+    },
+    {
+      "label": "penalty",
+      "confidence": 0.787,
+      "section": "PENALTIES AND LIQUIDATED DAMAGES",
+      "text": "For every day of delay in the arrival of the full crew complement at the call time stated in the crew call sheet, or for any event at which the SERVICE PROVIDER fails to deploy the full crew complement, the SERVICE PROVIDER shall pay the CLIENT liquidated damages equivalent to one-tenth of one percent (0.1%) of the Contract Price per day of delay, provided that the total liquidated damages shall n..."
+    },
+    {
+      "label": "termination",
+      "confidence": 0.938,
+      "section": "TERMINATION",
+      "text": "Either party may terminate this Agreement for a material breach by the other party that remains uncured fifteen (15) days after receipt of written notice. The CLIENT may also terminate this Agreement for convenience by giving the SERVICE PROVIDER at least thirty (30) days prior written notice, in which case the CLIENT shall pay only for services actually rendered up to the effective date of termin..."
+    }
+  ]
+}

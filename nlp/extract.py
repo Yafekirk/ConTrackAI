@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 import sys
 import unicodedata
+from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -20,6 +21,7 @@ from entities import (  # noqa: E402
     labeled,
     strip_label,
 )
+from longform import extract_long_form  # noqa: E402
 from train import load_or_train  # noqa: E402
 
 _FANCY_CHARS = str.maketrans(
@@ -77,19 +79,84 @@ def pdf_to_text(pdf_path: str) -> str:
     pages = []
     for page in reader.pages:
         pages.append(page.extract_text() or "")
+    pages = strip_running_headers(pages)
     return sanitize_extracted_text(unwrap_pdf_text("\n".join(pages)))
+
+
+_PAGE_NO_RE = re.compile(r"^\s*(?:page\s+)?\d{1,3}\s*(?:of\s+\d{1,3})?\s*$|^\s*-\s*\d{1,3}\s*-\s*$", re.I)
+
+
+def strip_running_headers(pages: list[str]) -> list[str]:
+    """Drop page numbers and header/footer lines repeated on most pages of a long PDF."""
+
+    def key(line: str) -> str:
+        return re.sub(r"\d+", "#", re.sub(r"\s+", " ", line.strip().lower()))
+
+    repeated: set[str] = set()
+    if len(pages) >= 3:
+        counts: Counter[str] = Counter()
+        for page in pages:
+            counts.update({key(line) for line in page.splitlines() if line.strip()})
+        threshold = max(3, int(len(pages) * 0.5))
+        repeated = {k for k, c in counts.items() if c >= threshold and len(k) < 120}
+    cleaned = []
+    for page in pages:
+        lines = [line for line in page.splitlines() if key(line) not in repeated and not _PAGE_NO_RE.match(line)]
+        cleaned.append("\n".join(lines))
+    return cleaned
+
+
+_TITLE_ARTICLE_RE = re.compile(r"^(?:Article|Section)\s+(?:[IVXLC]{1,7}|\d{1,2})(?:\s*[.:\-]\s*(.+))?\s*$")
+
+
+def _is_article_heading(line: str) -> bool:
+    """'ARTICLE V', 'Article 5', 'Section 5 - Payment Terms'; not a wrapped '...under Article V.' reference."""
+    if re.match(r"^(?:ARTICLE|SECTION)\s+(?:[IVXLC]{1,7}|\d{1,2})\b", line):
+        return True
+    m = _TITLE_ARTICLE_RE.match(line)
+    if not m:
+        return False
+    rest = m.group(1)
+    if rest is None:
+        return not line.rstrip().endswith(".")
+    words = [w for w in re.findall(r"[A-Za-z]+", rest) if len(w) > 3]
+    return len(rest) <= 80 and bool(words) and all(w[0].isupper() for w in words)
+_BREAK_BEFORE_RE = re.compile(
+    r"^\d{1,2}(?:\.\d{1,2}){1,3}\.?\s"
+    r"|^\((?:[a-z]|[ivx]{1,4})\)\s"
+    r"|^[\u2022\u25cf\u25aa*]\s?"
+    r"|^- "
+    r"|^(?:WHEREAS|NOW,?\s+THEREFORE|IN WITNESS WHEREOF|KNOW ALL|SIGNED IN THE PRESENCE)"
+    r"|^For\s+(?:and\s+on\s+behalf\s+of\s+)?(?:the\s+)?[A-Za-z ]{3,30}:\s*$"
+    r"|^(?:By|Name|Title|Designation|Position)\s*:"
+    r"|^(?:ANNEX|EXHIBIT|SCHEDULE|APPENDIX)\s+[A-Z0-9]{1,3}\b",
+    re.I,
+)
+_STANDALONE = {"- and -", "-and-", "and", "- and-", "-and -"}
+
+
+def _is_caps_heading(line: str) -> bool:
+    return (
+        bool(re.match(r"^[A-Z][A-Z0-9 &'/\-().,:]{2,90}$", line))
+        and not line.endswith((",", ";", "."))
+        and sum(ch.isalpha() for ch in line) >= 3
+    )
 
 
 def unwrap_pdf_text(text: str) -> str:
     lines = text.splitlines()
+    lengths = sorted(len(line.strip()) for line in lines if len(line.strip()) > 20)
+    typical = lengths[int(len(lengths) * 0.8)] if lengths else 0
     out: list[str] = []
     buf = ""
+    prev = ""
     for raw in lines:
         line = raw.strip()
         if not line:
             if buf:
                 out.append(buf)
                 buf = ""
+            prev = ""
             continue
         starts_field = bool(
             re.match(
@@ -101,13 +168,18 @@ def unwrap_pdf_text(text: str) -> str:
                 flags=re.I,
             )
         ) or bool(re.match(r"^\d+\.\s+", line)) or line.lower() == "contract template"
-        if buf and (starts_field or (line.startswith("- ") and ":" in line)):
+        structural = bool(_BREAK_BEFORE_RE.match(line)) or _is_article_heading(line) or _is_caps_heading(line)
+        prev_closed = _is_caps_heading(prev) or prev.lower() in _STANDALONE or prev.endswith(":") or (
+            prev.endswith((".", ";", ":")) and typical > 0 and len(prev) < 0.72 * typical
+        )
+        if buf and (starts_field or structural or prev_closed or (line.startswith("- ") and ":" in line)):
             out.append(buf)
             buf = line
         elif not buf:
             buf = line
         else:
             buf += " " + line
+        prev = line
     if buf:
         out.append(buf)
     return "\n".join(out)
@@ -303,6 +375,11 @@ def assemble(text: str, scored: list[tuple[str, str, float]]) -> dict:
     if sign_parts.get("vendor_signatory"):
         result["vendor_signatory"] = sign_parts["vendor_signatory"]
 
+    _finalize(result)
+    return result
+
+
+def _finalize(result: dict) -> None:
     bits = []
     if result["contract_value"]:
         symbol = {"USD": "$", "EUR": "€"}.get(str(result["currency"] or "").upper(), "₱")
@@ -313,17 +390,25 @@ def assemble(text: str, scored: list[tuple[str, str, float]]) -> dict:
         bits.append(f"Penalties: {result['penalty_clause']}")
     result["financial_obligations"] = "; ".join(bits) if bits else None
     result["classification"] = result["contract_type"]
-    return result
 
 
-def extract_from_text(text: str) -> dict:
+def extract_from_text(text: str, pre_unwrapped: bool = False) -> dict:
     text = sanitize_extracted_text(text or "")
     scored = classify_chunks(segment(text))
-    return assemble(text, scored)
+    result = assemble(text, scored)
+    paragraphs = text.splitlines() if pre_unwrapped else unwrap_pdf_text(text).splitlines()
+    long_form = extract_long_form(paragraphs, text, _model())
+    if long_form:
+        result.update(long_form)
+        result["extraction_mode"] = "long-form"
+        _finalize(result)
+    else:
+        result["extraction_mode"] = "template"
+    return result
 
 
 def extract_from_pdf(pdf_path: str) -> dict:
     text = pdf_to_text(pdf_path)
-    result = extract_from_text(text)
+    result = extract_from_text(text, pre_unwrapped=True)
     result["source_pdf"] = pdf_path
     return result

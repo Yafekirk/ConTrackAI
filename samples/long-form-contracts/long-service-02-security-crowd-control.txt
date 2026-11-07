@@ -1,0 +1,397 @@
+REPUBLIC OF THE PHILIPPINES
+
+SECURITY AND CROWD CONTROL SERVICES AGREEMENT
+
+by and between
+
+JBC Events Management
+
+(as CLIENT)
+
+and
+
+Nightwatch Event Security Inc.
+
+(as CONTRACTOR)
+
+Contract Reference No. JBC-SEC-2026-0089
+
+CONFIDENTIAL. This document contains proprietary commercial terms. Unauthorized reproduction, distribution, or disclosure is strictly prohibited.
+
+TABLE OF CONTENTS
+
+Article | Heading
+I | DEFINITIONS AND INTERPRETATION
+II | SCOPE OF SERVICES
+III | TERM OF THE AGREEMENT
+IV | RENEWAL
+V | CONTRACT PRICE
+VI | PAYMENT TERMS
+VII | PERFORMANCE SECURITY AND BOND
+VIII | OBLIGATIONS OF THE CONTRACTOR
+IX | OBLIGATIONS OF THE CLIENT
+X | PENALTIES AND LIQUIDATED DAMAGES
+XI | WARRANTIES AND REPRESENTATIONS
+XII | INSURANCE
+XIII | CONFIDENTIALITY
+XIV | DATA PRIVACY
+XV | INDEMNIFICATION
+XVI | LIMITATION OF LIABILITY
+XVII | FORCE MAJEURE
+XVIII | TERMINATION
+XIX | EFFECTS OF TERMINATION
+XX | DISPUTE RESOLUTION
+XXI | GOVERNING LAW AND VENUE
+XXII | NOTICES
+XXIII | ASSIGNMENT AND SUBCONTRACTING
+XXIV | RELATIONSHIP OF THE PARTIES
+XXV | ANTI-CORRUPTION AND ETHICAL CONDUCT
+XXVI | MISCELLANEOUS PROVISIONS
+ | Signatures and Acknowledgment
+ | Annex A - Posts And Deployment
+ | Annex B - Fees
+
+SECURITY AND CROWD CONTROL SERVICES AGREEMENT
+
+KNOW ALL MEN BY THESE PRESENTS:
+
+This Security and Crowd Control Services Agreement (the "Agreement") is made and entered into this 25th day of May 2026 at Quezon City, Philippines, by and between:
+
+JBC Events Management, a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, represented herein by its Procurement Director, NINA S. DOMINGO, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex C, hereinafter referred to as the "CLIENT";
+
+- and -
+
+Nightwatch Event Security Inc., a corporation duly organized and existing under and by virtue of the laws of the Republic of the Philippines, with principal office at 88 Katipunan Avenue, Loyola Heights, Quezon City, Metro Manila, Philippines, represented herein by its President, RAMON T. AQUINO, who is duly authorized for this purpose as evidenced by the Secretary's Certificate attached hereto as Annex D, hereinafter referred to as the "CONTRACTOR".
+
+The CLIENT and the CONTRACTOR are hereinafter referred to individually as a "Party" and collectively as the "Parties".
+
+WITNESSETH:
+
+WHEREAS, the CLIENT is engaged in the business of event planning, management, and production, and organizes more than one hundred fifty (150) corporate, social, and public events every year in Metro Manila and nearby provinces;
+
+WHEREAS, the CLIENT requires licensed security guards and trained crowd-control marshals for its warehouse, its corporate office, and the concerts, festivals, and corporate events it organizes;
+
+WHEREAS, the CONTRACTOR is a corporation duly registered with the Securities and Exchange Commission under Company Registration No. CS200907731 issued on June 30, 2009, and is engaged in the provision of licensed security guards, crowd-control marshals, and event security planning, and holds a valid License to Operate issued by the PNP Supervisory Office for Security and Investigation Agencies;
+
+WHEREAS, the CONTRACTOR represents that it possesses the technical capability, financial capacity, qualified personnel, licenses, and permits necessary to perform its obligations under this Agreement, including a valid Mayor's Permit and BIR Certificate of Registration;
+
+WHEREAS, on March 16, 2026, the CLIENT conducted a competitive canvass among no fewer than three (3) qualified suppliers, and the CONTRACTOR submitted the lowest calculated and most responsive proposal dated March 30, 2026;
+
+WHEREAS, the Board of Directors of the CLIENT, in a resolution adopted on May 7, 2026, approved the award of this engagement to the CONTRACTOR and authorized its representative to sign this Agreement;
+
+WHEREAS, the Board of Directors of the CONTRACTOR, in a resolution adopted on May 14, 2026, likewise authorized its representative to sign this Agreement;
+
+WHEREAS, the CONTRACTOR has examined the requirements of the CLIENT, has satisfied itself as to the conditions affecting the work, and confirms that the price stated herein is sufficient to cover all its obligations;
+
+WHEREAS, both Parties have conducted their own due diligence and confirm that no conflict of interest exists between them, their officers, and their employees with respect to this engagement;
+
+WHEREAS, the Parties desire to set forth in writing the terms and conditions governing their relationship;
+
+NOW, THEREFORE, for and in consideration of the foregoing premises and the mutual covenants and undertakings hereinafter set forth, the Parties hereby agree as follows:
+
+ARTICLE I
+DEFINITIONS AND INTERPRETATION
+
+1.1 In this Agreement, unless the context otherwise requires, the following words and expressions shall have the meanings hereby assigned to them:
+
+  - "Agreement" means this Security and Crowd Control Services Agreement, including its Annexes, as may be amended from time to time in accordance with its terms.
+
+  - "Applicable Law" means all statutes, ordinances, regulations, orders, and issuances of any governmental authority of the Republic of the Philippines that apply to a Party or to the subject matter of this Agreement.
+
+  - "Business Day" means any day other than a Saturday, Sunday, or regular or special non-working holiday declared in Metro Manila.
+
+  - "Confidential Information" means all information disclosed by one Party to the other, whether orally, in writing, or electronically, that is marked as confidential or that a reasonable person would understand to be confidential, including client lists, pricing, event plans, and trade secrets.
+
+  - "Contract Price" means the total amount payable by the CLIENT to the CONTRACTOR under Article V.
+
+  - "Effective Date" means the date on which the Term commences, as stated in Article III.
+
+  - "Force Majeure Event" has the meaning given in Article XVII.
+
+  - "Intellectual Property Rights" means patents, copyrights, trademarks, trade names, designs, know-how, and all similar rights, whether registered or not.
+
+  - "Personal Data" has the meaning given to it under Republic Act No. 10173, otherwise known as the Data Privacy Act of 2012, and its Implementing Rules and Regulations.
+
+  - "Personnel" means the officers, employees, agents, and subcontractors of a Party who are engaged in the performance of this Agreement.
+
+  - "Term" means the period described in Article III, as may be renewed or extended in accordance with Article IV.
+
+1.3 Headings are inserted for convenience only and shall not affect the interpretation of this Agreement. Words importing the singular include the plural and vice versa. The words "include" and "including" shall be read without limitation. References to a statute include that statute as amended or replaced.
+
+1.4 In case of conflict or inconsistency among the documents forming part of this Agreement, the following order of precedence shall apply: (a) this Agreement; (b) Annex A; (c) Annex B; and (d) the proposal of the CONTRACTOR dated March 30, 2026, to the extent incorporated herein.
+
+ARTICLE II
+SCOPE OF SERVICES
+
+2.1 The CONTRACTOR shall provide licensed, uniformed, and armed or unarmed security guards, as specified in Annex A, for twenty-four (24) hour protection of the CLIENT's corporate office and warehouse, and trained crowd-control marshals, bag-check personnel, and VIP lane officers for events organized by the CLIENT, together with post-event incident reports.
+
+2.2 Fixed posts shall be manned continuously on twelve (12) hour shifts. Event deployments shall be requested by the CLIENT through a deployment order issued at least seventy-two (72) hours before the event, stating the venue, expected attendance, number of marshals, and call time.
+
+2.3 The CONTRACTOR shall assign a detachment commander who shall conduct daily inspections, maintain the logbook, and coordinate with the CLIENT's administrative officer and with venue security, the local police, and emergency medical services during events.
+
+2.4 The CONTRACTOR shall submit a monthly security assessment report identifying risks, incidents, and recommended improvements for the CLIENT's premises.
+
+ARTICLE III
+TERM OF THE AGREEMENT
+
+3.1 The term of this Agreement shall commence on June 1, 2026 and shall expire on May 31, 2027 (the "Term"), unless sooner terminated in accordance with Article XVIII or renewed in accordance with Article IV.
+
+3.2 Obligations which by their nature are intended to survive the expiration or termination of this Agreement, including those relating to confidentiality, data privacy, indemnification, warranties, and payment of amounts already due, shall survive for the period stated in the relevant Article or, if none is stated, for the period allowed under Applicable Law.
+
+ARTICLE IV
+RENEWAL
+
+4.1 This Agreement shall be automatically renewed for successive periods of six (6) months each, on the same terms and conditions, unless either party notifies the other in writing of its intention not to renew at least thirty (30) days before the expiration of the then-current Term.
+
+4.2 Any renewal or extension shall be documented in a written instrument signed by the authorized representatives of both Parties, and no course of dealing or acceptance of payment after expiration shall be construed as a renewal unless expressly provided in this Article.
+
+ARTICLE V
+CONTRACT PRICE
+
+5.1 In consideration of the faithful performance by the CONTRACTOR of its obligations under this Agreement, the CLIENT shall pay the CONTRACTOR a total contract price of FOUR MILLION THREE HUNDRED TWENTY THOUSAND PESOS (PHP 4,320,000.00), computed at a fixed monthly fee of THREE HUNDRED SIXTY THOUSAND PESOS (PHP 360,000.00) for twelve (12) months (the "Contract Price").
+
+5.2 The Contract Price is fixed and shall not be subject to escalation during the Term, except as expressly provided herein or as required by Applicable Law. The Contract Price includes all costs of labor, materials, equipment, transportation, overhead, profit, and taxes, other than taxes that are by law for the account of the CLIENT.
+
+5.3 The CONTRACTOR acknowledges that it has satisfied itself as to the sufficiency of the Contract Price and shall not be entitled to any additional payment by reason of any error or omission in its own estimates.
+
+ARTICLE VI
+PAYMENT TERMS
+
+6.1 The CONTRACTOR shall bill the CLIENT monthly in arrears for the fixed monthly fee and any approved event deployments for the preceding month, and the CLIENT shall pay each correct billing on or before the last Business Day of the month in which it is received.
+
+6.2 Each billing shall be supported by duty detail orders, daily time records, and the signed deployment orders for events.
+
+6.3 Any increase in the statutory minimum wage or mandatory contributions during the Term shall be passed on to the CLIENT only to the extent required by law and upon presentation of supporting computations.
+
+6.4 The CLIENT shall deduct from each billing the applicable withholding taxes and any penalties due under Article X.
+
+ARTICLE VII
+PERFORMANCE SECURITY AND BOND
+
+7.1 The CONTRACTOR shall post, within ten (10) days from signing, a fidelity bond of not less than TWO MILLION PESOS (PHP 2,000,000.00) covering loss of CLIENT property through the acts of its guards, and a performance bond of FOUR HUNDRED THIRTY-TWO THOUSAND PESOS (PHP 432,000.00), both valid for the entire Term.
+
+7.2 The CLIENT may draw on the security to recover any amount due from the CONTRACTOR under this Agreement, including liquidated damages, penalties, and the cost of remedying any default, without prejudice to any other remedy available to the CLIENT.
+
+ARTICLE VIII
+OBLIGATIONS OF THE CONTRACTOR
+
+8.1 In addition to its other obligations under this Agreement, the CONTRACTOR shall:
+
+  - Deploy only guards who are duly licensed by the PNP-SOSIA, have passed neuro-psychiatric and drug tests within the last twelve (12) months, and have completed basic security training.
+
+  - Pay its guards not less than the applicable minimum wage and all benefits required under the Labor Code and PADPAO standards.
+
+  - Provide firearms, ammunition, radios, batons, flashlights, and uniforms, all properly licensed and in good condition.
+
+  - Rotate guards assigned to fixed posts at least every six (6) months, or earlier upon request of the CLIENT.
+
+  - Submit incident reports within twenty-four (24) hours after any security incident.
+
+8.3 The CONTRACTOR shall perform its obligations with the degree of skill, care, and diligence reasonably expected of an experienced and reputable provider of similar goods or services in the Philippines.
+
+ARTICLE IX
+OBLIGATIONS OF THE CLIENT
+
+9.1 The CLIENT shall pay the Contract Price in accordance with Article VI, provide the CONTRACTOR with timely access to its premises and venues as reasonably necessary, and designate a representative who shall coordinate with the CONTRACTOR on all matters relating to this Agreement.
+
+9.2 The CLIENT shall give the CONTRACTOR reasonable advance notice of any change in its schedule, venue, or requirements that may affect the performance of this Agreement, and the Parties shall agree in writing on any resulting adjustment.
+
+ARTICLE X
+PENALTIES AND LIQUIDATED DAMAGES
+
+10.1 For every post left unmanned, or every marshal not deployed as ordered, the CONTRACTOR shall pay a penalty equivalent to two percent (2%) of the monthly fee for each post per day, which the CLIENT may deduct from the next billing.
+
+10.2 Any guard found sleeping, absent from post, or under the influence of alcohol while on duty shall be replaced immediately, and the CONTRACTOR shall be charged a penalty of FIVE THOUSAND PESOS (PHP 5,000.00) per incident.
+
+10.3 The CONTRACTOR shall be liable for the full replacement value of any CLIENT property lost through the negligence or fault of its guards, as determined after joint investigation.
+
+10.4 The Parties agree that the liquidated damages and penalties provided in this Article are a genuine pre-estimate of the loss likely to be suffered and are not a penalty in the sense of Article 1229 of the Civil Code of the Philippines.
+
+ARTICLE XI
+WARRANTIES AND REPRESENTATIONS
+
+11.1 Each Party represents and warrants that: (a) it is duly organized, validly existing, and in good standing under the laws of the Philippines; (b) it has full corporate power and authority to enter into and perform this Agreement; (c) the execution of this Agreement does not violate its articles of incorporation, by-laws, or any agreement to which it is a party; and (d) there is no pending or threatened litigation that would materially affect its ability to perform this Agreement.
+
+11.2 The CONTRACTOR further warrants that all goods, premises, or services furnished under this Agreement shall conform to the specifications in the Annexes, shall be fit for the purpose for which they are intended, and shall comply with all Applicable Law, including laws on labor, safety, health, and the environment.
+
+11.3 The CONTRACTOR warrants that it has not given or promised any commission, gift, or other benefit to any officer or employee of the CLIENT in connection with the award or performance of this Agreement.
+
+ARTICLE XII
+INSURANCE
+
+12.1 The CONTRACTOR shall, at its own cost, obtain and maintain throughout the Term comprehensive general liability insurance with a limit of not less than FIFTEEN MILLION PESOS (PHP 15,000,000.00) per occurrence, and such other insurance as may be required by Applicable Law, naming the CLIENT as an additional insured.
+
+12.2 The CONTRACTOR shall likewise maintain property or all-risk insurance in an amount of not less than FIVE MILLION PESOS (PHP 5,000,000.00), and shall deliver certificates of insurance to the CLIENT within fifteen (15) days from signing and upon each renewal of the policies.
+
+12.3 Failure to maintain the required insurance shall entitle the CLIENT to procure the same and deduct the premiums from any amount due to the CONTRACTOR.
+
+ARTICLE XIII
+CONFIDENTIALITY
+
+13.1 Each Party shall hold the Confidential Information of the other Party in strict confidence, shall use it only for the purposes of this Agreement, and shall not disclose it to any third party without the prior written consent of the disclosing Party, except to its Personnel and professional advisers who need to know it and are bound by equivalent obligations.
+
+13.2 The obligations in this Article shall not apply to information that: (a) is or becomes publicly available through no fault of the receiving Party; (b) was lawfully known to the receiving Party before disclosure; (c) is independently developed without use of the Confidential Information; or (d) is required to be disclosed by law or by order of a competent court, provided that prompt notice is given to the disclosing Party.
+
+13.3 The obligations of confidentiality shall survive for a period of three (3) years after the expiration or termination of this Agreement.
+
+ARTICLE XIV
+DATA PRIVACY
+
+14.1 To the extent that the CONTRACTOR processes Personal Data on behalf of the CLIENT, the CONTRACTOR shall act as a personal information processor and shall process such Personal Data only on the documented instructions of the CLIENT and in compliance with the Data Privacy Act of 2012, its Implementing Rules and Regulations, and the issuances of the National Privacy Commission.
+
+14.2 The CONTRACTOR shall implement reasonable and appropriate organizational, physical, and technical security measures to protect Personal Data, shall notify the CLIENT of any personal data breach within twenty-four (24) hours from discovery, and shall return or securely destroy all Personal Data upon termination of this Agreement.
+
+ARTICLE XV
+INDEMNIFICATION
+
+15.1 The CONTRACTOR shall defend, indemnify, and hold harmless the CLIENT, its directors, officers, employees, and clients from and against all claims, losses, damages, liabilities, fines, costs, and expenses, including reasonable attorney's fees, arising from: (a) any breach of this Agreement by the CONTRACTOR; (b) the negligence or willful misconduct of the CONTRACTOR or its Personnel; (c) any claim by the CONTRACTOR's Personnel for wages, benefits, or injuries; and (d) any infringement of Intellectual Property Rights by goods or materials supplied by the CONTRACTOR.
+
+15.2 The indemnified Party shall give prompt written notice of any claim, allow the indemnifying Party to control the defense, and provide reasonable assistance at the indemnifying Party's expense.
+
+ARTICLE XVI
+LIMITATION OF LIABILITY
+
+16.1 Except for liability arising from fraud, gross negligence, willful misconduct, breach of confidentiality, data privacy violations, or the indemnities in Article XV, the aggregate liability of each Party under this Agreement shall not exceed the fees paid to the CONTRACTOR during the twelve (12) months immediately preceding the event giving rise to the claim.
+
+16.2 Neither Party shall be liable to the other for indirect, special, or consequential damages, including loss of profit, revenue, or goodwill, even if advised of the possibility of such damages.
+
+ARTICLE XVII
+FORCE MAJEURE
+
+17.1 Neither Party shall be liable for any delay or failure to perform its obligations, other than obligations to pay money, to the extent caused by a Force Majeure Event, meaning an event beyond the reasonable control of the affected Party, including typhoons, earthquakes, floods, fire, epidemics, war, civil disturbance, and acts of government, that could not have been prevented by reasonable diligence.
+
+17.2 The affected Party shall notify the other Party in writing within three (3) Business Days after the occurrence of the Force Majeure Event, shall use reasonable efforts to mitigate its effects, and shall resume performance as soon as practicable. If a Force Majeure Event continues for more than sixty (60) consecutive days, either Party may terminate this Agreement by written notice without liability.
+
+ARTICLE XVIII
+TERMINATION
+
+18.1 Either party may terminate this Agreement with thirty (30) days prior written notice for material breach not cured within fifteen (15) days from receipt of notice. The CLIENT may terminate immediately upon revocation or suspension of the CONTRACTOR's License to Operate.
+
+18.2 Either Party may terminate this Agreement immediately by written notice if the other Party becomes insolvent, makes an assignment for the benefit of creditors, is placed under receivership or rehabilitation, or ceases to carry on business in the ordinary course.
+
+18.3 Termination shall be effected by written notice delivered in accordance with Article XXII, stating the grounds for termination and the effective date thereof.
+
+ARTICLE XIX
+EFFECTS OF TERMINATION
+
+19.1 Upon expiration or termination of this Agreement for any reason, the CONTRACTOR shall promptly return all property, documents, and Confidential Information of the CLIENT in its possession, and the CLIENT shall pay all undisputed amounts due for obligations performed up to the effective date of termination.
+
+19.2 Termination shall be without prejudice to any rights or remedies accrued to either Party before the effective date of termination, including the right to claim damages for any breach.
+
+ARTICLE XX
+DISPUTE RESOLUTION
+
+20.1 The Parties shall endeavor to settle amicably any dispute, controversy, or claim arising out of or relating to this Agreement through good-faith negotiations between their senior officers within thirty (30) days from written notice of the dispute.
+
+20.2 Any dispute not settled by negotiation shall be referred to mediation under the rules of the Philippine Mediation Center, and failing settlement within sixty (60) days, to arbitration in Metro Manila in accordance with Republic Act No. 9285, the Alternative Dispute Resolution Act of 2004. The arbitral award shall be final and binding on the Parties.
+
+ARTICLE XXI
+GOVERNING LAW AND VENUE
+
+21.1 This Agreement shall be governed by and construed in accordance with the laws of the Republic of the Philippines.
+
+21.2 Subject to Article XX, any action to enforce an arbitral award or to obtain interim relief shall be filed exclusively in the proper courts of Pasig City, to the exclusion of all other venues.
+
+ARTICLE XXII
+NOTICES
+
+22.1 All notices under this Agreement shall be in writing and delivered personally, by registered mail, by reputable courier, or by electronic mail with confirmation of receipt, to the addresses below or to such other address as a Party may designate by written notice:
+
+  - To the CLIENT: JBC Events Management, Unit 1203, One Corporate Centre, Julia Vargas Avenue, Ortigas Center, Pasig City, Metro Manila, Philippines, Attention: Nina S. Domingo, Procurement Director; e-mail: legal@jbcevents.example.ph
+
+  - To the CONTRACTOR: Nightwatch Event Security Inc., 88 Katipunan Avenue, Loyola Heights, Quezon City, Metro Manila, Philippines, Attention: Ramon T. Aquino, President; e-mail: contracts@nightwatch.example.ph
+
+22.3 Notices shall be deemed received upon personal delivery, three (3) Business Days after mailing by registered mail or courier, or upon confirmation of receipt in the case of electronic mail.
+
+ARTICLE XXIII
+ASSIGNMENT AND SUBCONTRACTING
+
+23.1 Neither Party shall assign or transfer this Agreement or any of its rights or obligations hereunder without the prior written consent of the other Party. The CONTRACTOR shall not subcontract any part of its obligations without the prior written consent of the CLIENT, and shall remain fully responsible for the acts and omissions of its subcontractors.
+
+ARTICLE XXIV
+RELATIONSHIP OF THE PARTIES
+
+24.1 The CONTRACTOR is an independent contractor. Nothing in this Agreement shall be construed to create a partnership, joint venture, agency, or employer-employee relationship between the CLIENT and the CONTRACTOR or its Personnel. The CONTRACTOR shall have exclusive control over the means and methods of performing its obligations and shall be solely responsible for the wages, benefits, and statutory contributions of its Personnel.
+
+ARTICLE XXV
+ANTI-CORRUPTION AND ETHICAL CONDUCT
+
+25.1 Each Party shall comply with Republic Act No. 3019, the Anti-Graft and Corrupt Practices Act, and all other applicable anti-bribery laws, and shall not offer, give, solicit, or accept any improper payment or advantage in connection with this Agreement.
+
+25.2 The CONTRACTOR shall promptly report to the CLIENT any request for an improper payment made by any Personnel of the CLIENT. Any breach of this Article shall be a material breach entitling the non-breaching Party to terminate this Agreement immediately.
+
+ARTICLE XXVI
+MISCELLANEOUS PROVISIONS
+
+26.1 No amendment or modification of this Agreement shall be valid unless made in writing and signed by the authorized representatives of both Parties.
+
+26.2 The failure of a Party to insist on strict performance of any provision of this Agreement shall not be construed as a waiver of that provision or of any other provision.
+
+26.3 If any provision of this Agreement is held invalid or unenforceable, the remaining provisions shall continue in full force and effect, and the invalid provision shall be replaced by a valid provision that most closely reflects the intention of the Parties.
+
+26.4 This Agreement, together with its Annexes, constitutes the entire agreement between the Parties on its subject matter and supersedes all prior negotiations, proposals, understandings, and agreements, whether written or oral.
+
+26.5 This Agreement may be executed in several counterparts, each of which shall be deemed an original, and all of which together shall constitute one and the same instrument. Documentary stamp tax on this Agreement, if any, shall be for the account of the CONTRACTOR.
+
+IN WITNESS WHEREOF, the Parties have hereunto set their hands on the date and at the place first above written.
+
+For the CLIENT:
+JBC EVENTS MANAGEMENT
+
+By:  ______________________________
+NINA S. DOMINGO
+Procurement Director
+
+For the CONTRACTOR:
+NIGHTWATCH EVENT SECURITY INC.
+
+By:  ______________________________
+RAMON T. AQUINO
+President
+
+SIGNED IN THE PRESENCE OF:
+
+______________________________          ______________________________
+Patricia J. Bernal                        Liza M. Navarro
+
+ACKNOWLEDGMENT
+
+REPUBLIC OF THE PHILIPPINES )
+QUEZON CITY ) S.S.
+
+BEFORE ME, a Notary Public for and in Quezon City, personally appeared the following persons, exhibiting to me their competent evidence of identity as indicated below:
+
+Name | Competent Evidence of Identity | Date / Place Issued
+Nina S. Domingo | Passport No. P4471209B | 11 January 2024 / DFA Manila
+Ramon T. Aquino | Driver's License No. N02-15-338471 | 02 March 2025 / LTO Quezon City
+
+known to me and to me known to be the same persons who executed the foregoing Security and Crowd Control Services Agreement, consisting of the pages hereof including the page on which this Acknowledgment is written, and who acknowledged to me that the same is their free and voluntary act and deed as well as that of the corporations they respectively represent.
+
+WITNESS MY HAND AND SEAL on the date and at the place first above written.
+
+Doc. No. ____;
+Page No. ____;
+Book No. ____;
+Series of 2026.
+
+NOTARY PUBLIC
+Until December 31, 2027
+Roll of Attorneys No. 71234
+
+ANNEX A - POSTS AND DEPLOYMENT
+
+Post | Location | Shift | Guards
+Post 1 | Corporate office lobby, Ortigas Center | 24 hrs (2 x 12) | 2 unarmed
+Post 2 | Warehouse main gate, Taguig City | 24 hrs (2 x 12) | 2 armed
+Post 3 | Warehouse roving | Night shift only | 1 armed
+Events | Venue as stated in deployment order | Per event | As ordered
+
+ANNEX B - FEES
+
+Item | Basis | Amount
+Fixed posts (Posts 1-3) | Monthly | PHP 285,000.00
+Event marshal allowance | Monthly, up to 40 marshal-days | PHP 75,000.00
+Monthly fee |  | PHP 360,000.00
+Contract Price (12 months) |  | PHP 4,320,000.00
+
+Annexes C and D (Secretary's Certificates) are on file with the Parties and are incorporated herein by reference.
